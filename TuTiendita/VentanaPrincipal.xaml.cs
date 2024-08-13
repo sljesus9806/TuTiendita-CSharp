@@ -14,20 +14,32 @@ using System.Windows.Shapes;
 
 namespace TuTiendita
 {
-    /// <summary>
-    /// Interaction logic for VentanaPrincipal.xaml
-    /// </summary>
     public partial class VentanaPrincipal : Window
     {
-        public VentanaPrincipal()
+        private Usuario usuarioActual;
+
+        // Constructor que recibe el usuario logueado
+        public VentanaPrincipal(Usuario usuario)
         {
             InitializeComponent();
-            MainContent.Content = new UserControl();
+            usuarioActual = usuario;
+            ConfigurarInterfazSegunUsuario();
+        }
+
+        // Método para configurar la interfaz según el nivel de acceso del usuario
+        private void ConfigurarInterfazSegunUsuario()
+        {
+            // Ejemplo: Ocultar el botón "Usuarios" si el usuario no es un gerente
+            if (usuarioActual.NivelAcceso != "Gerente")
+            {
+                Usuarios.Visibility = Visibility.Collapsed;
+            }
+
+            // Puedes agregar más lógica para configurar la interfaz según sea necesario
         }
 
         private void Ventas_Click(object sender, RoutedEventArgs e)
         {
-            MainContent.Content = null;
             MainContent.Content = new VentasUserControl();
         }
 
@@ -37,9 +49,7 @@ namespace TuTiendita
 
         private void Productos_Click(object sender, RoutedEventArgs e)
         {
-            MainContent.Content = null;
             MainContent.Content = new ProductosUserControl();
-
         }
 
         private void Compras_Click(object sender, RoutedEventArgs e)
@@ -52,6 +62,7 @@ namespace TuTiendita
 
         private void Usuarios_Click(object sender, RoutedEventArgs e)
         {
+            MainContent.Content = new UsuariosUserControl(usuarioActual);
         }
 
         private void Configuracion_Click(object sender, RoutedEventArgs e)
@@ -61,8 +72,5 @@ namespace TuTiendita
         private void Migracion_Click(object sender, RoutedEventArgs e)
         {
         }
-
-
-
     }
 }

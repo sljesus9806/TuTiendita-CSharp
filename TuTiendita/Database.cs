@@ -27,6 +27,18 @@ namespace TuTiendita
                     {
                         cmd.ExecuteNonQuery();
                     }
+                    // Crear tabla de Usuarios
+                    string createUserTableQuery = @"CREATE TABLE IF NOT EXISTS [Usuarios] (
+                                            [Id] INTEGER PRIMARY KEY AUTOINCREMENT,
+                                            [Nombre] TEXT NOT NULL,
+                                            [Contrasena] TEXT NOT NULL,
+                                            [NivelAcceso] TEXT NOT NULL
+                                        );";
+
+                    using (var cmd = new SQLiteCommand(createUserTableQuery, connection))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
                 }
             }
         }

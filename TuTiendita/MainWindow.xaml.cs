@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Data.SQLite;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -11,9 +12,6 @@ using System.Windows.Shapes;
 
 namespace TuTiendita
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
         public MainWindow()
@@ -21,47 +19,73 @@ namespace TuTiendita
             InitializeComponent();
         }
 
-        public void BtnIniciarSesion_Click(object sender, RoutedEventArgs e)
-
+        private void BtnIniciarSesion_Click(object sender, RoutedEventArgs e)
         {
             string nombreUsuario = txtNombreUsuario.Text;
             string contrasena = txtContrasena.Password;
 
-            if (nombreUsuario == "admin" && contrasena == "1234")
+            // Verificar las credenciales en la base de datos
+            Usuario usuarioLogueado = VerificarCredenciales(nombreUsuario, contrasena);
+
+            if (usuarioLogueado != null)
             {
                 // Usuario y contraseña correctos
                 MessageBox.Show("Inicio de sesión exitoso!");
-                txtContrasena.IsEnabled = false;
-                txtNombreUsuario.IsEnabled = false;
-                VentanaPrincipal ventanaPrincipal = new VentanaPrincipal();
+
+                // Crear y mostrar la ventana principal con el usuario logueado
+                VentanaPrincipal ventanaPrincipal = new VentanaPrincipal(usuarioLogueado);
                 ventanaPrincipal.Show();
-                this.Close(); // Cierra la ventana de inicio de sesión
+
+                // Cerrar la ventana de inicio de sesión
+                this.Close();
             }
             else
             {
                 // Usuario o contraseña incorrectos
                 MessageBox.Show("Usuario o contraseña incorrectos", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-
-
         }
 
-        public void Txt_KeyDown(object sender, KeyEventArgs e)
-
+        private Usuario VerificarCredenciales(string nombreUsuario, string contrasena)
         {
+            Usuario usuario = null;
 
-            if (e.Key == Key.Enter)
+            using (var connection = Database.GetConnection())
             {
+                connection.Open();
 
-                // Llama al método que maneja el clic en el botón de inicio de sesión
-                BtnIniciarSesion_Click(this, new RoutedEventArgs());
+                string query = "SELECT * FROM Usuarios WHERE Nombre = @Nombre AND Contrasena = @Contrasena";
 
+                using (var cmd = new SQLiteCommand(query, connection))
+                {
+                    cmd.Parameters.AddWithValue("@Nombre", nombreUsuario);
+                    cmd.Parameters.AddWithValue("@Contrasena", contrasena);
 
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            usuario = new Usuario
+                            {
+                                IdUsuario = Convert.ToInt32(reader["Id"]),
+                                Nombre = reader["Nombre"].ToString(),
+                                Contrasena = reader["Contrasena"].ToString(),
+                                NivelAcceso = reader["NivelAcceso"].ToString()
+                            };
+                        }
+                    }
+                }
             }
 
-
+            return usuario;
         }
 
+        private void Txt_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                BtnIniciarSesion_Click(this, new RoutedEventArgs());
+            }
+        }
     }
-
 }
