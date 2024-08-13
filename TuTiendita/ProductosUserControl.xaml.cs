@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data.SQLite;
 using System.Linq;
 using System.Text;
@@ -12,6 +13,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+
 
 namespace TuTiendita
 {
@@ -138,16 +140,64 @@ namespace TuTiendita
         }
 
 
-        public class Producto
+        public class Producto : INotifyPropertyChanged
         {
+            private int _cantidad;
+            private decimal _precio;
+
             public string Codigo { get; set; }
             public string Nombre { get; set; }
-            public decimal Precio { get; set; }
+            public decimal Precio
+            {
+                get { return _precio; }
+                set
+                {
+                    if (_precio != value)
+                    {
+                        _precio = value;
+                        OnPropertyChanged(nameof(Precio));
+                        OnPropertyChanged(nameof(Subtotal)); // Actualiza el subtotal cuando cambie el precio
+                    }
+                }
+            }
             public int Stock { get; set; }
 
-            //CRUD Operaciones
+            public int Cantidad
+            {
+                get { return _cantidad; }
+                set
+                {
+                    if (_cantidad != value)
+                    {
+                        _cantidad = value;
+                        OnPropertyChanged(nameof(Cantidad)); // Notificar el cambio en cantidad
+                        OnPropertyChanged(nameof(Subtotal)); // Notificar que el subtotal ha cambiado
+                    }
+                }
+            }
 
-            public static void AgregarProducto(Producto producto) //Funcion para agregar productos nuevos
+            // Propiedad calculada para el Subtotal
+            public decimal Subtotal
+            {
+                get
+                {
+                    return Precio * Cantidad;
+                }
+            }
+
+            // Implementación de INotifyPropertyChanged
+            public event PropertyChangedEventHandler PropertyChanged;
+
+            protected void OnPropertyChanged(string propertyName)
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            }
+        
+
+
+        //CRUD Operaciones
+
+        public static void AgregarProducto(Producto producto) //Funcion para agregar productos nuevos
 
             {
                 if (ExisteProductoConCodigo(producto.Codigo))
@@ -247,7 +297,24 @@ namespace TuTiendita
             }
 
 
-        }
+            public static void ActualizarStock(string codigo, int cantidadVendida)
+            {
+                using (var connection = Database.GetConnection())
+                {
+                    connection.Open();
+                    string query = "UPDATE [Productos] SET Stock = Stock - @CantidadVendida WHERE Codigo = @Codigo";
+                    using (var cmd = new SQLiteCommand(query, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@CantidadVendida", cantidadVendida);
+                        cmd.Parameters.AddWithValue("@Codigo", codigo);
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
 
+
+
+
+        }
     }
 }
