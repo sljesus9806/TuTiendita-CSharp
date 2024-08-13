@@ -1,0 +1,48 @@
+﻿<UserControl x:Class="TuTiendita.UsuariosUserControl"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d">
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Sección para agregar usuario -->
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,10">
+            <Label Content="Nombre:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+            <TextBox x:Name="txtNombre" Width="150"/>
+
+            <Label Content="Contraseña:" VerticalAlignment="Center" Margin="10,0,5,0"/>
+            <PasswordBox x:Name="txtContrasena" Width="150"/>
+
+            <Label Content="Nivel de Acceso:" VerticalAlignment="Center" Margin="10,0,5,0"/>
+            <ComboBox x:Name="cmbNivelAcceso" Width="150">
+                <ComboBoxItem Content="Cajero"/>
+                <ComboBoxItem Content="Gerente"/>
+            </ComboBox>
+
+            <Button x:Name="btnAgregarUsuario" Content="Agregar" Width="100" Margin="10,0,0,0" Click="BtnAgregarUsuario_Click"/>
+        </StackPanel>
+
+        <!-- DataGrid para mostrar usuarios -->
+        <DataGrid x:Name="dgUsuarios" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="False" Margin="0,0,0,10">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="ID Usuario" Binding="{Binding IdUsuario}" Width="100"/>
+                <DataGridTextColumn Header="Nombre" Binding="{Binding Nombre}" Width="200"/>
+                <DataGridTextColumn Header="Contraseña" Binding="{Binding Contrasena}" Width="150"/>
+                <DataGridTextColumn Header="Nivel de Acceso" Binding="{Binding NivelAcceso}" Width="150"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- Botones para gestionar usuarios -->
+        <StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Right">
+            <Button x:Name="btnEditarUsuario" Content="Editar" Width="100" Margin="0,0,10,0" Click="BtnEditarUsuario_Click"/>
+            <Button x:Name="btnEliminarUsuario" Content="Eliminar" Width="100" Click="BtnEliminarUsuario_Click"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

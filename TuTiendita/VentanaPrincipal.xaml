@@ -32,7 +32,7 @@
             <Button Content="Productos" Margin="5" HorizontalAlignment="Stretch" Click="Productos_Click"/>
             <Button Content="Compras" Margin="5" HorizontalAlignment="Stretch" Click="Compras_Click"/>
             <Button Content="Clientes" Margin="5" HorizontalAlignment="Stretch" Click="Clientes_Click"/>
-            <Button Content="Usuarios" Margin="5" HorizontalAlignment="Stretch" Click="Usuarios_Click"/>
+            <Button x:Name="Usuarios" Content="Usuarios" Margin="5" HorizontalAlignment="Stretch" Click="Usuarios_Click"/>
             <Button Content="Configuración" Margin="5" HorizontalAlignment="Stretch" Click="Configuracion_Click"/>
             <Button Content="Migración de Datos" Margin="5" HorizontalAlignment="Stretch" Click="Migracion_Click"/>
         </StackPanel>
