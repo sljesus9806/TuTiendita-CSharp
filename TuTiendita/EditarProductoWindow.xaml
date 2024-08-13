@@ -1,0 +1,30 @@
+﻿<Window x:Class="TuTiendita.EditarProductoWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Editar Producto" Height="300" Width="400">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Label Content="Código:" Grid.Row="0"/>
+        <TextBox x:Name="txtCodigo" Grid.Row="0" Margin="80,0,0,5" IsReadOnly="True"/>
+
+        <Label Content="Nombre:" Grid.Row="1"/>
+        <TextBox x:Name="txtNombre" Grid.Row="1" Margin="80,0,0,5"/>
+
+        <Label Content="Precio:" Grid.Row="2"/>
+        <TextBox x:Name="txtPrecio" Grid.Row="2" Margin="80,0,0,5"/>
+
+        <Label Content="Stock:" Grid.Row="3"/>
+        <TextBox x:Name="txtStock" Grid.Row="3" Margin="80,0,0,5"/>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,23,61,2" Grid.RowSpan="2">
+            <Button Content="Guardar" Width="83" Margin="5" Click="BtnGuardar_Click" Height="39"/>
+            <Button Content="Cancelar" Width="75" Margin="5" Click="BtnCancelar_Click" Height="38"/>
+        </StackPanel>
+    </Grid>
+</Window>
