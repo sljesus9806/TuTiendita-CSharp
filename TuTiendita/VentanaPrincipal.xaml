@@ -25,20 +25,6 @@
             <!-- Contenido Principal -->
         </Grid.RowDefinitions>
 
-        <!-- Ribbon o Barra de Herramientas Superior -->
-        <ToolBarTray Grid.Row="0" Grid.ColumnSpan="2" Background="LightGray">
-            <ToolBar>
-                <Button Content="Ventas" Click="Ventas_Click"/>
-                <Button Content="Cerrar Caja" Click="CerrarCaja_Click"/>
-                <Button Content="Productos" Click="Productos_Click"/>
-                <Button Content="Compras" Click="Compras_Click"/>
-                <Button Content="Clientes" Click="Clientes_Click"/>
-                <Button Content="Usuarios" Click="Usuarios_Click"/>
-                <Button Content="Configuración" Click="Configuracion_Click"/>
-                <Button Content="Migración de Datos" Click="Migracion_Click"/>
-            </ToolBar>
-        </ToolBarTray>
-
         <!-- Sidebar (Menú de Navegación) -->
         <StackPanel Grid.Row="1" Grid.Column="0" Background="#EDEDED" VerticalAlignment="Stretch">
             <Button Content="Ventas" Margin="5" HorizontalAlignment="Stretch" Click="Ventas_Click"/>

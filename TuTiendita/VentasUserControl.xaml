@@ -1,0 +1,56 @@
+﻿<UserControl x:Class="TuTiendita.VentasUserControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- Para el cuadro de búsqueda -->
+            <RowDefinition Height="Auto"/>
+            <!-- Para el DataGrid de productos filtrados -->
+            <RowDefinition Height="*"/>
+            <!-- Para el DataGrid de productos seleccionados -->
+            <RowDefinition Height="Auto"/>
+            <!-- Para los botones y el total -->
+        </Grid.RowDefinitions>
+
+        <!-- Cuadro de Búsqueda -->
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,10,0,10" Grid.Row="0">
+            <Label Content="Buscar Producto:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+            <TextBox x:Name="txtBuscarProducto" Width="300" TextChanged="TxtBuscarProducto_TextChanged"/>
+        </StackPanel>
+
+        <!-- DataGrid para mostrar productos filtrados -->
+        <DataGrid x:Name="dgProductos" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True" Margin="0,10,0,10" 
+                  MouseDoubleClick="DgProductos_MouseDoubleClick" MaxHeight="150"
+                  ScrollViewer.VerticalScrollBarVisibility="Auto">
+            <!-- Limitar la altura -->
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Código" Binding="{Binding Codigo}" Width="150"/>
+                <DataGridTextColumn Header="Descripción" Binding="{Binding Nombre}" Width="*"/>
+                <DataGridTextColumn Header="Precio" Binding="{Binding Precio, StringFormat=C}" Width="100"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- DataGrid para mostrar productos seleccionados -->
+        <DataGrid x:Name="dgVenta" Grid.Row="2" AutoGenerateColumns="False" Margin="0,10,0,10">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Código" Binding="{Binding Codigo}" Width="150"/>
+                <DataGridTextColumn Header="Descripción" Binding="{Binding Nombre}" Width="*"/>
+                <DataGridTextColumn Header="Cantidad" Binding="{Binding Cantidad}" Width="100"/>
+                <DataGridTextColumn Header="Precio Unitario" Binding="{Binding Precio, StringFormat=C}" Width="100"/>
+                <DataGridTextColumn Header="Subtotal" Binding="{Binding Subtotal, StringFormat=C}" Width="100"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- Botones y Total -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,10,0,10">
+            <Button Content="Vender" Width="100" Margin="5" Click="BtnVender_Click"/>
+            <Button Content="Limpiar" Width="100" Margin="5" Click="BtnLimpiar_Click"/>
+            <Label Content="Total:" VerticalAlignment="Center" Margin="10,0,10,0"/>
+            <TextBlock x:Name="txtTotal" VerticalAlignment="Center" FontSize="16"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

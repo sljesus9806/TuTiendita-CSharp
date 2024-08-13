@@ -22,10 +22,13 @@ namespace TuTiendita
         public VentanaPrincipal()
         {
             InitializeComponent();
+            MainContent.Content = new UserControl();
         }
-        
+
         private void Ventas_Click(object sender, RoutedEventArgs e)
         {
+            MainContent.Content = null;
+            MainContent.Content = new VentasUserControl();
         }
 
         private void CerrarCaja_Click(object sender, RoutedEventArgs e)
@@ -34,7 +37,9 @@ namespace TuTiendita
 
         private void Productos_Click(object sender, RoutedEventArgs e)
         {
+            MainContent.Content = null;
             MainContent.Content = new ProductosUserControl();
+
         }
 
         private void Compras_Click(object sender, RoutedEventArgs e)
