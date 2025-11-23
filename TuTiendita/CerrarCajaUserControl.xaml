@@ -12,10 +12,12 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <StackPanel Grid.Row="0" Background="#2C3E50" Padding="20">
-            <TextBlock Text="Gestión de Turnos / Caja" FontSize="24" FontWeight="Bold" Foreground="White"/>
-            <TextBlock x:Name="txtEstadoTurno" Text="No hay turno abierto" FontSize="14" Foreground="#ECF0F1" Margin="0,5,0,0"/>
-        </StackPanel>
+        <Border Grid.Row="0" Background="#2C3E50" Padding="20">
+            <StackPanel>
+                <TextBlock Text="Gestión de Turnos / Caja" FontSize="24" FontWeight="Bold" Foreground="White"/>
+                <TextBlock x:Name="txtEstadoTurno" Text="No hay turno abierto" FontSize="14" Foreground="#ECF0F1" Margin="0,5,0,0"/>
+            </StackPanel>
+        </Border>
 
         <!-- Content -->
         <Grid Grid.Row="1" Margin="20">
