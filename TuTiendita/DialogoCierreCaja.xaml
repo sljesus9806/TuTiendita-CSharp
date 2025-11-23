@@ -1,0 +1,133 @@
+<Window x:Class="TuTiendita.DialogoCierreCaja"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Cierre de Caja - Contador de Denominaciones" Height="700" Width="650"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize">
+    <Grid Margin="15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#2C3E50" Padding="15" Margin="-15,-15,-15,15" CornerRadius="5,5,0,0">
+            <TextBlock Text="Contador de Denominaciones" FontSize="20" FontWeight="Bold" Foreground="White"/>
+        </Border>
+
+        <!-- Denominaciones -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock Text="Billetes" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="100"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="150"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="35"/>
+                        <RowDefinition Height="35"/>
+                        <RowDefinition Height="35"/>
+                        <RowDefinition Height="35"/>
+                        <RowDefinition Height="35"/>
+                        <RowDefinition Height="35"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- $1000 -->
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="$1000" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                    <TextBox Grid.Row="0" Grid.Column="1" x:Name="txt1000" Text="0" Margin="5" VerticalContentAlignment="Center" TextChanged="Denominacion_Changed"/>
+                    <TextBlock Grid.Row="0" Grid.Column="2" x:Name="total1000" Text="$0.00" VerticalAlignment="Center" Margin="10,0" FontWeight="Bold"/>
+
+                    <!-- $500 -->
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="$500" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                    <TextBox Grid.Row="1" Grid.Column="1" x:Name="txt500" Text="0" Margin="5" VerticalContentAlignment="Center" TextChanged="Denominacion_Changed"/>
+                    <TextBlock Grid.Row="1" Grid.Column="2" x:Name="total500" Text="$0.00" VerticalAlignment="Center" Margin="10,0" FontWeight="Bold"/>
+
+                    <!-- $200 -->
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="$200" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                    <TextBox Grid.Row="2" Grid.Column="1" x:Name="txt200" Text="0" Margin="5" VerticalContentAlignment="Center" TextChanged="Denominacion_Changed"/>
+                    <TextBlock Grid.Row="2" Grid.Column="2" x:Name="total200" Text="$0.00" VerticalAlignment="Center" Margin="10,0" FontWeight="Bold"/>
+
+                    <!-- $100 -->
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="$100" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                    <TextBox Grid.Row="3" Grid.Column="1" x:Name="txt100" Text="0" Margin="5" VerticalContentAlignment="Center" TextChanged="Denominacion_Changed"/>
+                    <TextBlock Grid.Row="3" Grid.Column="2" x:Name="total100" Text="$0.00" VerticalAlignment="Center" Margin="10,0" FontWeight="Bold"/>
+
+                    <!-- $50 -->
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="$50" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                    <TextBox Grid.Row="4" Grid.Column="1" x:Name="txt50" Text="0" Margin="5" VerticalContentAlignment="Center" TextChanged="Denominacion_Changed"/>
+                    <TextBlock Grid.Row="4" Grid.Column="2" x:Name="total50" Text="$0.00" VerticalAlignment="Center" Margin="10,0" FontWeight="Bold"/>
+
+                    <!-- $20 -->
+                    <TextBlock Grid.Row="5" Grid.Column="0" Text="$20" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                    <TextBox Grid.Row="5" Grid.Column="1" x:Name="txt20" Text="0" Margin="5" VerticalContentAlignment="Center" TextChanged="Denominacion_Changed"/>
+                    <TextBlock Grid.Row="5" Grid.Column="2" x:Name="total20" Text="$0.00" VerticalAlignment="Center" Margin="10,0" FontWeight="Bold"/>
+                </Grid>
+
+                <TextBlock Text="Monedas" FontSize="16" FontWeight="Bold" Margin="0,20,0,10"/>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="100"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="150"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="35"/>
+                        <RowDefinition Height="35"/>
+                        <RowDefinition Height="35"/>
+                        <RowDefinition Height="35"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- $10 -->
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="$10" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                    <TextBox Grid.Row="0" Grid.Column="1" x:Name="txt10" Text="0" Margin="5" VerticalContentAlignment="Center" TextChanged="Denominacion_Changed"/>
+                    <TextBlock Grid.Row="0" Grid.Column="2" x:Name="total10" Text="$0.00" VerticalAlignment="Center" Margin="10,0" FontWeight="Bold"/>
+
+                    <!-- $5 -->
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="$5" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                    <TextBox Grid.Row="1" Grid.Column="1" x:Name="txt5" Text="0" Margin="5" VerticalContentAlignment="Center" TextChanged="Denominacion_Changed"/>
+                    <TextBlock Grid.Row="1" Grid.Column="2" x:Name="total5" Text="$0.00" VerticalAlignment="Center" Margin="10,0" FontWeight="Bold"/>
+
+                    <!-- $2 -->
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="$2" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                    <TextBox Grid.Row="2" Grid.Column="1" x:Name="txt2" Text="0" Margin="5" VerticalContentAlignment="Center" TextChanged="Denominacion_Changed"/>
+                    <TextBlock Grid.Row="2" Grid.Column="2" x:Name="total2" Text="$0.00" VerticalAlignment="Center" Margin="10,0" FontWeight="Bold"/>
+
+                    <!-- $1 -->
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="$1" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                    <TextBox Grid.Row="3" Grid.Column="1" x:Name="txt1" Text="0" Margin="5" VerticalContentAlignment="Center" TextChanged="Denominacion_Changed"/>
+                    <TextBlock Grid.Row="3" Grid.Column="2" x:Name="total1" Text="$0.00" VerticalAlignment="Center" Margin="10,0" FontWeight="Bold"/>
+                </Grid>
+
+                <Separator Margin="0,15"/>
+
+                <!-- Notas -->
+                <TextBlock Text="Notas del Cierre (opcional)" FontSize="14" FontWeight="Bold" Margin="0,10,0,5"/>
+                <TextBox x:Name="txtNotas" Height="60" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"/>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Total -->
+        <Border Grid.Row="2" Background="#ECF0F1" Padding="15" Margin="0,15,0,15" CornerRadius="5">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="Total Efectivo Contado:" FontSize="18" FontWeight="Bold" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1" x:Name="txtTotalGeneral" Text="$0.00" FontSize="24" FontWeight="Bold" Foreground="#27AE60" VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+
+        <!-- Botones -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Aceptar" Width="120" Height="40" Margin="5" Click="BtnAceptar_Click" Background="#27AE60" Foreground="White" FontWeight="Bold" FontSize="14"/>
+            <Button Content="Cancelar" Width="120" Height="40" Margin="5" Click="BtnCancelar_Click" FontSize="14"/>
+        </StackPanel>
+    </Grid>
+</Window>

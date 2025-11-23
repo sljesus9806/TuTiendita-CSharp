@@ -25,20 +25,42 @@
         <!-- Título de la sección -->
         <TextBlock Text="Gestión de Productos" FontSize="24" HorizontalAlignment="Center" Margin="10" Grid.Row="0" Grid.ColumnSpan="2"/>
 
-        <!-- Cuadro de Búsqueda -->
-        <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,0,0,10">
-            <Label Content="Buscar Producto:" VerticalAlignment="Center" Margin="0,0,10,0"/>
-            <TextBox x:Name="txtBuscar" Width="300" TextChanged="TxtBuscar_TextChanged"/>
+        <!-- Cuadro de Búsqueda y Filtros -->
+        <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Vertical" Margin="0,0,0,10">
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                <Label Content="Buscar:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <TextBox x:Name="txtBuscar" Width="250" TextChanged="TxtBuscar_TextChanged" Margin="0,0,10,0"/>
+                <CheckBox x:Name="chkStockBajo" Content="Solo Stock Bajo" VerticalAlignment="Center" Margin="10,0" Checked="FiltrosChanged" Unchecked="FiltrosChanged"/>
+                <Button Content="Exportar CSV" Width="100" Margin="10,0" Click="BtnExportarCSV_Click"/>
+                <Button Content="Importar CSV" Width="100" Margin="5,0" Click="BtnImportarCSV_Click"/>
+            </StackPanel>
         </StackPanel>
 
         <!-- DataGrid para listar productos -->
         <DataGrid x:Name="dgProductos" Grid.Row="2" AutoGenerateColumns="False" IsReadOnly="True" Margin="0,10,0,10" Grid.ColumnSpan="2">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Código" Binding="{Binding Codigo}" Width="150"/>
+                <DataGridTextColumn Header="Código" Binding="{Binding Codigo}" Width="100"/>
                 <DataGridTextColumn Header="Descripción" Binding="{Binding Nombre}" Width="*"/>
-                <DataGridTextColumn Header="Precio" Binding="{Binding Precio, StringFormat=C}" Width="100"/>
-                <DataGridTextColumn Header="Stock" Binding="{Binding Stock}" Width="100"/>
+                <DataGridTextColumn Header="Precio" Binding="{Binding Precio, StringFormat=C}" Width="90"/>
+                <DataGridTextColumn Header="Costo" Binding="{Binding Costo, StringFormat=C}" Width="80"/>
+                <DataGridTextColumn Header="Stock" Binding="{Binding Stock}" Width="70"/>
+                <DataGridTextColumn Header="Stock Min" Binding="{Binding StockMinimo}" Width="80"/>
             </DataGrid.Columns>
+            <DataGrid.RowStyle>
+                <Style TargetType="DataGridRow">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding StockBajo}" Value="True">
+                            <Setter Property="Background" Value="#FFF9C4"/>
+                            <Setter Property="FontWeight" Value="Bold"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding SinStock}" Value="True">
+                            <Setter Property="Background" Value="#FFCDD2"/>
+                            <Setter Property="Foreground" Value="#B71C1C"/>
+                            <Setter Property="FontWeight" Value="Bold"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </DataGrid.RowStyle>
         </DataGrid>
 
         <!-- Botones de acción -->

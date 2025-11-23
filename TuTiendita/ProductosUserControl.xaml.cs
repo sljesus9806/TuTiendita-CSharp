@@ -114,13 +114,61 @@ namespace TuTiendita
 
         private void TxtBuscar_TextChanged(object sender, TextChangedEventArgs e)
         {
-            string textoBusqueda = txtBuscar.Text.ToLower();
+            AplicarFiltros();
+        }
+
+        private void FiltrosChanged(object sender, RoutedEventArgs e)
+        {
+            AplicarFiltros();
+        }
+
+        private void AplicarFiltros()
+        {
+            string textoBusqueda = txtBuscar?.Text?.ToLower() ?? "";
+            bool soloStockBajo = chkStockBajo?.IsChecked ?? false;
 
             var productosFiltrados = productos
-                .Where(p => p.Codigo.ToLower().Contains(textoBusqueda) || p.Nombre.ToLower().Contains(textoBusqueda))
+                .Where(p => (string.IsNullOrEmpty(textoBusqueda) ||
+                           p.Codigo.ToLower().Contains(textoBusqueda) ||
+                           p.Nombre.ToLower().Contains(textoBusqueda)) &&
+                          (!soloStockBajo || p.StockBajo || p.SinStock))
                 .ToList();
 
             dgProductos.ItemsSource = productosFiltrados;
+        }
+
+        private void BtnExportarCSV_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var saveDialog = new Microsoft.Win32.SaveFileDialog
+                {
+                    Filter = "CSV files (*.csv)|*.csv",
+                    FileName = $"Productos_{DateTime.Now:yyyyMMdd}.csv"
+                };
+
+                if (saveDialog.ShowDialog() == true)
+                {
+                    using (var writer = new System.IO.StreamWriter(saveDialog.FileName))
+                    {
+                        writer.WriteLine("Codigo,Nombre,Precio,Costo,Stock,StockMinimo,CategoriaId");
+                        foreach (var p in productos)
+                        {
+                            writer.WriteLine($"{p.Codigo},{p.Nombre},{p.Precio},{p.Costo},{p.Stock},{p.StockMinimo},{p.CategoriaId}");
+                        }
+                    }
+                    MessageBox.Show("Productos exportados exitosamente.", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al exportar: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void BtnImportarCSV_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("Funcionalidad de importación CSV próximamente disponible.", "Información", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         public static bool ExisteProductoConCodigo(string codigo) //validacion para textbox de busqueda
@@ -144,6 +192,8 @@ namespace TuTiendita
         {
             private int _cantidad;
             private decimal _precio;
+            private int _stock;
+            private int _stockMinimo = 5;
 
             public string Codigo { get; set; }
             public string Nombre { get; set; }
@@ -160,7 +210,38 @@ namespace TuTiendita
                     }
                 }
             }
-            public int Stock { get; set; }
+
+            public int Stock
+            {
+                get { return _stock; }
+                set
+                {
+                    if (_stock != value)
+                    {
+                        _stock = value;
+                        OnPropertyChanged(nameof(Stock));
+                        OnPropertyChanged(nameof(StockBajo));
+                        OnPropertyChanged(nameof(SinStock));
+                    }
+                }
+            }
+
+            public int StockMinimo
+            {
+                get { return _stockMinimo; }
+                set
+                {
+                    if (_stockMinimo != value)
+                    {
+                        _stockMinimo = value;
+                        OnPropertyChanged(nameof(StockMinimo));
+                        OnPropertyChanged(nameof(StockBajo));
+                    }
+                }
+            }
+
+            public decimal Costo { get; set; }
+            public int? CategoriaId { get; set; }
 
             public int Cantidad
             {
@@ -185,6 +266,10 @@ namespace TuTiendita
                 }
             }
 
+            // Indicadores de stock
+            public bool StockBajo => Stock > 0 && Stock <= StockMinimo;
+            public bool SinStock => Stock <= 0;
+
             // Propiedades formateadas para reportes
             public string PrecioFormateado => Precio.ToString("C");
             public string ValorTotalFormateado => (Precio * Stock).ToString("C");
@@ -202,7 +287,6 @@ namespace TuTiendita
         //CRUD Operaciones
 
         public static void AgregarProducto(Producto producto) //Funcion para agregar productos nuevos
-
             {
                 if (ExisteProductoConCodigo(producto.Codigo))
                 {
@@ -210,46 +294,50 @@ namespace TuTiendita
                     return; // Salir de la función si el código ya existe
                 }
 
-
                 using (var connection = Database.GetConnection())
                 {
                     connection.Open();
-                    string query = "INSERT INTO [Productos] (Codigo, Nombre, Precio, Stock) VALUES (@Codigo, @Nombre, @Precio, @Stock)";
+                    string query = @"INSERT INTO [Productos] (Codigo, Nombre, Precio, Costo, Stock, StockMinimo, CategoriaId)
+                                    VALUES (@Codigo, @Nombre, @Precio, @Costo, @Stock, @StockMinimo, @CategoriaId)";
                     using (var cmd = new SQLiteCommand(query, connection))
                     {
                         cmd.Parameters.AddWithValue("@Codigo", producto.Codigo);
                         cmd.Parameters.AddWithValue("@Nombre", producto.Nombre);
                         cmd.Parameters.AddWithValue("@Precio", producto.Precio);
+                        cmd.Parameters.AddWithValue("@Costo", producto.Costo);
                         cmd.Parameters.AddWithValue("@Stock", producto.Stock);
+                        cmd.Parameters.AddWithValue("@StockMinimo", producto.StockMinimo);
+                        cmd.Parameters.AddWithValue("@CategoriaId", producto.CategoriaId.HasValue ? (object)producto.CategoriaId.Value : DBNull.Value);
                         cmd.ExecuteNonQuery();
-
                     }
-
-
-
                 }
             }
 
             public static void EditarProducto(Producto producto) //Funcion para editar productos que ya existen en base a su codigo
-
             {
                 using (var connection = Database.GetConnection())
                 {
                     connection.Open();
-                    string query = "UPDATE [Productos] SET Nombre = @Nombre, Precio = @Precio, Stock = @Stock WHERE Codigo = @Codigo";
+                    string query = @"UPDATE [Productos]
+                                    SET Nombre = @Nombre,
+                                        Precio = @Precio,
+                                        Costo = @Costo,
+                                        Stock = @Stock,
+                                        StockMinimo = @StockMinimo,
+                                        CategoriaId = @CategoriaId
+                                    WHERE Codigo = @Codigo";
                     using (var cmd = new SQLiteCommand(query, connection))
                     {
                         cmd.Parameters.AddWithValue("@Codigo", producto.Codigo);
                         cmd.Parameters.AddWithValue("@Nombre", producto.Nombre);
                         cmd.Parameters.AddWithValue("@Precio", producto.Precio);
+                        cmd.Parameters.AddWithValue("@Costo", producto.Costo);
                         cmd.Parameters.AddWithValue("@Stock", producto.Stock);
+                        cmd.Parameters.AddWithValue("@StockMinimo", producto.StockMinimo);
+                        cmd.Parameters.AddWithValue("@CategoriaId", producto.CategoriaId.HasValue ? (object)producto.CategoriaId.Value : DBNull.Value);
                         cmd.ExecuteNonQuery();
-
                     }
                 }
-
-
-
             }
             public static void EliminarProducto(Producto producto)
             {
@@ -287,17 +375,46 @@ namespace TuTiendita
                                     Codigo = reader["Codigo"].ToString(),
                                     Nombre = reader["Nombre"].ToString(),
                                     Precio = Convert.ToDecimal(reader["Precio"]),
-                                    Stock = Convert.ToInt32(reader["Stock"])
+                                    Stock = Convert.ToInt32(reader["Stock"]),
+                                    Costo = reader["Costo"] != DBNull.Value ? Convert.ToDecimal(reader["Costo"]) : 0,
+                                    StockMinimo = reader["StockMinimo"] != DBNull.Value ? Convert.ToInt32(reader["StockMinimo"]) : 5,
+                                    CategoriaId = reader["CategoriaId"] != DBNull.Value ? (int?)Convert.ToInt32(reader["CategoriaId"]) : null
                                 });
                             }
                         }
                     }
                 }
                 return productos;
+            }
 
-
-
-
+            public static Producto ObtenerPorCodigo(string codigo)
+            {
+                using (var connection = Database.GetConnection())
+                {
+                    connection.Open();
+                    string query = "SELECT * FROM Productos WHERE Codigo = @codigo";
+                    using (var cmd = new SQLiteCommand(query, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@codigo", codigo);
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                return new Producto
+                                {
+                                    Codigo = reader["Codigo"].ToString(),
+                                    Nombre = reader["Nombre"].ToString(),
+                                    Precio = Convert.ToDecimal(reader["Precio"]),
+                                    Stock = Convert.ToInt32(reader["Stock"]),
+                                    Costo = reader["Costo"] != DBNull.Value ? Convert.ToDecimal(reader["Costo"]) : 0,
+                                    StockMinimo = reader["StockMinimo"] != DBNull.Value ? Convert.ToInt32(reader["StockMinimo"]) : 5,
+                                    CategoriaId = reader["CategoriaId"] != DBNull.Value ? (int?)Convert.ToInt32(reader["CategoriaId"]) : null
+                                };
+                            }
+                        }
+                    }
+                }
+                return null;
             }
 
 
@@ -315,10 +432,37 @@ namespace TuTiendita
                     }
                 }
             }
+        }
 
+        public class Categoria
+        {
+            public int Id { get; set; }
+            public string Nombre { get; set; }
+            public string Descripcion { get; set; }
 
-
-
+            public static List<Categoria> ObtenerTodas()
+            {
+                var categorias = new List<Categoria>();
+                using (var connection = Database.GetConnection())
+                {
+                    connection.Open();
+                    string query = "SELECT * FROM Categorias ORDER BY Nombre";
+                    using (var cmd = new SQLiteCommand(query, connection))
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            categorias.Add(new Categoria
+                            {
+                                Id = reader.GetInt32(0),
+                                Nombre = reader.GetString(1),
+                                Descripcion = reader.IsDBNull(2) ? "" : reader.GetString(2)
+                            });
+                        }
+                    }
+                }
+                return categorias;
+            }
         }
     }
 }

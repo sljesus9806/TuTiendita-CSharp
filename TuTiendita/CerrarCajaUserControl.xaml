@@ -75,32 +75,69 @@
                 </StackPanel>
             </Border>
 
-            <!-- Current Shift Info -->
+            <!-- Current Shift Info and Cash Movements -->
             <Border Grid.Row="1" x:Name="pnlInfoTurno" BorderBrush="#BDC3C7" BorderThickness="1"
                     Padding="20" Margin="0,0,0,20" CornerRadius="5" Visibility="Collapsed">
-                <StackPanel>
-                    <TextBlock Text="Información del Turno Actual" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
 
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Usuario:" FontWeight="SemiBold" Margin="0,5,15,5"/>
-                        <TextBlock Grid.Row="0" Grid.Column="1" x:Name="txtUsuarioTurno" Text="" Margin="0,5"/>
+                    <!-- Info del Turno -->
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Información del Turno Actual" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
 
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Apertura:" FontWeight="SemiBold" Margin="0,5,15,5"/>
-                        <TextBlock Grid.Row="1" Grid.Column="1" x:Name="txtFechaApertura" Text="" Margin="0,5"/>
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Usuario:" FontWeight="SemiBold" Margin="0,5,15,5"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1" x:Name="txtUsuarioTurno" Text="" Margin="0,5"/>
 
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Ventas Realizadas:" FontWeight="SemiBold" Margin="0,5,15,5"/>
-                        <TextBlock Grid.Row="2" Grid.Column="1" x:Name="txtNumeroVentas" Text="0" Margin="0,5"/>
-                    </Grid>
-                </StackPanel>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Apertura:" FontWeight="SemiBold" Margin="0,5,15,5"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" x:Name="txtFechaApertura" Text="" Margin="0,5"/>
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Ventas Realizadas:" FontWeight="SemiBold" Margin="0,5,15,5"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1" x:Name="txtNumeroVentas" Text="0" Margin="0,5"/>
+                        </Grid>
+                    </StackPanel>
+
+                    <!-- Separator -->
+                    <Border Grid.Column="1" Background="#BDC3C7" Width="1" Margin="0,10"/>
+
+                    <!-- Movimientos de Caja -->
+                    <StackPanel Grid.Column="2">
+                        <Grid>
+                            <TextBlock Text="Movimientos de Caja" FontSize="16" FontWeight="Bold" HorizontalAlignment="Left"/>
+                            <Button Content="+ Registrar" HorizontalAlignment="Right" Width="100" Height="30"
+                                    Background="#3498DB" Foreground="White" BorderThickness="0"
+                                    Click="BtnRegistrarMovimiento_Click" Cursor="Hand"/>
+                        </Grid>
+
+                        <DataGrid x:Name="dgMovimientos" AutoGenerateColumns="False" IsReadOnly="True"
+                                  MaxHeight="150" Margin="0,10,0,0" GridLinesVisibility="Horizontal"
+                                  HeadersVisibility="Column" AlternatingRowBackground="#F8F9FA">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Tipo" Binding="{Binding Tipo}" Width="70"/>
+                                <DataGridTextColumn Header="Monto" Binding="{Binding MontoFormateado}" Width="80"/>
+                                <DataGridTextColumn Header="Concepto" Binding="{Binding Concepto}" Width="*"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <TextBlock Text="Total Movimientos: " FontWeight="SemiBold"/>
+                            <TextBlock x:Name="txtTotalMovimientos" Text="$0.00" FontWeight="Bold" Foreground="#E74C3C"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
             </Border>
 
             <!-- Shift History -->
