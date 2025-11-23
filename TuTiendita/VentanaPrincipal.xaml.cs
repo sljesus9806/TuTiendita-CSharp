@@ -40,11 +40,12 @@ namespace TuTiendita
 
         private void Ventas_Click(object sender, RoutedEventArgs e)
         {
-            MainContent.Content = new VentasUserControl();
+            MainContent.Content = new VentasUserControl(usuarioActual);
         }
 
         private void CerrarCaja_Click(object sender, RoutedEventArgs e)
         {
+            MainContent.Content = new CerrarCajaUserControl(usuarioActual);
         }
 
         private void Productos_Click(object sender, RoutedEventArgs e)
@@ -65,11 +66,12 @@ namespace TuTiendita
             MainContent.Content = new UsuariosUserControl(usuarioActual);
         }
 
-        private void Configuracion_Click(object sender, RoutedEventArgs e)
+        private void Reportes_Click(object sender, RoutedEventArgs e)
         {
+            MainContent.Content = new ReportesUserControl();
         }
 
-        private void Migracion_Click(object sender, RoutedEventArgs e)
+        private void Configuracion_Click(object sender, RoutedEventArgs e)
         {
         }
     }

@@ -185,6 +185,10 @@ namespace TuTiendita
                 }
             }
 
+            // Propiedades formateadas para reportes
+            public string PrecioFormateado => Precio.ToString("C");
+            public string ValorTotalFormateado => (Precio * Stock).ToString("C");
+
             // Implementación de INotifyPropertyChanged
             public event PropertyChangedEventHandler PropertyChanged;
 
