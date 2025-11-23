@@ -39,6 +39,9 @@ namespace TuTiendita
                 txtUsuarioTurno.Text = turnoActual.UsuarioNombre;
                 txtFechaApertura.Text = turnoActual.FechaApertura;
                 txtNumeroVentas.Text = ObtenerNumeroVentasTurno(turnoActual.Id).ToString();
+
+                // Cargar movimientos de caja
+                CargarMovimientosCaja();
             }
             else
             {
@@ -47,6 +50,104 @@ namespace TuTiendita
                 pnlAbrirTurno.Visibility = Visibility.Visible;
                 pnlCerrarTurno.Visibility = Visibility.Collapsed;
                 pnlInfoTurno.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private void CargarMovimientosCaja()
+        {
+            if (turnoActual == null) return;
+
+            try
+            {
+                var movimientos = new List<MovimientoCaja>();
+                decimal totalMovimientos = 0;
+
+                using (var connection = Database.GetConnection())
+                {
+                    connection.Open();
+                    string query = "SELECT * FROM MovimientosCaja WHERE TurnoId = @turnoId ORDER BY Fecha DESC";
+                    using (var cmd = new SQLiteCommand(query, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@turnoId", turnoActual.Id);
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                var movimiento = new MovimientoCaja
+                                {
+                                    Id = reader.GetInt32(0),
+                                    TurnoId = reader.GetInt32(1),
+                                    Tipo = reader.GetString(2),
+                                    Monto = reader.GetDecimal(3),
+                                    Concepto = reader.GetString(4),
+                                    Fecha = reader.GetString(5),
+                                    UsuarioId = reader.GetInt32(6),
+                                    UsuarioNombre = reader.GetString(7)
+                                };
+                                movimientos.Add(movimiento);
+
+                                // Calcular total (negativos para gastos y retiros, positivos para depósitos)
+                                if (movimiento.Tipo == "Gasto" || movimiento.Tipo == "Retiro")
+                                    totalMovimientos -= movimiento.Monto;
+                                else
+                                    totalMovimientos += movimiento.Monto;
+                            }
+                        }
+                    }
+                }
+
+                dgMovimientos.ItemsSource = movimientos;
+                txtTotalMovimientos.Text = totalMovimientos.ToString("C");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al cargar movimientos: {ex.Message}", "Error",
+                              MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void BtnRegistrarMovimiento_Click(object sender, RoutedEventArgs e)
+        {
+            if (turnoActual == null)
+            {
+                MessageBox.Show("No hay turno abierto.", "Advertencia",
+                              MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var dialogo = new DialogoMovimientoCaja();
+            if (dialogo.ShowDialog() == true)
+            {
+                try
+                {
+                    using (var connection = Database.GetConnection())
+                    {
+                        connection.Open();
+                        string query = @"INSERT INTO MovimientosCaja (TurnoId, Tipo, Monto, Concepto, Fecha, UsuarioId, UsuarioNombre)
+                                       VALUES (@turnoId, @tipo, @monto, @concepto, @fecha, @usuarioId, @usuarioNombre)";
+
+                        using (var cmd = new SQLiteCommand(query, connection))
+                        {
+                            cmd.Parameters.AddWithValue("@turnoId", turnoActual.Id);
+                            cmd.Parameters.AddWithValue("@tipo", dialogo.TipoMovimiento);
+                            cmd.Parameters.AddWithValue("@monto", dialogo.Monto);
+                            cmd.Parameters.AddWithValue("@concepto", dialogo.Concepto);
+                            cmd.Parameters.AddWithValue("@fecha", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                            cmd.Parameters.AddWithValue("@usuarioId", usuarioActual.IdUsuario);
+                            cmd.Parameters.AddWithValue("@usuarioNombre", usuarioActual.Nombre);
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+
+                    MessageBox.Show($"Movimiento registrado: {dialogo.TipoMovimiento} de {dialogo.Monto:C}",
+                                  "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                    CargarMovimientosCaja();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error al registrar movimiento: {ex.Message}", "Error",
+                                  MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
         }
 
@@ -111,6 +212,80 @@ namespace TuTiendita
             }
         }
 
+        private decimal CalcularTotalMovimientos()
+        {
+            if (turnoActual == null) return 0;
+
+            try
+            {
+                decimal total = 0;
+                using (var connection = Database.GetConnection())
+                {
+                    connection.Open();
+                    string query = "SELECT Tipo, Monto FROM MovimientosCaja WHERE TurnoId = @turnoId";
+                    using (var cmd = new SQLiteCommand(query, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@turnoId", turnoActual.Id);
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                string tipo = reader.GetString(0);
+                                decimal monto = reader.GetDecimal(1);
+
+                                // Gastos y retiros restan, depósitos suman
+                                if (tipo == "Gasto" || tipo == "Retiro")
+                                    total -= monto;
+                                else
+                                    total += monto;
+                            }
+                        }
+                    }
+                }
+                return total;
+            }
+            catch
+            {
+                return 0;
+            }
+        }
+
+        private List<MovimientoCaja> ObtenerMovimientosTurno(int turnoId)
+        {
+            var movimientos = new List<MovimientoCaja>();
+            try
+            {
+                using (var connection = Database.GetConnection())
+                {
+                    connection.Open();
+                    string query = "SELECT * FROM MovimientosCaja WHERE TurnoId = @turnoId ORDER BY Fecha";
+                    using (var cmd = new SQLiteCommand(query, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@turnoId", turnoId);
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                movimientos.Add(new MovimientoCaja
+                                {
+                                    Id = reader.GetInt32(0),
+                                    TurnoId = reader.GetInt32(1),
+                                    Tipo = reader.GetString(2),
+                                    Monto = reader.GetDecimal(3),
+                                    Concepto = reader.GetString(4),
+                                    Fecha = reader.GetString(5),
+                                    UsuarioId = reader.GetInt32(6),
+                                    UsuarioNombre = reader.GetString(7)
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            catch { }
+            return movimientos;
+        }
+
         private void BtnAbrirTurno_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(txtMontoInicial.Text))
@@ -173,8 +348,11 @@ namespace TuTiendita
             decimal montoFinal = dialogoCierre.MontoFinalContado;
             string notas = dialogoCierre.NotasCierre;
 
-            // Calcular montos esperados
-            decimal montoEsperadoEfectivo = turnoActual.MontoInicial + turnoActual.TotalEfectivo;
+            // Calcular total de movimientos de caja
+            decimal totalMovimientos = CalcularTotalMovimientos();
+
+            // Calcular montos esperados (incluyendo movimientos)
+            decimal montoEsperadoEfectivo = turnoActual.MontoInicial + turnoActual.TotalEfectivo + totalMovimientos;
             decimal diferencia = montoFinal - montoEsperadoEfectivo;
 
             // Mostrar resumen con desglose
@@ -189,6 +367,8 @@ namespace TuTiendita
                            $"  • Transferencia:  {turnoActual.TotalTransferencia:C}\n" +
                            $"  ─────────────────────────────────\n" +
                            $"  Total Ventas:     {turnoActual.TotalVentas:C}\n\n" +
+                           $"MOVIMIENTOS DE CAJA:\n" +
+                           $"  Total Movimientos: {totalMovimientos:C}\n\n" +
                            $"CIERRE:\n" +
                            $"  Efectivo Esperado: {montoEsperadoEfectivo:C}\n" +
                            $"  Efectivo Contado:  {montoFinal:C}\n" +
@@ -234,7 +414,7 @@ namespace TuTiendita
                     }
 
                     // Generar reporte de cierre
-                    GenerarReporteCierre(turnoActual.Id, montoFinal, diferencia, notas);
+                    GenerarReporteCierre(turnoActual.Id, montoFinal, diferencia, notas, totalMovimientos);
 
                     MessageBox.Show("Turno cerrado exitosamente.\nSe ha generado el reporte de cierre.",
                                   "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -249,7 +429,7 @@ namespace TuTiendita
             }
         }
 
-        private void GenerarReporteCierre(int turnoId, decimal montoFinal, decimal diferencia, string notas)
+        private void GenerarReporteCierre(int turnoId, decimal montoFinal, decimal diferencia, string notas, decimal totalMovimientos)
         {
             try
             {
@@ -283,7 +463,26 @@ namespace TuTiendita
                     writer.WriteLine($"  TOTAL VENTAS:               {turnoActual.TotalVentas,15:C}");
                     writer.WriteLine();
 
-                    decimal montoEsperadoEfectivo = turnoActual.MontoInicial + turnoActual.TotalEfectivo;
+                    // Agregar sección de movimientos
+                    writer.WriteLine("MOVIMIENTOS DE CAJA:");
+                    var movimientos = ObtenerMovimientosTurno(turnoId);
+                    if (movimientos.Count > 0)
+                    {
+                        foreach (var mov in movimientos)
+                        {
+                            string signo = (mov.Tipo == "Gasto" || mov.Tipo == "Retiro") ? "-" : "+";
+                            writer.WriteLine($"  {mov.Tipo,-12} {signo}{mov.Monto,12:C}  {mov.Concepto}");
+                        }
+                        writer.WriteLine("  ───────────────────────────────────────────");
+                        writer.WriteLine($"  TOTAL MOVIMIENTOS:          {totalMovimientos,15:C}");
+                    }
+                    else
+                    {
+                        writer.WriteLine("  No se registraron movimientos en este turno");
+                    }
+                    writer.WriteLine();
+
+                    decimal montoEsperadoEfectivo = turnoActual.MontoInicial + turnoActual.TotalEfectivo + totalMovimientos;
 
                     writer.WriteLine("CIERRE:");
                     writer.WriteLine($"  Efectivo Esperado:          {montoEsperadoEfectivo,15:C}");
