@@ -34,6 +34,7 @@ namespace TuTiendita
             productosSeleccionados = new List<Producto>(); // Inicializa la lista de productos seleccionados
             CargarProductos();  // Carga todos los productos al inicializar
             ObtenerTurnoActual(); // Obtiene el turno actual si existe
+            ActualizarEstadoInterfaz(); // Actualiza la interfaz según si hay turno o no
         }
   
         private void CargarProductos()
@@ -150,6 +151,14 @@ namespace TuTiendita
 
         private void BtnVender_Click(object sender, RoutedEventArgs e)
         {
+            // Verificar que hay un turno abierto
+            if (!turnoActualId.HasValue)
+            {
+                MessageBox.Show("No hay un turno abierto. Por favor abra un turno en 'Gestión de Turno' antes de realizar ventas.",
+                              "Turno No Iniciado", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             if (productosSeleccionados.Count == 0)
             {
                 MessageBox.Show("No hay productos en la venta.", "Advertencia", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -315,6 +324,22 @@ namespace TuTiendita
             catch (Exception ex)
             {
                 MessageBox.Show($"Error al obtener turno actual: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void ActualizarEstadoInterfaz()
+        {
+            if (turnoActualId.HasValue)
+            {
+                // Hay turno abierto - habilitar ventas
+                brdEstadoTurno.Visibility = Visibility.Collapsed;
+                pnlVentas.IsEnabled = true;
+            }
+            else
+            {
+                // No hay turno abierto - deshabilitar ventas y mostrar advertencia
+                brdEstadoTurno.Visibility = Visibility.Visible;
+                pnlVentas.IsEnabled = false;
             }
         }
 
