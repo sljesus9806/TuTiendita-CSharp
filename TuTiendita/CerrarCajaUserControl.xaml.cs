@@ -178,7 +178,7 @@ namespace TuTiendita
                                 TotalTarjeta = reader.FieldCount > 9 && !reader.IsDBNull(9) ? reader.GetDecimal(9) : 0,
                                 TotalTransferencia = reader.FieldCount > 10 && !reader.IsDBNull(10) ? reader.GetDecimal(10) : 0,
                                 Notas = reader.FieldCount > 11 && !reader.IsDBNull(11) ? reader.GetString(11) : "",
-                                Estado = reader.FieldCount > 12 ? reader.GetString(12) : reader.GetString(8)
+                                Estado = reader.FieldCount > 12 && !reader.IsDBNull(12) ? reader.GetString(12) : "Abierto"
                             };
                         }
                     }
