@@ -25,6 +25,17 @@ namespace TuTiendita
         public AgregarProductoWindow()
         {
             InitializeComponent();
+            CargarCategorias();
+        }
+
+        private void CargarCategorias()
+        {
+            var categorias = Categoria.ObtenerTodas();
+            cmbCategoria.ItemsSource = categorias;
+            if (categorias.Count > 0)
+            {
+                cmbCategoria.SelectedIndex = 0;
+            }
         }
 
         private void BtnGuardar_Click(object sender, RoutedEventArgs e)
@@ -33,10 +44,20 @@ namespace TuTiendita
             if (string.IsNullOrWhiteSpace(txtCodigo.Text) ||
                 string.IsNullOrWhiteSpace(txtNombre.Text) ||
                 !decimal.TryParse(txtPrecio.Text, out decimal precio) ||
-                !int.TryParse(txtStock.Text, out int stock))
+                !decimal.TryParse(txtCosto.Text, out decimal costo) ||
+                !int.TryParse(txtStock.Text, out int stock) ||
+                !int.TryParse(txtStockMinimo.Text, out int stockMinimo))
             {
                 MessageBox.Show("Por favor ingrese datos válidos en todos los campos.", "Advertencia", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
+            }
+
+            if (precio < costo)
+            {
+                var result = MessageBox.Show("El precio de venta es menor que el costo. ¿Desea continuar?",
+                                           "Advertencia", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                if (result == MessageBoxResult.No)
+                    return;
             }
 
             // Crear un nuevo producto
@@ -45,7 +66,10 @@ namespace TuTiendita
                 Codigo = txtCodigo.Text,
                 Nombre = txtNombre.Text,
                 Precio = precio,
-                Stock = stock
+                Costo = costo,
+                Stock = stock,
+                StockMinimo = stockMinimo,
+                CategoriaId = cmbCategoria.SelectedValue as int?
             };
 
             DialogResult = true; // Cierra el dialogo y retorna el resultado
