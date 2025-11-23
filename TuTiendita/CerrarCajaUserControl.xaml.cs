@@ -35,7 +35,7 @@ namespace TuTiendita
 
                 // Mostrar información del turno
                 txtMontoInicialActual.Text = turnoActual.MontoInicial.ToString("C");
-                txtTotalVentasActual.Text = turnoActual.TotalVentas.ToString("C");
+                txtTotalVentasActual.Text = $"{turnoActual.TotalVentas:C}\n(E:{turnoActual.TotalEfectivo:C} T:{turnoActual.TotalTarjeta:C} Tr:{turnoActual.TotalTransferencia:C})";
                 txtUsuarioTurno.Text = turnoActual.UsuarioNombre;
                 txtFechaApertura.Text = turnoActual.FechaApertura;
                 txtNumeroVentas.Text = ObtenerNumeroVentasTurno(turnoActual.Id).ToString();
@@ -73,7 +73,11 @@ namespace TuTiendita
                                 MontoInicial = reader.GetDecimal(5),
                                 MontoFinal = reader.IsDBNull(6) ? 0 : reader.GetDecimal(6),
                                 TotalVentas = reader.GetDecimal(7),
-                                Estado = reader.GetString(8)
+                                TotalEfectivo = reader.FieldCount > 8 && !reader.IsDBNull(8) ? reader.GetDecimal(8) : 0,
+                                TotalTarjeta = reader.FieldCount > 9 && !reader.IsDBNull(9) ? reader.GetDecimal(9) : 0,
+                                TotalTransferencia = reader.FieldCount > 10 && !reader.IsDBNull(10) ? reader.GetDecimal(10) : 0,
+                                Notas = reader.FieldCount > 11 && !reader.IsDBNull(11) ? reader.GetString(11) : "",
+                                Estado = reader.FieldCount > 12 ? reader.GetString(12) : reader.GetString(8)
                             };
                         }
                     }
@@ -159,29 +163,48 @@ namespace TuTiendita
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(txtMontoFinal.Text))
+            // Abrir diálogo de contador de denominaciones
+            var dialogoCierre = new DialogoCierreCaja();
+            if (dialogoCierre.ShowDialog() != true)
             {
-                MessageBox.Show("Ingrese el monto final en caja.", "Advertencia", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
+                return; // Usuario canceló
             }
 
-            if (!decimal.TryParse(txtMontoFinal.Text, out decimal montoFinal) || montoFinal < 0)
-            {
-                MessageBox.Show("Ingrese un monto válido.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
+            decimal montoFinal = dialogoCierre.MontoFinalContado;
+            string notas = dialogoCierre.NotasCierre;
 
-            decimal montoEsperado = turnoActual.MontoInicial + turnoActual.TotalVentas;
-            decimal diferencia = montoFinal - montoEsperado;
+            // Calcular montos esperados
+            decimal montoEsperadoEfectivo = turnoActual.MontoInicial + turnoActual.TotalEfectivo;
+            decimal diferencia = montoFinal - montoEsperadoEfectivo;
 
-            string mensaje = $"Resumen del Turno #{turnoActual.Id}\n\n" +
-                           $"Monto Inicial: {turnoActual.MontoInicial:C}\n" +
-                           $"Total Ventas: {turnoActual.TotalVentas:C}\n" +
-                           $"Monto Esperado: {montoEsperado:C}\n" +
-                           $"Monto Final: {montoFinal:C}\n" +
-                           $"Diferencia: {diferencia:C}\n\n" +
-                           (diferencia != 0 ? (diferencia > 0 ? "⚠️ Hay un sobrante en caja" : "⚠️ Hay un faltante en caja") : "✓ Caja cuadrada") +
-                           "\n\n¿Desea cerrar el turno?";
+            // Mostrar resumen con desglose
+            string mensaje = $"═══════════════════════════════════════\n" +
+                           $"  RESUMEN DE CIERRE - TURNO #{turnoActual.Id}\n" +
+                           $"═══════════════════════════════════════\n\n" +
+                           $"APERTURA:\n" +
+                           $"  Monto Inicial: {turnoActual.MontoInicial:C}\n\n" +
+                           $"VENTAS POR MÉTODO DE PAGO:\n" +
+                           $"  • Efectivo:       {turnoActual.TotalEfectivo:C}\n" +
+                           $"  • Tarjeta:        {turnoActual.TotalTarjeta:C}\n" +
+                           $"  • Transferencia:  {turnoActual.TotalTransferencia:C}\n" +
+                           $"  ─────────────────────────────────\n" +
+                           $"  Total Ventas:     {turnoActual.TotalVentas:C}\n\n" +
+                           $"CIERRE:\n" +
+                           $"  Efectivo Esperado: {montoEsperadoEfectivo:C}\n" +
+                           $"  Efectivo Contado:  {montoFinal:C}\n" +
+                           $"  Diferencia:        {diferencia:C}\n\n";
+
+            if (diferencia > 0)
+                mensaje += "  ⚠️  HAY UN SOBRANTE EN CAJA\n";
+            else if (diferencia < 0)
+                mensaje += "  ⚠️  HAY UN FALTANTE EN CAJA\n";
+            else
+                mensaje += "  ✓  CAJA CUADRADA\n";
+
+            if (!string.IsNullOrWhiteSpace(notas))
+                mensaje += $"\nNotas: {notas}\n";
+
+            mensaje += "\n¿Desea cerrar el turno?";
 
             var result = MessageBox.Show(mensaje, "Confirmar Cierre de Turno", MessageBoxButton.YesNo, MessageBoxImage.Question);
 
@@ -195,6 +218,7 @@ namespace TuTiendita
                         string updateQuery = @"UPDATE Turnos
                                              SET FechaCierre = @fechaCierre,
                                                  MontoFinal = @montoFinal,
+                                                 Notas = @notas,
                                                  Estado = @estado
                                              WHERE Id = @id";
 
@@ -202,13 +226,18 @@ namespace TuTiendita
                         {
                             cmd.Parameters.AddWithValue("@fechaCierre", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
                             cmd.Parameters.AddWithValue("@montoFinal", montoFinal);
+                            cmd.Parameters.AddWithValue("@notas", notas ?? "");
                             cmd.Parameters.AddWithValue("@estado", "Cerrado");
                             cmd.Parameters.AddWithValue("@id", turnoActual.Id);
                             cmd.ExecuteNonQuery();
                         }
                     }
 
-                    MessageBox.Show("Turno cerrado exitosamente.", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                    // Generar reporte de cierre
+                    GenerarReporteCierre(turnoActual.Id, montoFinal, diferencia, notas);
+
+                    MessageBox.Show("Turno cerrado exitosamente.\nSe ha generado el reporte de cierre.",
+                                  "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
                     txtMontoFinal.Clear();
                     CargarEstadoTurno();
                     CargarHistorialTurnos();
@@ -217,6 +246,76 @@ namespace TuTiendita
                 {
                     MessageBox.Show($"Error al cerrar turno: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
+            }
+        }
+
+        private void GenerarReporteCierre(int turnoId, decimal montoFinal, decimal diferencia, string notas)
+        {
+            try
+            {
+                string reportesFolder = "Reportes";
+                if (!System.IO.Directory.Exists(reportesFolder))
+                {
+                    System.IO.Directory.CreateDirectory(reportesFolder);
+                }
+
+                string fileName = $"Reportes/CierreCaja_Turno{turnoId}_{DateTime.Now:yyyyMMdd_HHmmss}.txt";
+
+                using (var writer = new System.IO.StreamWriter(fileName))
+                {
+                    writer.WriteLine("═══════════════════════════════════════════════");
+                    writer.WriteLine("         REPORTE DE CIERRE DE CAJA            ");
+                    writer.WriteLine("═══════════════════════════════════════════════");
+                    writer.WriteLine($"Turno #: {turnoActual.Id}");
+                    writer.WriteLine($"Usuario: {turnoActual.UsuarioNombre}");
+                    writer.WriteLine($"Apertura: {turnoActual.FechaApertura}");
+                    writer.WriteLine($"Cierre: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+                    writer.WriteLine("═══════════════════════════════════════════════");
+                    writer.WriteLine();
+                    writer.WriteLine("APERTURA:");
+                    writer.WriteLine($"  Monto Inicial:              {turnoActual.MontoInicial,15:C}");
+                    writer.WriteLine();
+                    writer.WriteLine("VENTAS POR MÉTODO DE PAGO:");
+                    writer.WriteLine($"  Efectivo:                   {turnoActual.TotalEfectivo,15:C}");
+                    writer.WriteLine($"  Tarjeta:                    {turnoActual.TotalTarjeta,15:C}");
+                    writer.WriteLine($"  Transferencia:              {turnoActual.TotalTransferencia,15:C}");
+                    writer.WriteLine("  ───────────────────────────────────────────");
+                    writer.WriteLine($"  TOTAL VENTAS:               {turnoActual.TotalVentas,15:C}");
+                    writer.WriteLine();
+
+                    decimal montoEsperadoEfectivo = turnoActual.MontoInicial + turnoActual.TotalEfectivo;
+
+                    writer.WriteLine("CIERRE:");
+                    writer.WriteLine($"  Efectivo Esperado:          {montoEsperadoEfectivo,15:C}");
+                    writer.WriteLine($"  Efectivo Contado:           {montoFinal,15:C}");
+                    writer.WriteLine($"  Diferencia:                 {diferencia,15:C}");
+                    writer.WriteLine();
+
+                    if (diferencia > 0)
+                        writer.WriteLine("  ⚠️  HAY UN SOBRANTE EN CAJA");
+                    else if (diferencia < 0)
+                        writer.WriteLine("  ⚠️  HAY UN FALTANTE EN CAJA");
+                    else
+                        writer.WriteLine("  ✓  CAJA CUADRADA");
+
+                    if (!string.IsNullOrWhiteSpace(notas))
+                    {
+                        writer.WriteLine();
+                        writer.WriteLine("NOTAS:");
+                        writer.WriteLine($"  {notas}");
+                    }
+
+                    writer.WriteLine();
+                    writer.WriteLine("═══════════════════════════════════════════════");
+                    writer.WriteLine("  Reporte generado automáticamente");
+                    writer.WriteLine($"  Fecha: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+                    writer.WriteLine("═══════════════════════════════════════════════");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al generar reporte: {ex.Message}", "Advertencia",
+                              MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -270,6 +369,10 @@ namespace TuTiendita
         public decimal MontoInicial { get; set; }
         public decimal MontoFinal { get; set; }
         public decimal TotalVentas { get; set; }
+        public decimal TotalEfectivo { get; set; }
+        public decimal TotalTarjeta { get; set; }
+        public decimal TotalTransferencia { get; set; }
+        public string Notas { get; set; }
         public string Estado { get; set; }
 
         public string MontoInicialFormateado => MontoInicial.ToString("C");
@@ -277,5 +380,20 @@ namespace TuTiendita
         public string TotalVentasFormateado => TotalVentas.ToString("C");
 
         public event PropertyChangedEventHandler PropertyChanged;
+    }
+
+    public class MovimientoCaja
+    {
+        public int Id { get; set; }
+        public int TurnoId { get; set; }
+        public string Tipo { get; set; } // "Gasto", "Retiro", "Depósito"
+        public decimal Monto { get; set; }
+        public string Concepto { get; set; }
+        public string Fecha { get; set; }
+        public int UsuarioId { get; set; }
+        public string UsuarioNombre { get; set; }
+
+        public string MontoFormateado => Monto.ToString("C");
+        public string TipoColor => Tipo == "Gasto" || Tipo == "Retiro" ? "#E74C3C" : "#27AE60";
     }
 }
