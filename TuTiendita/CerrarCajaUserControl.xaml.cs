@@ -19,6 +19,21 @@ namespace TuTiendita
             usuarioActual = usuario;
             CargarEstadoTurno();
             CargarHistorialTurnos();
+            ConfigurarPermisos(); // Configurar permisos según el rol del usuario
+        }
+
+        private void ConfigurarPermisos()
+        {
+            // Si el usuario es Cajero, deshabilitar ciertas funciones
+            if (usuarioActual != null && usuarioActual.NivelAcceso == "Cajero")
+            {
+                // Los cajeros NO pueden registrar movimientos de caja (gastos, retiros, depósitos)
+                // Esto previene fraude y manipulación del efectivo
+                if (btnRegistrarMovimiento != null)
+                {
+                    btnRegistrarMovimiento.Visibility = Visibility.Collapsed;
+                }
+            }
         }
 
         private void CargarEstadoTurno()
@@ -543,7 +558,11 @@ namespace TuTiendita
                                 MontoInicial = reader.GetDecimal(5),
                                 MontoFinal = reader.IsDBNull(6) ? 0 : reader.GetDecimal(6),
                                 TotalVentas = reader.GetDecimal(7),
-                                Estado = reader.GetString(8)
+                                TotalEfectivo = reader.FieldCount > 8 && !reader.IsDBNull(8) ? reader.GetDecimal(8) : 0,
+                                TotalTarjeta = reader.FieldCount > 9 && !reader.IsDBNull(9) ? reader.GetDecimal(9) : 0,
+                                TotalTransferencia = reader.FieldCount > 10 && !reader.IsDBNull(10) ? reader.GetDecimal(10) : 0,
+                                Notas = reader.FieldCount > 11 && !reader.IsDBNull(11) ? reader.GetString(11) : "",
+                                Estado = reader.FieldCount > 12 && !reader.IsDBNull(12) ? reader.GetString(12) : "Cerrado"
                             });
                         }
                     }

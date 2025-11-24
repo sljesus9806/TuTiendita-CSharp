@@ -117,7 +117,7 @@
                     <StackPanel Grid.Column="2">
                         <Grid>
                             <TextBlock Text="Movimientos de Caja" FontSize="16" FontWeight="Bold" HorizontalAlignment="Left"/>
-                            <Button Content="+ Registrar" HorizontalAlignment="Right" Width="100" Height="30"
+                            <Button x:Name="btnRegistrarMovimiento" Content="+ Registrar" HorizontalAlignment="Right" Width="100" Height="30"
                                     Background="#3498DB" Foreground="White" BorderThickness="0"
                                     Click="BtnRegistrarMovimiento_Click" Cursor="Hand"/>
                         </Grid>

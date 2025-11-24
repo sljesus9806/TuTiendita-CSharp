@@ -25,6 +25,33 @@
             <!-- Contenido Principal -->
         </Grid.RowDefinitions>
 
+        <!-- Barra Superior con Info de Usuario -->
+        <Border Grid.Row="0" Grid.ColumnSpan="2" Background="#2C3E50" Padding="15,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="👤 Usuario:" Foreground="White" FontWeight="SemiBold" Margin="0,0,10,0" FontSize="14"/>
+                    <TextBlock x:Name="txtUsuarioActual" Text="" Foreground="#ECF0F1" FontSize="14" Margin="0,0,15,0"/>
+                    <TextBlock Text="•" Foreground="#BDC3C7" Margin="0,0,10,0" FontSize="14"/>
+                    <TextBlock Text="Rol:" Foreground="White" FontWeight="SemiBold" Margin="0,0,10,0" FontSize="14"/>
+                    <TextBlock x:Name="txtRolActual" Text="" Foreground="#3498DB" FontWeight="Bold" FontSize="14"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button x:Name="btnCambiarUsuario" Content="🔐 Cambiar Usuario (Admin)" Width="200" Height="35"
+                            Background="#E67E22" Foreground="White" FontWeight="Bold" BorderThickness="0"
+                            Click="BtnCambiarUsuario_Click" Cursor="Hand" Margin="0,0,10,0"/>
+                    <Button Content="🚪 Cerrar Sesión" Width="140" Height="35"
+                            Background="#E74C3C" Foreground="White" FontWeight="Bold" BorderThickness="0"
+                            Click="BtnCerrarSesion_Click" Cursor="Hand"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
         <!-- Sidebar (Menú de Navegación) -->
         <StackPanel Grid.Row="1" Grid.Column="0" Background="#EDEDED" VerticalAlignment="Stretch">
             <Button Content="Ventas" Margin="5" HorizontalAlignment="Stretch" Click="Ventas_Click"/>

@@ -23,11 +23,27 @@ namespace TuTiendita
     public partial class ProductosUserControl : UserControl
     {
         private List<Producto> productos;
-        
-        public ProductosUserControl() //Principal
+        private Usuario usuarioActual;
+
+        public ProductosUserControl(Usuario usuario = null) //Principal
         {
             InitializeComponent();
+            usuarioActual = usuario;
             CargarProductos();  // Cargar productos desde la base de datos al inicializar el control
+            ConfigurarPermisos(); // Configurar permisos según el rol del usuario
+        }
+
+        private void ConfigurarPermisos()
+        {
+            // Si el usuario es Cajero, deshabilitar eliminación de productos
+            if (usuarioActual != null && usuarioActual.NivelAcceso == "Cajero")
+            {
+                // Ocultar botón de eliminar para cajeros
+                if (btnEliminar != null)
+                {
+                    btnEliminar.Visibility = Visibility.Collapsed;
+                }
+            }
         }
 
 
