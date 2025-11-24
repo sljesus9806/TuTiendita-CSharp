@@ -191,6 +191,17 @@ namespace TuTiendita
                     }
                     catch { /* Column already exists */ }
 
+                    // Alter Ventas table to add ClienteId column if it doesn't exist
+                    try
+                    {
+                        string alterVentasClienteId = "ALTER TABLE Ventas ADD COLUMN ClienteId INTEGER REFERENCES Clientes(Id)";
+                        using (var cmd = new SQLiteCommand(alterVentasClienteId, connection))
+                        {
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                    catch { /* Column already exists */ }
+
                     // Create DetalleVentas (Sales Details) table
                     string createDetalleVentasQuery = @"CREATE TABLE IF NOT EXISTS [DetalleVentas] (
                                                 [Id] INTEGER PRIMARY KEY AUTOINCREMENT,
