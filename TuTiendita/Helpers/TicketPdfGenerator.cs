@@ -405,7 +405,7 @@ namespace TuTiendita.Helpers
         public decimal Monto { get; set; }
     }
 
-    internal class ConfiguracionTienda
+    file class ConfiguracionTienda
     {
         public string NombreTienda { get; set; }
         public string RUC { get; set; }
