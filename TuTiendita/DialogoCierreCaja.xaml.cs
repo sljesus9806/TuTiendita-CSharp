@@ -23,6 +23,10 @@ namespace TuTiendita
         {
             try
             {
+                // Verificar que los controles estén inicializados
+                if (total1000 == null || txtTotalGeneral == null)
+                    return;
+
                 decimal total = 0;
 
                 // Billetes
