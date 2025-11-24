@@ -30,7 +30,14 @@ namespace TuTiendita
             InitializeComponent();
             usuarioActual = usuario;
             CargarProductos();  // Cargar productos desde la base de datos al inicializar el control
-            ConfigurarPermisos(); // Configurar permisos según el rol del usuario
+
+            // Configurar permisos después de que todos los controles estén cargados
+            this.Loaded += ProductosUserControl_Loaded;
+        }
+
+        private void ProductosUserControl_Loaded(object sender, RoutedEventArgs e)
+        {
+            ConfigurarPermisos();
         }
 
         private void ConfigurarPermisos()
@@ -39,10 +46,7 @@ namespace TuTiendita
             if (usuarioActual != null && usuarioActual.NivelAcceso == "Cajero")
             {
                 // Ocultar botón de eliminar para cajeros
-                if (btnEliminar != null)
-                {
-                    btnEliminar.Visibility = Visibility.Collapsed;
-                }
+                btnEliminar.Visibility = Visibility.Collapsed;
             }
         }
 
