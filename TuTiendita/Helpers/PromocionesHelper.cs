@@ -124,7 +124,7 @@ namespace TuTiendita.Helpers
         /// Calcula el descuento para una venta
         /// </summary>
         public static (decimal descuento, string detalles) CalcularDescuento(
-            List<Producto> productos,
+            List<ProductosUserControl.Producto> productos,
             decimal subtotal,
             Promocion promocion)
         {
