@@ -511,6 +511,7 @@ namespace TuTiendita.Helpers
         public string TotalGastadoFormateado => TotalGastado.ToString("C");
         public string DeudaTotalFormateada => DeudaTotal.ToString("C");
         public string LimiteCreditoFormateado => LimiteCredito.ToString("C");
+        public string DescuentoFormateado => $"{DescuentoEspecial}%";
         public decimal CreditoDisponible => (decimal)LimiteCredito - DeudaTotal;
         public string CreditoDisponibleFormateado => CreditoDisponible.ToString("C");
     }
@@ -534,5 +535,49 @@ namespace TuTiendita.Helpers
         public string MontoAbonadoFormateado => MontoAbonado.ToString("C");
         public string MontoPendienteFormateado => MontoPendiente.ToString("C");
         public string EstadoFormateado => Estado == "Pagado" ? "✓ Pagado" : "⏱ Pendiente";
+        public string FechaVentaFormateada
+        {
+            get
+            {
+                if (DateTime.TryParse(FechaVenta, out DateTime fecha))
+                    return fecha.ToString("dd/MM/yyyy");
+                return FechaVenta;
+            }
+        }
+        public string FechaVencimientoFormateada
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(FechaVencimiento))
+                    return "Sin vencimiento";
+                if (DateTime.TryParse(FechaVencimiento, out DateTime fecha))
+                    return fecha.ToString("dd/MM/yyyy");
+                return FechaVencimiento;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Clase que representa un pago de crédito
+    /// </summary>
+    public class PagoCredito
+    {
+        public int Id { get; set; }
+        public int CreditoId { get; set; }
+        public decimal Monto { get; set; }
+        public string FechaPago { get; set; }
+        public string MetodoPago { get; set; }
+        public string Notas { get; set; }
+
+        public string MontoFormateado => Monto.ToString("C");
+        public string FechaPagoFormateada
+        {
+            get
+            {
+                if (DateTime.TryParse(FechaPago, out DateTime fecha))
+                    return fecha.ToString("dd/MM/yyyy HH:mm");
+                return FechaPago;
+            }
+        }
     }
 }

@@ -106,6 +106,7 @@ namespace TuTiendita
 
         private void Clientes_Click(object sender, RoutedEventArgs e)
         {
+            MainContent.Content = new ClientesUserControl(usuarioActual);
         }
 
         private void Usuarios_Click(object sender, RoutedEventArgs e)
