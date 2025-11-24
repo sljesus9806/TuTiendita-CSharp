@@ -27,6 +27,9 @@ namespace TuTiendita
             usuarioOriginal = null; // No hay override inicial
             ConfigurarInterfazSegunUsuario();
             ActualizarInfoUsuario();
+
+            // Cargar Dashboard por defecto
+            MainContent.Content = new DashboardUserControl();
         }
 
         private void ActualizarInfoUsuario()
@@ -75,6 +78,11 @@ namespace TuTiendita
             }
 
             // Puedes agregar más lógica para configurar la interfaz según sea necesario
+        }
+
+        private void Dashboard_Click(object sender, RoutedEventArgs e)
+        {
+            MainContent.Content = new DashboardUserControl();
         }
 
         private void Ventas_Click(object sender, RoutedEventArgs e)
