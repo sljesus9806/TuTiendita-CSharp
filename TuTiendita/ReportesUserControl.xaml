@@ -58,7 +58,10 @@
                                             Margin="0,0,10,0" Click="BtnMes_Click" Cursor="Hand"/>
                                     <Button x:Name="btnBuscarVentas" Content="Buscar" Width="100" Height="30"
                                             Background="#3498DB" Foreground="White" BorderThickness="0"
-                                            Click="BtnBuscarVentas_Click" Cursor="Hand"/>
+                                            Click="BtnBuscarVentas_Click" Cursor="Hand" Margin="0,0,10,0"/>
+                                    <Button x:Name="btnExportarPDF" Content="📄 Exportar PDF" Width="120" Height="30"
+                                            Background="#27AE60" Foreground="White" BorderThickness="0" FontWeight="Bold"
+                                            Click="BtnExportarPDF_Click" Cursor="Hand"/>
                                 </StackPanel>
                             </Grid>
                         </StackPanel>
