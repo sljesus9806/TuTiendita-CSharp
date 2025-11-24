@@ -109,16 +109,32 @@ namespace TuTiendita
         {
             CalcularTotales();
 
-            if (decimal.TryParse(txtTotalGeneral.Text.Replace("$", "").Replace(",", ""), out decimal monto))
+            try
             {
-                MontoFinalContado = monto;
-                NotasCierre = txtNotas.Text;
-                DialogResult = true;
-                Close();
+                // Limpiar el texto para el parseo: remover símbolo de moneda, comas y espacios
+                string textoLimpio = txtTotalGeneral.Text
+                    .Replace("$", "")
+                    .Replace(",", "")
+                    .Replace(" ", "")
+                    .Trim();
+
+                if (decimal.TryParse(textoLimpio, System.Globalization.NumberStyles.Any,
+                                    System.Globalization.CultureInfo.InvariantCulture, out decimal monto))
+                {
+                    MontoFinalContado = monto;
+                    NotasCierre = txtNotas.Text ?? "";
+                    DialogResult = true;
+                    Close();
+                }
+                else
+                {
+                    MessageBox.Show("Error al calcular el total. Verifique los valores ingresados.",
+                                  "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                MessageBox.Show("Error al calcular el total. Verifique los valores ingresados.",
+                MessageBox.Show($"Error al procesar el cierre: {ex.Message}\n\nVerifique que todos los valores sean numéricos.",
                               "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
