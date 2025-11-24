@@ -67,7 +67,7 @@
         <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Left" Margin="10,0,0,10">
             <Button Content="Agregar" Width="100" Margin="5" Click="BtnAgregar_Click"/>
             <Button Content="Editar" Width="100" Margin="5" Click="BtnEditar_Click"/>
-            <Button Content="Eliminar" Width="100" Margin="5" Click="BtnEliminar_Click"/>
+            <Button x:Name="btnEliminar" Content="Eliminar" Width="100" Margin="5" Click="BtnEliminar_Click"/>
         </StackPanel>
     </Grid>
 </UserControl>
