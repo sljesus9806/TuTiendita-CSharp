@@ -17,6 +17,26 @@ namespace TuTiendita
         public MainWindow()
         {
             InitializeComponent();
+
+            // Ejecutar migración de passwords al inicio (si es necesario)
+            try
+            {
+                Helpers.PasswordMigration.EjecutarMigracionConFeedback(silencioso: true);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error en migración de passwords: {ex.Message}");
+            }
+
+            // Ejecutar backup automático si está configurado
+            try
+            {
+                Helpers.BackupManager.CrearBackupAutomaticoSiNecesario();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error en backup automático: {ex.Message}");
+            }
         }
 
         private void BtnIniciarSesion_Click(object sender, RoutedEventArgs e)
@@ -54,24 +74,37 @@ namespace TuTiendita
             {
                 connection.Open();
 
-                string query = "SELECT * FROM Usuarios WHERE Nombre = @Nombre AND Contrasena = @Contrasena";
+                // Buscar usuario por nombre (no verificamos password en el query)
+                string query = "SELECT * FROM Usuarios WHERE Nombre = @Nombre";
 
                 using (var cmd = new SQLiteCommand(query, connection))
                 {
                     cmd.Parameters.AddWithValue("@Nombre", nombreUsuario);
-                    cmd.Parameters.AddWithValue("@Contrasena", contrasena);
 
                     using (var reader = cmd.ExecuteReader())
                     {
                         if (reader.Read())
                         {
-                            usuario = new Usuario
+                            string passwordHash = reader["Contrasena"].ToString();
+
+                            // Verificar contraseña usando BCrypt (compatible con texto plano durante migración)
+                            if (Helpers.SecurityHelper.VerifyPasswordCompat(contrasena, passwordHash))
                             {
-                                IdUsuario = Convert.ToInt32(reader["Id"]),
-                                Nombre = reader["Nombre"].ToString(),
-                                Contrasena = reader["Contrasena"].ToString(),
-                                NivelAcceso = reader["NivelAcceso"].ToString()
-                            };
+                                usuario = new Usuario
+                                {
+                                    IdUsuario = Convert.ToInt32(reader["Id"]),
+                                    Nombre = reader["Nombre"].ToString(),
+                                    Contrasena = passwordHash,
+                                    NivelAcceso = reader["NivelAcceso"].ToString()
+                                };
+
+                                // Registrar login en auditoría
+                                try
+                                {
+                                    Helpers.AuditLogger.RegistrarLogin(usuario);
+                                }
+                                catch { }
+                            }
                         }
                     }
                 }

@@ -52,6 +52,59 @@ namespace TuTiendita
             CargarReporteVentas();
         }
 
+        private void BtnExportarPDF_Click(object sender, RoutedEventArgs e)
+        {
+            if (!dpFechaDesde.SelectedDate.HasValue || !dpFechaHasta.SelectedDate.HasValue)
+            {
+                MessageBox.Show("Seleccione las fechas de inicio y fin para generar el reporte.", "Advertencia",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                // Crear directorio de reportes si no existe
+                string reportesFolder = "Reportes";
+                if (!System.IO.Directory.Exists(reportesFolder))
+                {
+                    System.IO.Directory.CreateDirectory(reportesFolder);
+                }
+
+                // Generar nombre de archivo PDF
+                DateTime fechaInicio = dpFechaDesde.SelectedDate.Value;
+                DateTime fechaFin = dpFechaHasta.SelectedDate.Value;
+                string fileName = $"Reportes/ReporteVentas_{fechaInicio:yyyyMMdd}_{fechaFin:yyyyMMdd}_{DateTime.Now:HHmmss}.pdf";
+
+                // Usar el generador de PDF profesional
+                bool exito = Helpers.ReportePdfGenerator.GenerarReporteVentas(fechaInicio, fechaFin, fileName);
+
+                if (exito)
+                {
+                    // Preguntar si desea abrir el reporte
+                    var resultado = MessageBox.Show(
+                        "✓ Reporte de ventas exportado exitosamente a PDF\n\n¿Desea abrir el reporte?",
+                        "Exportación Exitosa",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Information);
+
+                    if (resultado == MessageBoxResult.Yes)
+                    {
+                        Helpers.TicketPdfGenerator.AbrirPdf(fileName);
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Error al generar el reporte PDF", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al exportar reporte: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         private void CargarReporteVentas()
         {
             if (!dpFechaDesde.SelectedDate.HasValue || !dpFechaHasta.SelectedDate.HasValue)

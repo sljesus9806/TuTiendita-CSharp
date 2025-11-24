@@ -112,6 +112,7 @@ namespace TuTiendita
 
         private void Configuracion_Click(object sender, RoutedEventArgs e)
         {
+            MainContent.Content = new ConfiguracionUserControl(usuarioActual);
         }
 
         private void BtnCambiarUsuario_Click(object sender, RoutedEventArgs e)
@@ -226,6 +227,13 @@ namespace TuTiendita
 
             if (resultado == MessageBoxResult.Yes)
             {
+                // Registrar logout en auditoría
+                try
+                {
+                    Helpers.AuditLogger.RegistrarLogout(usuarioActual);
+                }
+                catch { }
+
                 // Abrir ventana de login
                 MainWindow loginWindow = new MainWindow();
                 loginWindow.Show();

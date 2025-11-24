@@ -251,55 +251,46 @@ namespace TuTiendita
         {
             try
             {
+                // Crear directorio de tickets si no existe
                 string ticketsFolder = "Tickets";
                 if (!System.IO.Directory.Exists(ticketsFolder))
                 {
                     System.IO.Directory.CreateDirectory(ticketsFolder);
                 }
 
-                string fileName = $"Tickets/Ticket_{ventaId}_{DateTime.Now:yyyyMMdd_HHmmss}.txt";
+                // Generar nombre de archivo PDF
+                string fileName = $"Tickets/Ticket_{ventaId}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
 
-                using (var writer = new System.IO.StreamWriter(fileName))
+                // Usar el generador de PDF profesional
+                bool exito = Helpers.TicketPdfGenerator.GenerarTicketVenta((int)ventaId, fileName);
+
+                if (exito)
                 {
-                    writer.WriteLine("=======================================");
-                    writer.WriteLine("          TU TIENDITA - POS           ");
-                    writer.WriteLine("=======================================");
-                    writer.WriteLine($"Ticket #: {ventaId}");
-                    writer.WriteLine($"Fecha: {DateTime.Now:dd/MM/yyyy HH:mm:ss}");
-                    writer.WriteLine($"Cajero: {usuarioActual.Nombre}");
-                    writer.WriteLine("=======================================");
-                    writer.WriteLine();
-                    writer.WriteLine("PRODUCTOS:");
-                    writer.WriteLine("---------------------------------------");
-                    writer.WriteLine("Cant  Descripción           Subtotal");
-                    writer.WriteLine("---------------------------------------");
+                    // Registrar en auditoría
+                    Helpers.AuditLogger.RegistrarVenta(usuarioActual, (int)ventaId, total, productos.Count);
 
-                    foreach (var prod in productos)
+                    // Preguntar si desea abrir el ticket
+                    var resultado = MessageBox.Show(
+                        "✓ Ticket generado exitosamente\n\n¿Desea abrir el ticket?",
+                        "Ticket PDF",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Information);
+
+                    if (resultado == MessageBoxResult.Yes)
                     {
-                        writer.WriteLine($"{prod.Cantidad,4}  {prod.Nombre,-20} {(prod.Precio * prod.Cantidad),10:C}");
+                        Helpers.TicketPdfGenerator.AbrirPdf(fileName);
                     }
-
-                    writer.WriteLine("---------------------------------------");
-                    writer.WriteLine($"TOTAL:                      {total,10:C}");
-                    writer.WriteLine($"Método de Pago:             {metodoPago}");
-
-                    if (metodoPago == "Efectivo")
-                    {
-                        writer.WriteLine($"Efectivo Recibido:          {montoPagado,10:C}");
-                        writer.WriteLine($"Cambio:                     {cambio,10:C}");
-                    }
-
-                    writer.WriteLine("=======================================");
-                    writer.WriteLine("    ¡Gracias por su compra!    ");
-                    writer.WriteLine("=======================================");
                 }
-
-                // Opcional: Abrir el ticket generado
-                // System.Diagnostics.Process.Start(fileName);
+                else
+                {
+                    MessageBox.Show("Error al generar el ticket PDF", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error al generar ticket: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"Error al generar ticket: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
