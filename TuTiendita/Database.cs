@@ -285,6 +285,114 @@ namespace TuTiendita
                         cmd.ExecuteNonQuery();
                     }
 
+                    // Create Clientes table (customer CRM)
+                    string createClientesQuery = @"CREATE TABLE IF NOT EXISTS [Clientes] (
+                                                [Id] INTEGER PRIMARY KEY AUTOINCREMENT,
+                                                [Nombre] TEXT NOT NULL,
+                                                [Apellido] TEXT,
+                                                [Documento] TEXT UNIQUE,
+                                                [Telefono] TEXT,
+                                                [Email] TEXT,
+                                                [Direccion] TEXT,
+                                                [FechaNacimiento] TEXT,
+                                                [LimiteCredito] REAL DEFAULT 0,
+                                                [DescuentoEspecial] REAL DEFAULT 0,
+                                                [FechaRegistro] TEXT NOT NULL,
+                                                [Activo] INTEGER DEFAULT 1,
+                                                [Notas] TEXT
+                                                )";
+                    using (var cmd = new SQLiteCommand(createClientesQuery, connection))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    // Create CreditoClientes table (customer credit/debts)
+                    string createCreditoQuery = @"CREATE TABLE IF NOT EXISTS [CreditoClientes] (
+                                                [Id] INTEGER PRIMARY KEY AUTOINCREMENT,
+                                                [ClienteId] INTEGER NOT NULL,
+                                                [VentaId] INTEGER NOT NULL,
+                                                [MontoTotal] REAL NOT NULL,
+                                                [MontoAbonado] REAL DEFAULT 0,
+                                                [MontoPendiente] REAL NOT NULL,
+                                                [FechaVenta] TEXT NOT NULL,
+                                                [FechaVencimiento] TEXT,
+                                                [Estado] TEXT DEFAULT 'Pendiente',
+                                                FOREIGN KEY ([ClienteId]) REFERENCES [Clientes]([Id]),
+                                                FOREIGN KEY ([VentaId]) REFERENCES [Ventas]([Id])
+                                                )";
+                    using (var cmd = new SQLiteCommand(createCreditoQuery, connection))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    // Create PagosCredito table (credit payments)
+                    string createPagosCreditoQuery = @"CREATE TABLE IF NOT EXISTS [PagosCredito] (
+                                                [Id] INTEGER PRIMARY KEY AUTOINCREMENT,
+                                                [CreditoId] INTEGER NOT NULL,
+                                                [Monto] REAL NOT NULL,
+                                                [FechaPago] TEXT NOT NULL,
+                                                [MetodoPago] TEXT NOT NULL,
+                                                [UsuarioId] INTEGER,
+                                                [Notas] TEXT,
+                                                FOREIGN KEY ([CreditoId]) REFERENCES [CreditoClientes]([Id]),
+                                                FOREIGN KEY ([UsuarioId]) REFERENCES [Usuarios]([Id])
+                                                )";
+                    using (var cmd = new SQLiteCommand(createPagosCreditoQuery, connection))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    // Create Proveedores table (suppliers)
+                    string createProveedoresQuery = @"CREATE TABLE IF NOT EXISTS [Proveedores] (
+                                                [Id] INTEGER PRIMARY KEY AUTOINCREMENT,
+                                                [Nombre] TEXT NOT NULL,
+                                                [Contacto] TEXT,
+                                                [Telefono] TEXT,
+                                                [Email] TEXT,
+                                                [Direccion] TEXT,
+                                                [RUC] TEXT UNIQUE,
+                                                [Activo] INTEGER DEFAULT 1,
+                                                [Notas] TEXT
+                                                )";
+                    using (var cmd = new SQLiteCommand(createProveedoresQuery, connection))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    // Create OrdenesCompra table (purchase orders)
+                    string createOrdenesCompraQuery = @"CREATE TABLE IF NOT EXISTS [OrdenesCompra] (
+                                                [Id] INTEGER PRIMARY KEY AUTOINCREMENT,
+                                                [ProveedorId] INTEGER NOT NULL,
+                                                [FechaOrden] TEXT NOT NULL,
+                                                [FechaEntrega] TEXT,
+                                                [Total] REAL NOT NULL,
+                                                [Estado] TEXT DEFAULT 'Pendiente',
+                                                [UsuarioId] INTEGER,
+                                                [Notas] TEXT,
+                                                FOREIGN KEY ([ProveedorId]) REFERENCES [Proveedores]([Id]),
+                                                FOREIGN KEY ([UsuarioId]) REFERENCES [Usuarios]([Id])
+                                                )";
+                    using (var cmd = new SQLiteCommand(createOrdenesCompraQuery, connection))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    // Create DetalleOrdenCompra table
+                    string createDetalleOrdenQuery = @"CREATE TABLE IF NOT EXISTS [DetalleOrdenCompra] (
+                                                [Id] INTEGER PRIMARY KEY AUTOINCREMENT,
+                                                [OrdenCompraId] INTEGER NOT NULL,
+                                                [ProductoId] INTEGER NOT NULL,
+                                                [Cantidad] INTEGER NOT NULL,
+                                                [PrecioUnitario] REAL NOT NULL,
+                                                [Subtotal] REAL NOT NULL,
+                                                FOREIGN KEY ([OrdenCompraId]) REFERENCES [OrdenesCompra]([Id]),
+                                                FOREIGN KEY ([ProductoId]) REFERENCES [Productos]([Id])
+                                                )";
+                    using (var cmd = new SQLiteCommand(createDetalleOrdenQuery, connection))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+
                 // Create default data if database is new
                 if (isNewDatabase)
                 {
