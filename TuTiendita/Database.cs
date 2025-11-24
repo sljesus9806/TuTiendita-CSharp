@@ -265,6 +265,26 @@ namespace TuTiendita
                         cmd.ExecuteNonQuery();
                     }
 
+                    // Create Promociones table (discounts and promotions)
+                    string createPromocionesQuery = @"CREATE TABLE IF NOT EXISTS [Promociones] (
+                                                [Id] INTEGER PRIMARY KEY AUTOINCREMENT,
+                                                [Nombre] TEXT NOT NULL,
+                                                [Descripcion] TEXT,
+                                                [TipoDescuento] TEXT NOT NULL,
+                                                [ValorDescuento] REAL NOT NULL,
+                                                [ProductoId] INTEGER,
+                                                [CodigoCupon] TEXT UNIQUE,
+                                                [FechaInicio] TEXT NOT NULL,
+                                                [FechaFin] TEXT NOT NULL,
+                                                [Activo] INTEGER DEFAULT 1,
+                                                [MontoMinimo] REAL DEFAULT 0,
+                                                FOREIGN KEY ([ProductoId]) REFERENCES [Productos]([Id])
+                                                )";
+                    using (var cmd = new SQLiteCommand(createPromocionesQuery, connection))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+
                 // Create default data if database is new
                 if (isNewDatabase)
                 {
