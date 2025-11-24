@@ -112,6 +112,7 @@ namespace TuTiendita
 
         private void Configuracion_Click(object sender, RoutedEventArgs e)
         {
+            MainContent.Content = new ConfiguracionUserControl(usuarioActual);
         }
 
         private void BtnCambiarUsuario_Click(object sender, RoutedEventArgs e)
