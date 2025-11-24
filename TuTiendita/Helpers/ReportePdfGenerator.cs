@@ -615,7 +615,7 @@ namespace TuTiendita.Helpers
         public decimal Total { get; set; }
     }
 
-    internal class ConfiguracionTienda
+    file class ConfiguracionTienda
     {
         public string NombreTienda { get; set; }
     }

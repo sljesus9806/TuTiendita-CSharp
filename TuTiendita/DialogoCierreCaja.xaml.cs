@@ -7,7 +7,7 @@ namespace TuTiendita
     public partial class DialogoCierreCaja : Window
     {
         public decimal MontoFinalContado { get; private set; }
-        public string NotasCierre { get; private set; }
+        public string NotasCierre { get; private set; } = string.Empty;
 
         public DialogoCierreCaja()
         {

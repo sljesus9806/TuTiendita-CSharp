@@ -9,9 +9,9 @@ namespace TuTiendita
 {
     public class Usuario : INotifyPropertyChanged
     {
-        private string _nombre;
-        private string _contrasena;
-        private string _nivelAcceso;
+        private string _nombre = string.Empty;
+        private string _contrasena = string.Empty;
+        private string _nivelAcceso = string.Empty;
 
         public int IdUsuario { get; set; }
 
