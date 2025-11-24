@@ -297,7 +297,7 @@ namespace TuTiendita
             public string NombreConCodigo => $"{Codigo} - {Nombre}";
 
             // Implementación de INotifyPropertyChanged
-            public event PropertyChangedEventHandler PropertyChanged;
+            public event PropertyChangedEventHandler? PropertyChanged;
 
             protected void OnPropertyChanged(string propertyName)
             {

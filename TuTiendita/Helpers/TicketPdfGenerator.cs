@@ -246,7 +246,7 @@ namespace TuTiendita.Helpers
                     var config = ObtenerConfiguracion();
                     if (config.IVA > 0)
                     {
-                        datos.Subtotal = datos.Total / (1 + config.IVA / 100);
+                        datos.Subtotal = datos.Total / (1 + (decimal)config.IVA / 100m);
                         datos.MontoIVA = datos.Total - datos.Subtotal;
                     }
                     else
@@ -381,19 +381,19 @@ namespace TuTiendita.Helpers
 
     internal class DatosVenta
     {
-        public string Fecha { get; set; }
+        public string Fecha { get; set; } = string.Empty;
         public decimal Total { get; set; }
         public decimal Subtotal { get; set; }
         public decimal MontoIVA { get; set; }
         public int TurnoId { get; set; }
-        public string NombreUsuario { get; set; }
-        public List<ProductoVenta> Productos { get; set; }
-        public List<MetodoPago> MetodosPago { get; set; }
+        public string NombreUsuario { get; set; } = string.Empty;
+        public List<ProductoVenta> Productos { get; set; } = new();
+        public List<MetodoPago> MetodosPago { get; set; } = new();
     }
 
     internal class ProductoVenta
     {
-        public string Nombre { get; set; }
+        public string Nombre { get; set; } = string.Empty;
         public int Cantidad { get; set; }
         public decimal Precio { get; set; }
         public decimal Total { get; set; }
@@ -401,20 +401,20 @@ namespace TuTiendita.Helpers
 
     internal class MetodoPago
     {
-        public string Metodo { get; set; }
+        public string Metodo { get; set; } = string.Empty;
         public decimal Monto { get; set; }
     }
 
     file class ConfiguracionTienda
     {
-        public string NombreTienda { get; set; }
-        public string RUC { get; set; }
-        public string Direccion { get; set; }
-        public string Telefono { get; set; }
-        public string Email { get; set; }
+        public string NombreTienda { get; set; } = string.Empty;
+        public string RUC { get; set; } = string.Empty;
+        public string Direccion { get; set; } = string.Empty;
+        public string Telefono { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
         public double IVA { get; set; }
-        public string MensajePiePagina { get; set; }
-        public string MonedaSimbolo { get; set; }
+        public string MensajePiePagina { get; set; } = string.Empty;
+        public string MonedaSimbolo { get; set; } = string.Empty;
     }
 
     #endregion

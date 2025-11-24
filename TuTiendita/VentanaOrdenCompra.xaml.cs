@@ -12,7 +12,7 @@ namespace TuTiendita
     {
         private Proveedor proveedorActual;
         private Usuario usuarioActual;
-        private List<Producto> productosDisponibles;
+        private List<ProductosUserControl.Producto> productosDisponibles;
         private ObservableCollection<DetalleOrdenCompraTemp> detallesOrden;
 
         public VentanaOrdenCompra(Proveedor proveedor, Usuario usuario)

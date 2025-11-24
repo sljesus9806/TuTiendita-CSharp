@@ -312,7 +312,7 @@ namespace TuTiendita
         public string PrecioUnitarioFormateado => PrecioUnitario.ToString("C");
         public string SubtotalFormateado => Subtotal.ToString("C");
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
     }
 
     #endregion

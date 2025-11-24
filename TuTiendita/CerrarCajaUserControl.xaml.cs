@@ -11,7 +11,7 @@ namespace TuTiendita
     public partial class CerrarCajaUserControl : UserControl
     {
         private Usuario usuarioActual;
-        private Turno turnoActual;
+        private Turno? turnoActual;
 
         public CerrarCajaUserControl(Usuario usuario)
         {
@@ -539,35 +539,35 @@ namespace TuTiendita
     {
         public int Id { get; set; }
         public int UsuarioId { get; set; }
-        public string UsuarioNombre { get; set; }
-        public string FechaApertura { get; set; }
-        public string FechaCierre { get; set; }
+        public string UsuarioNombre { get; set; } = string.Empty;
+        public string FechaApertura { get; set; } = string.Empty;
+        public string FechaCierre { get; set; } = string.Empty;
         public decimal MontoInicial { get; set; }
         public decimal MontoFinal { get; set; }
         public decimal TotalVentas { get; set; }
         public decimal TotalEfectivo { get; set; }
         public decimal TotalTarjeta { get; set; }
         public decimal TotalTransferencia { get; set; }
-        public string Notas { get; set; }
-        public string Estado { get; set; }
+        public string Notas { get; set; } = string.Empty;
+        public string Estado { get; set; } = string.Empty;
 
         public string MontoInicialFormateado => MontoInicial.ToString("C");
         public string MontoFinalFormateado => MontoFinal > 0 ? MontoFinal.ToString("C") : "N/A";
         public string TotalVentasFormateado => TotalVentas.ToString("C");
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
     }
 
     public class MovimientoCaja
     {
         public int Id { get; set; }
         public int TurnoId { get; set; }
-        public string Tipo { get; set; } // "Gasto", "Retiro", "Depósito"
+        public string Tipo { get; set; } = string.Empty; // "Gasto", "Retiro", "Depósito"
         public decimal Monto { get; set; }
-        public string Concepto { get; set; }
-        public string Fecha { get; set; }
+        public string Concepto { get; set; } = string.Empty;
+        public string Fecha { get; set; } = string.Empty;
         public int UsuarioId { get; set; }
-        public string UsuarioNombre { get; set; }
+        public string UsuarioNombre { get; set; } = string.Empty;
 
         public string MontoFormateado => Monto.ToString("C");
         public string TipoColor => Tipo == "Gasto" || Tipo == "Retiro" ? "#E74C3C" : "#27AE60";
