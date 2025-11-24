@@ -392,12 +392,12 @@ namespace TuTiendita
                     string createDetalleOrdenQuery = @"CREATE TABLE IF NOT EXISTS [DetalleOrdenCompra] (
                                                 [Id] INTEGER PRIMARY KEY AUTOINCREMENT,
                                                 [OrdenCompraId] INTEGER NOT NULL,
-                                                [ProductoId] INTEGER NOT NULL,
+                                                [ProductoCodigo] TEXT NOT NULL,
                                                 [Cantidad] INTEGER NOT NULL,
                                                 [PrecioUnitario] REAL NOT NULL,
                                                 [Subtotal] REAL NOT NULL,
                                                 FOREIGN KEY ([OrdenCompraId]) REFERENCES [OrdenesCompra]([Id]),
-                                                FOREIGN KEY ([ProductoId]) REFERENCES [Productos]([Id])
+                                                FOREIGN KEY ([ProductoCodigo]) REFERENCES [Productos]([Codigo])
                                                 )";
                     using (var cmd = new SQLiteCommand(createDetalleOrdenQuery, connection))
                     {

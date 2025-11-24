@@ -202,16 +202,16 @@ namespace TuTiendita.Helpers
 
                             // Agregar detalles
                             string queryDetalle = @"INSERT INTO DetalleOrdenCompra
-                                                  (OrdenCompraId, ProductoId, Cantidad, PrecioUnitario, Subtotal)
+                                                  (OrdenCompraId, ProductoCodigo, Cantidad, PrecioUnitario, Subtotal)
                                                   VALUES
-                                                  (@OrdenCompraId, @ProductoId, @Cantidad, @PrecioUnitario, @Subtotal)";
+                                                  (@OrdenCompraId, @ProductoCodigo, @Cantidad, @PrecioUnitario, @Subtotal)";
 
                             foreach (var detalle in detalles)
                             {
                                 using (var cmd = new SQLiteCommand(queryDetalle, connection))
                                 {
                                     cmd.Parameters.AddWithValue("@OrdenCompraId", ordenId);
-                                    cmd.Parameters.AddWithValue("@ProductoId", detalle.ProductoId);
+                                    cmd.Parameters.AddWithValue("@ProductoCodigo", detalle.ProductoCodigo);
                                     cmd.Parameters.AddWithValue("@Cantidad", detalle.Cantidad);
                                     cmd.Parameters.AddWithValue("@PrecioUnitario", detalle.PrecioUnitario);
                                     cmd.Parameters.AddWithValue("@Subtotal", detalle.Subtotal);
@@ -264,11 +264,11 @@ namespace TuTiendita.Helpers
                         try
                         {
                             // Obtener detalles de la orden
-                            string queryDetalles = @"SELECT ProductoId, Cantidad
+                            string queryDetalles = @"SELECT ProductoCodigo, Cantidad
                                                    FROM DetalleOrdenCompra
                                                    WHERE OrdenCompraId = @OrdenId";
 
-                            var detalles = new List<(int productoId, int cantidad)>();
+                            var detalles = new List<(string productoCodigo, int cantidad)>();
 
                             using (var cmd = new SQLiteCommand(queryDetalles, connection))
                             {
@@ -277,7 +277,7 @@ namespace TuTiendita.Helpers
                                 {
                                     while (reader.Read())
                                     {
-                                        detalles.Add((reader.GetInt32(0), reader.GetInt32(1)));
+                                        detalles.Add((reader.GetString(0), reader.GetInt32(1)));
                                     }
                                 }
                             }
@@ -285,13 +285,13 @@ namespace TuTiendita.Helpers
                             // Actualizar stock de cada producto
                             string queryUpdateStock = @"UPDATE Productos SET
                                                       Stock = Stock + @Cantidad
-                                                      WHERE Id = @ProductoId";
+                                                      WHERE Codigo = @ProductoCodigo";
 
-                            foreach (var (productoId, cantidad) in detalles)
+                            foreach (var (productoCodigo, cantidad) in detalles)
                             {
                                 using (var cmd = new SQLiteCommand(queryUpdateStock, connection))
                                 {
-                                    cmd.Parameters.AddWithValue("@ProductoId", productoId);
+                                    cmd.Parameters.AddWithValue("@ProductoCodigo", productoCodigo);
                                     cmd.Parameters.AddWithValue("@Cantidad", cantidad);
                                     cmd.ExecuteNonQuery();
                                 }
@@ -401,7 +401,7 @@ namespace TuTiendita.Helpers
                     connection.Open();
                     string query = @"SELECT doc.*, p.Nombre as ProductoNombre
                                    FROM DetalleOrdenCompra doc
-                                   INNER JOIN Productos p ON doc.ProductoId = p.Id
+                                   INNER JOIN Productos p ON doc.ProductoCodigo = p.Codigo
                                    WHERE doc.OrdenCompraId = @OrdenId";
 
                     using (var cmd = new SQLiteCommand(query, connection))
@@ -415,7 +415,7 @@ namespace TuTiendita.Helpers
                                 {
                                     Id = reader.GetInt32(0),
                                     OrdenCompraId = reader.GetInt32(1),
-                                    ProductoId = reader.GetInt32(2),
+                                    ProductoCodigo = reader.GetString(2),
                                     Cantidad = reader.GetInt32(3),
                                     PrecioUnitario = reader.GetDecimal(4),
                                     Subtotal = reader.GetDecimal(5),
@@ -491,7 +491,7 @@ namespace TuTiendita.Helpers
     {
         public int Id { get; set; }
         public int OrdenCompraId { get; set; }
-        public int ProductoId { get; set; }
+        public string ProductoCodigo { get; set; }
         public int Cantidad { get; set; }
         public decimal PrecioUnitario { get; set; }
         public decimal Subtotal { get; set; }
