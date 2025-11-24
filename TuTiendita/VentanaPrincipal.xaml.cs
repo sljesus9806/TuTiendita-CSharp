@@ -227,6 +227,13 @@ namespace TuTiendita
 
             if (resultado == MessageBoxResult.Yes)
             {
+                // Registrar logout en auditoría
+                try
+                {
+                    Helpers.AuditLogger.RegistrarLogout(usuarioActual);
+                }
+                catch { }
+
                 // Abrir ventana de login
                 MainWindow loginWindow = new MainWindow();
                 loginWindow.Show();
