@@ -1,0 +1,153 @@
+<Window x:Class="TuTiendita.VentanaOrdenCompra"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Nueva Orden de Compra" Height="700" Width="900"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,20">
+            <TextBlock Text="📦 Nueva Orden de Compra" FontSize="22" FontWeight="Bold"/>
+            <TextBlock x:Name="txtProveedor" FontSize="14" Foreground="#7F8C8D" Margin="0,5,0,0"/>
+        </StackPanel>
+
+        <!-- Product Search and Add -->
+        <Border Grid.Row="1" Background="#ECF0F1" CornerRadius="5" Padding="15" Margin="0,0,0,20">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Search Product -->
+                <Grid Grid.Row="0" Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="🔍 Buscar Producto" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <ComboBox x:Name="cmbProductos" Height="40" FontSize="14"
+                                  IsEditable="True" IsTextSearchEnabled="True"
+                                  SelectionChanged="CmbProductos_SelectionChanged"/>
+                    </StackPanel>
+
+                    <Button x:Name="btnAgregar" Grid.Column="2" Content="➕ Agregar" Width="120" Height="40"
+                            Background="#27AE60" Foreground="White" FontWeight="Bold" BorderThickness="0"
+                            VerticalAlignment="Bottom" Click="BtnAgregar_Click" Cursor="Hand"/>
+                </Grid>
+
+                <!-- Product Details -->
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Cantidad" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <TextBox x:Name="txtCantidad" Text="1" Height="35" FontSize="14" Padding="8"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="Precio Unitario ($)" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <TextBox x:Name="txtPrecio" Text="0" Height="35" FontSize="14" Padding="8"
+                                 TextChanged="TxtPrecio_TextChanged"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="4">
+                        <TextBlock Text="Subtotal ($)" FontWeight="Bold" Margin="0,0,0,5"/>
+                        <TextBox x:Name="txtSubtotal" Text="$0.00" Height="35" FontSize="14" Padding="8"
+                                 IsReadOnly="True" Background="#E8E8E8"/>
+                    </StackPanel>
+                </Grid>
+            </Grid>
+        </Border>
+
+        <!-- Order Details DataGrid -->
+        <Border Grid.Row="2" Background="White" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="10" Padding="10">
+            <DataGrid x:Name="dgDetalles" AutoGenerateColumns="False"
+                      CanUserAddRows="False" HeadersVisibility="Column"
+                      GridLinesVisibility="Horizontal" RowHeight="40"
+                      AlternatingRowBackground="#F8F9FA">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Producto" Binding="{Binding ProductoNombre}" Width="*" IsReadOnly="True"/>
+                    <DataGridTextColumn Header="Cantidad" Binding="{Binding Cantidad}" Width="100">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="TextAlignment" Value="Center"/>
+                                <Setter Property="FontWeight" Value="Bold"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="Precio Unit." Binding="{Binding PrecioUnitarioFormateado}" Width="120" IsReadOnly="True">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="TextAlignment" Value="Right"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="Subtotal" Binding="{Binding SubtotalFormateado}" Width="120" IsReadOnly="True">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="TextAlignment" Value="Right"/>
+                                <Setter Property="FontWeight" Value="Bold"/>
+                                <Setter Property="Foreground" Value="#27AE60"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTemplateColumn Header="Acciones" Width="100">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Button Content="🗑️" Width="35" Height="28"
+                                        Background="#E74C3C" Foreground="White"
+                                        BorderThickness="0" Click="BtnEliminarDetalle_Click" Cursor="Hand"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+
+        <!-- Totals -->
+        <Border Grid.Row="3" Background="#3498DB" CornerRadius="5" Padding="15" Margin="0,20,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Total de la Orden" FontSize="16" Foreground="White" Opacity="0.9"/>
+                    <TextBlock x:Name="txtTotalOrden" Text="$0.00" FontSize="32" FontWeight="Bold" Foreground="White"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock x:Name="txtTotalItems" Text="0 items" FontSize="14" Foreground="White" Opacity="0.9" HorizontalAlignment="Right"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+            <Button x:Name="btnGuardar" Content="💾 Crear Orden" Width="140" Height="40"
+                    Background="#27AE60" Foreground="White" FontWeight="Bold" BorderThickness="0"
+                    Margin="0,0,10,0" Click="BtnGuardar_Click" Cursor="Hand"/>
+            <Button x:Name="btnCancelar" Content="❌ Cancelar" Width="120" Height="40"
+                    Background="#95A5A6" Foreground="White" FontWeight="Bold" BorderThickness="0"
+                    Click="BtnCancelar_Click" Cursor="Hand"/>
+        </StackPanel>
+    </Grid>
+</Window>

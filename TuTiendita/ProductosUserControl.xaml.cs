@@ -215,6 +215,7 @@ namespace TuTiendita
             private int _stock;
             private int _stockMinimo = 5;
 
+            public int Id { get; set; }
             public string Codigo { get; set; }
             public string Nombre { get; set; }
             public decimal Precio
@@ -293,6 +294,7 @@ namespace TuTiendita
             // Propiedades formateadas para reportes
             public string PrecioFormateado => Precio.ToString("C");
             public string ValorTotalFormateado => (Precio * Stock).ToString("C");
+            public string NombreConCodigo => $"{Codigo} - {Nombre}";
 
             // Implementación de INotifyPropertyChanged
             public event PropertyChangedEventHandler PropertyChanged;

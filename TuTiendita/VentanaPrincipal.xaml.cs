@@ -102,10 +102,12 @@ namespace TuTiendita
 
         private void Compras_Click(object sender, RoutedEventArgs e)
         {
+            MainContent.Content = new ProveedoresUserControl(usuarioActual);
         }
 
         private void Clientes_Click(object sender, RoutedEventArgs e)
         {
+            MainContent.Content = new ClientesUserControl(usuarioActual);
         }
 
         private void Usuarios_Click(object sender, RoutedEventArgs e)
