@@ -22,6 +22,12 @@ namespace TuTiendita
             {
                 connection.Open();
 
+                // Enable foreign key constraints
+                using (var cmd = new SQLiteCommand("PRAGMA foreign_keys = ON;", connection))
+                {
+                    cmd.ExecuteNonQuery();
+                }
+
                     // Create Categorias table
                     string createCategoriasQuery = @"CREATE TABLE IF NOT EXISTS [Categorias] (
                                                 [Id] INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -220,6 +226,45 @@ namespace TuTiendita
                         cmd.ExecuteNonQuery();
                     }
 
+                    // Create Configuracion table (store settings)
+                    string createConfiguracionQuery = @"CREATE TABLE IF NOT EXISTS [Configuracion] (
+                                                [Id] INTEGER PRIMARY KEY CHECK ([Id] = 1),
+                                                [NombreTienda] TEXT NOT NULL DEFAULT 'TuTiendita',
+                                                [RUC] TEXT,
+                                                [Direccion] TEXT,
+                                                [Telefono] TEXT,
+                                                [Email] TEXT,
+                                                [Logo] BLOB,
+                                                [IVA] REAL NOT NULL DEFAULT 0.0,
+                                                [MensajePiePagina] TEXT DEFAULT 'Gracias por su compra',
+                                                [MonedaSimbolo] TEXT DEFAULT '$',
+                                                [BackupAutomatico] INTEGER DEFAULT 1,
+                                                [IntervalolBackupHoras] INTEGER DEFAULT 24
+                                                )";
+                    using (var cmd = new SQLiteCommand(createConfiguracionQuery, connection))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    // Create AuditLog table (audit trail)
+                    string createAuditLogQuery = @"CREATE TABLE IF NOT EXISTS [AuditLog] (
+                                                [Id] INTEGER PRIMARY KEY AUTOINCREMENT,
+                                                [Fecha] TEXT NOT NULL,
+                                                [UsuarioId] INTEGER,
+                                                [UsuarioNombre] TEXT NOT NULL,
+                                                [Accion] TEXT NOT NULL,
+                                                [Tabla] TEXT,
+                                                [RegistroId] TEXT,
+                                                [DatosAnteriores] TEXT,
+                                                [DatosNuevos] TEXT,
+                                                [Detalles] TEXT,
+                                                FOREIGN KEY ([UsuarioId]) REFERENCES [Usuarios]([Id])
+                                                )";
+                    using (var cmd = new SQLiteCommand(createAuditLogQuery, connection))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+
                 // Create default data if database is new
                 if (isNewDatabase)
                 {
@@ -244,6 +289,15 @@ namespace TuTiendita
                             cmd.Parameters.AddWithValue("@nombre", cat);
                             cmd.ExecuteNonQuery();
                         }
+                    }
+
+                    // Create default configuration
+                    string insertConfigQuery = @"INSERT INTO [Configuracion]
+                                                ([Id], [NombreTienda], [IVA], [MensajePiePagina], [MonedaSimbolo])
+                                                VALUES (1, 'TuTiendita', 0.0, 'Gracias por su compra', '$')";
+                    using (var cmd = new SQLiteCommand(insertConfigQuery, connection))
+                    {
+                        cmd.ExecuteNonQuery();
                     }
                 }
             }
