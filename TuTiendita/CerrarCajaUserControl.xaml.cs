@@ -448,82 +448,40 @@ namespace TuTiendita
         {
             try
             {
+                // Crear directorio de reportes si no existe
                 string reportesFolder = "Reportes";
                 if (!System.IO.Directory.Exists(reportesFolder))
                 {
                     System.IO.Directory.CreateDirectory(reportesFolder);
                 }
 
-                string fileName = $"Reportes/CierreCaja_Turno{turnoId}_{DateTime.Now:yyyyMMdd_HHmmss}.txt";
+                // Generar nombre de archivo PDF
+                string fileName = $"Reportes/CierreCaja_Turno{turnoId}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
 
-                using (var writer = new System.IO.StreamWriter(fileName))
+                // Usar el generador de PDF profesional
+                bool exito = Helpers.ReportePdfGenerator.GenerarReporteCierreCaja(turnoId, fileName);
+
+                if (exito)
                 {
-                    writer.WriteLine("═══════════════════════════════════════════════");
-                    writer.WriteLine("         REPORTE DE CIERRE DE CAJA            ");
-                    writer.WriteLine("═══════════════════════════════════════════════");
-                    writer.WriteLine($"Turno #: {turnoActual.Id}");
-                    writer.WriteLine($"Usuario: {turnoActual.UsuarioNombre}");
-                    writer.WriteLine($"Apertura: {turnoActual.FechaApertura}");
-                    writer.WriteLine($"Cierre: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-                    writer.WriteLine("═══════════════════════════════════════════════");
-                    writer.WriteLine();
-                    writer.WriteLine("APERTURA:");
-                    writer.WriteLine($"  Monto Inicial:              {turnoActual.MontoInicial,15:C}");
-                    writer.WriteLine();
-                    writer.WriteLine("VENTAS POR MÉTODO DE PAGO:");
-                    writer.WriteLine($"  Efectivo:                   {turnoActual.TotalEfectivo,15:C}");
-                    writer.WriteLine($"  Tarjeta:                    {turnoActual.TotalTarjeta,15:C}");
-                    writer.WriteLine($"  Transferencia:              {turnoActual.TotalTransferencia,15:C}");
-                    writer.WriteLine("  ───────────────────────────────────────────");
-                    writer.WriteLine($"  TOTAL VENTAS:               {turnoActual.TotalVentas,15:C}");
-                    writer.WriteLine();
+                    // Registrar en auditoría
+                    Helpers.AuditLogger.RegistrarCierreTurno(usuarioActual, turnoId, montoFinal, diferencia);
 
-                    // Agregar sección de movimientos
-                    writer.WriteLine("MOVIMIENTOS DE CAJA:");
-                    var movimientos = ObtenerMovimientosTurno(turnoId);
-                    if (movimientos.Count > 0)
+                    // Preguntar si desea abrir el reporte
+                    var resultado = MessageBox.Show(
+                        "✓ Reporte de cierre generado exitosamente\n\n¿Desea abrir el reporte PDF?",
+                        "Reporte de Cierre",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Information);
+
+                    if (resultado == MessageBoxResult.Yes)
                     {
-                        foreach (var mov in movimientos)
-                        {
-                            string signo = (mov.Tipo == "Gasto" || mov.Tipo == "Retiro") ? "-" : "+";
-                            writer.WriteLine($"  {mov.Tipo,-12} {signo}{mov.Monto,12:C}  {mov.Concepto}");
-                        }
-                        writer.WriteLine("  ───────────────────────────────────────────");
-                        writer.WriteLine($"  TOTAL MOVIMIENTOS:          {totalMovimientos,15:C}");
+                        Helpers.TicketPdfGenerator.AbrirPdf(fileName);
                     }
-                    else
-                    {
-                        writer.WriteLine("  No se registraron movimientos en este turno");
-                    }
-                    writer.WriteLine();
-
-                    decimal montoEsperadoEfectivo = turnoActual.MontoInicial + turnoActual.TotalEfectivo + totalMovimientos;
-
-                    writer.WriteLine("CIERRE:");
-                    writer.WriteLine($"  Efectivo Esperado:          {montoEsperadoEfectivo,15:C}");
-                    writer.WriteLine($"  Efectivo Contado:           {montoFinal,15:C}");
-                    writer.WriteLine($"  Diferencia:                 {diferencia,15:C}");
-                    writer.WriteLine();
-
-                    if (diferencia > 0)
-                        writer.WriteLine("  ⚠️  HAY UN SOBRANTE EN CAJA");
-                    else if (diferencia < 0)
-                        writer.WriteLine("  ⚠️  HAY UN FALTANTE EN CAJA");
-                    else
-                        writer.WriteLine("  ✓  CAJA CUADRADA");
-
-                    if (!string.IsNullOrWhiteSpace(notas))
-                    {
-                        writer.WriteLine();
-                        writer.WriteLine("NOTAS:");
-                        writer.WriteLine($"  {notas}");
-                    }
-
-                    writer.WriteLine();
-                    writer.WriteLine("═══════════════════════════════════════════════");
-                    writer.WriteLine("  Reporte generado automáticamente");
-                    writer.WriteLine($"  Fecha: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-                    writer.WriteLine("═══════════════════════════════════════════════");
+                }
+                else
+                {
+                    MessageBox.Show("Error al generar el reporte PDF", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
             }
             catch (Exception ex)
