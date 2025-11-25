@@ -21,7 +21,7 @@ namespace TuTiendita
             proveedorActual = proveedor;
             usuarioActual = usuario;
 
-            txtProveedor.Text = $"Proveedor: {proveedor.Nombre} | RUC: {proveedor.RUC ?? "N/A"}";
+            txtProveedor.Text = $"Proveedor: {proveedor.Nombre} | RFC: {proveedor.RFC ?? "N/A"}";
 
             detallesOrden = new ObservableCollection<DetalleOrdenCompraTemp>();
             dgDetalles.ItemsSource = detallesOrden;

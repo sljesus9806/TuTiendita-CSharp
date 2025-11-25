@@ -41,7 +41,7 @@
                 </Grid>
 
                 <StackPanel Margin="0,0,0,15">
-                    <TextBlock Text="Documento (DNI/RUC)" FontWeight="Bold" Margin="0,0,0,5"/>
+                    <TextBlock Text="Documento (CURP/RFC)" FontWeight="Bold" Margin="0,0,0,5"/>
                     <TextBox x:Name="txtDocumento" Height="35" FontSize="14" Padding="8"/>
                 </StackPanel>
 

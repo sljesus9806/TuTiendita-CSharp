@@ -34,7 +34,7 @@ namespace TuTiendita
             if (proveedorActual == null) return;
 
             txtNombre.Text = proveedorActual.Nombre;
-            txtRUC.Text = proveedorActual.RUC;
+            txtRUC.Text = proveedorActual.RFC;
             txtContacto.Text = proveedorActual.Contacto;
             txtTelefono.Text = proveedorActual.Telefono;
             txtEmail.Text = proveedorActual.Email;
@@ -57,7 +57,7 @@ namespace TuTiendita
             {
                 // Actualizar datos del proveedor
                 proveedorActual.Nombre = txtNombre.Text.Trim();
-                proveedorActual.RUC = txtRUC.Text.Trim();
+                proveedorActual.RFC = txtRUC.Text.Trim();
                 proveedorActual.Contacto = txtContacto.Text.Trim();
                 proveedorActual.Telefono = txtTelefono.Text.Trim();
                 proveedorActual.Email = txtEmail.Text.Trim();
