@@ -22,6 +22,19 @@ namespace TuTiendita
         private void ClientesUserControl_Loaded(object sender, RoutedEventArgs e)
         {
             CargarClientes();
+            VerificarPermisos();
+        }
+
+        private void VerificarPermisos()
+        {
+            // Solo los gerentes pueden agregar, editar o eliminar clientes
+            if (usuarioActual.NivelAcceso != "Gerente")
+            {
+                // Deshabilitar botón de nuevo cliente
+                btnNuevoCliente.IsEnabled = false;
+                btnNuevoCliente.Opacity = 0.5;
+                btnNuevoCliente.ToolTip = "Solo los gerentes pueden agregar clientes";
+            }
         }
 
         private void CargarClientes()
@@ -68,6 +81,15 @@ namespace TuTiendita
 
         private void BtnNuevoCliente_Click(object sender, RoutedEventArgs e)
         {
+            // Verificar permisos
+            if (usuarioActual.NivelAcceso != "Gerente")
+            {
+                MessageBox.Show("Solo los gerentes pueden agregar nuevos clientes.", "Permiso Denegado",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                AuditLogger.RegistrarPermisosDenegados(usuarioActual, "Agregar cliente");
+                return;
+            }
+
             var ventana = new VentanaEditarCliente(null, usuarioActual);
             if (ventana.ShowDialog() == true)
             {
@@ -77,6 +99,15 @@ namespace TuTiendita
 
         private void BtnEditar_Click(object sender, RoutedEventArgs e)
         {
+            // Verificar permisos
+            if (usuarioActual.NivelAcceso != "Gerente")
+            {
+                MessageBox.Show("Solo los gerentes pueden editar clientes.", "Permiso Denegado",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                AuditLogger.RegistrarPermisosDenegados(usuarioActual, "Editar cliente");
+                return;
+            }
+
             if (sender is Button button && button.Tag is int clienteId)
             {
                 var cliente = ClientesHelper.ObtenerClientePorId(clienteId);
@@ -107,6 +138,15 @@ namespace TuTiendita
 
         private void BtnEliminar_Click(object sender, RoutedEventArgs e)
         {
+            // Verificar permisos
+            if (usuarioActual.NivelAcceso != "Gerente")
+            {
+                MessageBox.Show("Solo los gerentes pueden eliminar clientes.", "Permiso Denegado",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                AuditLogger.RegistrarPermisosDenegados(usuarioActual, "Eliminar cliente");
+                return;
+            }
+
             if (sender is Button button && button.Tag is int clienteId)
             {
                 var cliente = ClientesHelper.ObtenerClientePorId(clienteId);
