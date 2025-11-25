@@ -280,7 +280,7 @@ namespace TuTiendita.Helpers
                                 cmd.Parameters.AddWithValue("@FechaEntrega", orden.FechaEntrega ?? (object)DBNull.Value);
                                 cmd.Parameters.AddWithValue("@Total", orden.Total);
                                 cmd.Parameters.AddWithValue("@Estado", "Pendiente");
-                                cmd.Parameters.AddWithValue("@UsuarioId", usuario?.Id ?? (object)DBNull.Value);
+                                cmd.Parameters.AddWithValue("@UsuarioId", usuario?.IdUsuario ?? (object)DBNull.Value);
                                 cmd.Parameters.AddWithValue("@Notas", orden.Notas ?? (object)DBNull.Value);
 
                                 ordenId = Convert.ToInt32(cmd.ExecuteScalar());

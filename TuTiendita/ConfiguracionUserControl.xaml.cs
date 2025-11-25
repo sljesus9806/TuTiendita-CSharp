@@ -343,7 +343,7 @@ namespace TuTiendita
                 var validacion = SecurityHelper.ValidarComplejidadPassword(txtPasswordNueva.Password);
                 if (!validacion.esValida)
                 {
-                    MessageBox.Show(validacion.mensaje, "Validación",
+                    MessageBox.Show(validacion.mensajeError, "Validación",
                         MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }

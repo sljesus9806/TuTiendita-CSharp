@@ -67,7 +67,8 @@ namespace TuTiendita
                 bool exito;
                 if (esNuevo)
                 {
-                    exito = ProveedoresHelper.CrearProveedor(proveedorActual, usuarioActual);
+                    int nuevoId = ProveedoresHelper.CrearProveedor(proveedorActual, usuarioActual);
+                    exito = nuevoId > 0;
                 }
                 else
                 {

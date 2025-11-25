@@ -106,7 +106,8 @@ namespace TuTiendita
                 bool exito;
                 if (esNuevo)
                 {
-                    exito = ClientesHelper.CrearCliente(clienteActual, usuarioActual);
+                    int nuevoId = ClientesHelper.CrearCliente(clienteActual, usuarioActual);
+                    exito = nuevoId > 0;
                 }
                 else
                 {
