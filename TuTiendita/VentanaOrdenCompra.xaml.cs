@@ -170,17 +170,17 @@ namespace TuTiendita
                 {
                     ProveedorId = proveedorActual.Id,
                     FechaOrden = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
-                    Total = (double)total,
+                    Total = total,
                     Estado = "Pendiente",
-                    UsuarioId = usuarioActual.Id
+                    UsuarioId = usuarioActual.IdUsuario
                 };
 
                 var detalles = detallesOrden.Select(d => new DetalleOrdenCompra
                 {
                     ProductoCodigo = d.ProductoCodigo,
                     Cantidad = d.Cantidad,
-                    PrecioUnitario = (double)d.PrecioUnitario,
-                    Subtotal = (double)d.Subtotal
+                    PrecioUnitario = d.PrecioUnitario,
+                    Subtotal = d.Subtotal
                 }).ToList();
 
                 int ordenId = ProveedoresHelper.CrearOrdenCompra(orden, detalles, usuarioActual);

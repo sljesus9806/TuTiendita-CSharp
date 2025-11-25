@@ -332,7 +332,7 @@ namespace TuTiendita.Helpers
                 // Registrar en auditoría
                 if (usuario != null)
                 {
-                    AuditLogger.RegistrarEliminacion(usuario, "Clientes", clienteId.ToString());
+                    AuditLogger.RegistrarEliminacion(usuario, "Clientes", clienteId.ToString(), null);
                 }
 
                 return true;
@@ -517,6 +517,53 @@ namespace TuTiendita.Helpers
         }
 
         /// <summary>
+<<<<<<< HEAD
+        /// Obtiene un crédito por su ID
+        /// </summary>
+        public static CreditoCliente ObtenerCreditoPorId(int creditoId)
+        {
+            try
+            {
+                using (var connection = Database.GetConnection())
+                {
+                    connection.Open();
+                    string query = @"SELECT * FROM CreditoClientes WHERE Id = @Id";
+
+                    using (var cmd = new SQLiteCommand(query, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@Id", creditoId);
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                return new CreditoCliente
+                                {
+                                    Id = reader.GetInt32(0),
+                                    ClienteId = reader.GetInt32(1),
+                                    VentaId = reader.GetInt32(2),
+                                    MontoTotal = reader.GetDecimal(3),
+                                    MontoAbonado = reader.GetDecimal(4),
+                                    MontoPendiente = reader.GetDecimal(5),
+                                    FechaVenta = reader.GetString(6),
+                                    FechaVencimiento = reader.IsDBNull(7) ? null : reader.GetString(7),
+                                    Estado = reader.GetString(8)
+                                };
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error al obtener crédito: {ex.Message}");
+            }
+
+            return null;
+        }
+
+        /// <summary>
+=======
+>>>>>>> origin/master
         /// Obtiene los pagos realizados para un crédito específico
         /// </summary>
         public static List<PagoCredito> ObtenerPagosCliente(int creditoId)
