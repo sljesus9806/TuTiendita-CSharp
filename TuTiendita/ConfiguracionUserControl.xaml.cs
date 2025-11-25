@@ -358,7 +358,7 @@ namespace TuTiendita
 
                     using (var cmd = new SQLiteCommand(queryPassword, connection))
                     {
-                        cmd.Parameters.AddWithValue("@Id", usuarioActual.Id);
+                        cmd.Parameters.AddWithValue("@Id", usuarioActual.IdUsuario);
                         passwordActualDb = cmd.ExecuteScalar()?.ToString();
                     }
 
@@ -386,12 +386,12 @@ namespace TuTiendita
                     using (var cmd = new SQLiteCommand(queryUpdate, connection))
                     {
                         cmd.Parameters.AddWithValue("@Password", passwordHash);
-                        cmd.Parameters.AddWithValue("@Id", usuarioActual.Id);
+                        cmd.Parameters.AddWithValue("@Id", usuarioActual.IdUsuario);
                         cmd.ExecuteNonQuery();
                     }
 
                     // Registrar en auditoría
-                    AuditLogger.RegistrarCambioPassword(usuarioActual, usuarioActual.Id, usuarioActual.Nombre);
+                    AuditLogger.RegistrarCambioPassword(usuarioActual, usuarioActual.IdUsuario, usuarioActual.Nombre);
                 }
 
                 MessageBox.Show("✓ Contraseña cambiada exitosamente", "Éxito",
