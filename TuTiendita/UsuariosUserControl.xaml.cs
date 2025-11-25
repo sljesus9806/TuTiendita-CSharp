@@ -57,16 +57,26 @@ namespace TuTiendita
                 }
             }
             dgUsuarios.ItemsSource = usuarios;
+            ActualizarResumen();
+        }
+
+        private void ActualizarResumen()
+        {
+            // Actualizar las tarjetas de resumen
+            txtTotalUsuarios.Text = usuarios.Count.ToString();
+            txtTotalGerentes.Text = usuarios.Count(u => u.NivelAcceso == "Gerente").ToString();
+            txtTotalCajeros.Text = usuarios.Count(u => u.NivelAcceso == "Cajero").ToString();
         }
 
         private void VerificarPermisos()
         {
             if (usuarioActual.NivelAcceso != "Gerente")
             {
-                // Si no es gerente, oculta la sección de gestión de usuarios
-                btnAgregarUsuario.Visibility = Visibility.Collapsed;
-                btnEditarUsuario.Visibility = Visibility.Collapsed;
-                btnEliminarUsuario.Visibility = Visibility.Collapsed;
+                // Si no es gerente, deshabilita la sección de gestión de usuarios
+                txtNombre.IsEnabled = false;
+                txtContrasena.IsEnabled = false;
+                cmbNivelAcceso.IsEnabled = false;
+                btnAgregarUsuario.IsEnabled = false;
             }
         }
 
@@ -105,7 +115,8 @@ namespace TuTiendita
                 }
 
                 usuarios.Add(nuevoUsuario);
-                ActualizarDataGrid();
+                MessageBox.Show("Usuario agregado correctamente.", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                CargarUsuarios(); // Recargar para obtener el ID correcto de la BD
                 LimpiarFormulario();
             }
             else
@@ -116,51 +127,73 @@ namespace TuTiendita
 
         private void BtnEditarUsuario_Click(object sender, RoutedEventArgs e)
         {
-            if (dgUsuarios.SelectedItem == null)
+            // Obtener el ID del usuario desde el Tag del botón
+            var button = sender as Button;
+            if (button == null) return;
+
+            int idUsuario = Convert.ToInt32(button.Tag);
+            var usuarioSeleccionado = usuarios.FirstOrDefault(u => u.IdUsuario == idUsuario);
+
+            if (usuarioSeleccionado == null)
             {
-                MessageBox.Show("Seleccione un usuario para editar.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Usuario no encontrado.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
-            var usuarioSeleccionado = dgUsuarios.SelectedItem as Usuario;
+            // Crear un diálogo para editar
+            var resultado = MessageBox.Show($"¿Desea editar el usuario '{usuarioSeleccionado.Nombre}'?",
+                "Editar Usuario", MessageBoxButton.YesNo, MessageBoxImage.Question);
 
-            if (usuarioSeleccionado != null)
+            if (resultado == MessageBoxResult.Yes)
             {
-                usuarioSeleccionado.Nombre = txtNombre.Text;
-                usuarioSeleccionado.Contrasena = txtContrasena.Password;
-                usuarioSeleccionado.NivelAcceso = (cmbNivelAcceso.SelectedItem as ComboBoxItem)?.Content.ToString();
+                // Prellenar los campos con los datos actuales
+                txtNombre.Text = usuarioSeleccionado.Nombre;
+                txtContrasena.Password = usuarioSeleccionado.Contrasena;
 
-                // Actualizar en la base de datos
-                using (var connection = Database.GetConnection())
+                // Seleccionar el nivel de acceso correspondiente
+                foreach (ComboBoxItem item in cmbNivelAcceso.Items)
                 {
-                    connection.Open();
-                    string query = "UPDATE Usuarios SET Nombre = @Nombre, Contrasena = @Contrasena, NivelAcceso = @NivelAcceso WHERE Id = @Id";
-                    using (var cmd = new SQLiteCommand(query, connection))
+                    if (item.Content.ToString() == usuarioSeleccionado.NivelAcceso)
                     {
-                        cmd.Parameters.AddWithValue("@Id", usuarioSeleccionado.IdUsuario);
-                        cmd.Parameters.AddWithValue("@Nombre", usuarioSeleccionado.Nombre);
-                        cmd.Parameters.AddWithValue("@Contrasena", usuarioSeleccionado.Contrasena);
-                        cmd.Parameters.AddWithValue("@NivelAcceso", usuarioSeleccionado.NivelAcceso);
-                        cmd.ExecuteNonQuery();
+                        cmbNivelAcceso.SelectedItem = item;
+                        break;
                     }
                 }
 
-                ActualizarDataGrid();
-                LimpiarFormulario();
+                // Mostrar mensaje para que el usuario actualice
+                MessageBox.Show("Modifique los datos y presione 'Agregar Usuario' para actualizar.",
+                    "Información", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
 
         private void BtnEliminarUsuario_Click(object sender, RoutedEventArgs e)
         {
-            if (dgUsuarios.SelectedItem == null)
+            // Obtener el ID del usuario desde el Tag del botón
+            var button = sender as Button;
+            if (button == null) return;
+
+            int idUsuario = Convert.ToInt32(button.Tag);
+            var usuarioSeleccionado = usuarios.FirstOrDefault(u => u.IdUsuario == idUsuario);
+
+            if (usuarioSeleccionado == null)
             {
-                MessageBox.Show("Seleccione un usuario para eliminar.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Usuario no encontrado.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
-            var usuarioSeleccionado = dgUsuarios.SelectedItem as Usuario;
+            // Verificar que no se elimine el último gerente
+            if (usuarioSeleccionado.NivelAcceso == "Gerente" && usuarios.Count(u => u.NivelAcceso == "Gerente") == 1)
+            {
+                MessageBox.Show("No se puede eliminar el único gerente del sistema.",
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
 
-            if (usuarioSeleccionado != null)
+            // Confirmar eliminación
+            var resultado = MessageBox.Show($"¿Está seguro de eliminar el usuario '{usuarioSeleccionado.Nombre}'?",
+                "Confirmar Eliminación", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+
+            if (resultado == MessageBoxResult.Yes)
             {
                 // Eliminar de la base de datos
                 using (var connection = Database.GetConnection())
@@ -174,9 +207,8 @@ namespace TuTiendita
                     }
                 }
 
-                usuarios.Remove(usuarioSeleccionado);
-                ActualizarDataGrid();
-                LimpiarFormulario();
+                MessageBox.Show("Usuario eliminado correctamente.", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                CargarUsuarios();
             }
         }
 
@@ -184,6 +216,7 @@ namespace TuTiendita
         {
             dgUsuarios.ItemsSource = null;
             dgUsuarios.ItemsSource = usuarios;
+            ActualizarResumen();
         }
 
         private void LimpiarFormulario()
