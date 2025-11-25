@@ -55,7 +55,7 @@ namespace TuTiendita.Helpers
 
                             if (!string.IsNullOrEmpty(configuracion.RUC))
                             {
-                                column.Item().AlignCenter().Text($"RUC: {configuracion.RUC}")
+                                column.Item().AlignCenter().Text($"RFC: {configuracion.RUC}")
                                     .FontSize(8);
                             }
 

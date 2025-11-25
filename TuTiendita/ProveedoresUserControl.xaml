@@ -46,7 +46,7 @@
                                             <Setter.Value>
                                                 <VisualBrush Stretch="None" AlignmentX="Left">
                                                     <VisualBrush.Visual>
-                                                        <TextBlock Text="Buscar proveedor por nombre, RUC o contacto..."
+                                                        <TextBlock Text="Buscar proveedor por nombre, RFC o contacto..."
                                                                    Foreground="#95A5A6" FontSize="14"/>
                                                     </VisualBrush.Visual>
                                                 </VisualBrush>
@@ -81,7 +81,7 @@
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="60"/>
                     <DataGridTextColumn Header="Nombre" Binding="{Binding Nombre}" Width="200"/>
-                    <DataGridTextColumn Header="RUC" Binding="{Binding RUC}" Width="120"/>
+                    <DataGridTextColumn Header="RFC" Binding="{Binding RUC}" Width="120"/>
                     <DataGridTextColumn Header="Contacto" Binding="{Binding Contacto}" Width="150"/>
                     <DataGridTextColumn Header="Teléfono" Binding="{Binding Telefono}" Width="120"/>
                     <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="180"/>
