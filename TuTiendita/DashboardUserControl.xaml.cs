@@ -135,7 +135,7 @@ namespace TuTiendita
 
                     // Productos vendidos hoy
                     string queryProductos = @"SELECT COALESCE(SUM(dv.Cantidad), 0)
-                                            FROM DetalleVenta dv
+                                            FROM DetalleVentas dv
                                             INNER JOIN Ventas v ON dv.VentaId = v.Id
                                             WHERE DATE(v.Fecha) = @Fecha";
 
@@ -338,12 +338,11 @@ namespace TuTiendita
 
                     // Top 5 productos más vendidos del mes
                     string inicioMes = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1).ToString("yyyy-MM-dd");
-                    string query = @"SELECT p.Nombre, SUM(dv.Cantidad) as Total
-                                   FROM DetalleVenta dv
-                                   INNER JOIN Productos p ON dv.ProductoId = p.Id
+                    string query = @"SELECT dv.ProductoNombre, SUM(dv.Cantidad) as Total
+                                   FROM DetalleVentas dv
                                    INNER JOIN Ventas v ON dv.VentaId = v.Id
                                    WHERE DATE(v.Fecha) >= @Inicio
-                                   GROUP BY p.Nombre
+                                   GROUP BY dv.ProductoNombre
                                    ORDER BY Total DESC
                                    LIMIT 5";
 

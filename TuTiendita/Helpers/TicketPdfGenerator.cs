@@ -230,10 +230,9 @@ namespace TuTiendita.Helpers
                     }
 
                     // Obtener productos de la venta
-                    string queryProductos = @"SELECT p.Nombre, dv.Cantidad, dv.PrecioUnitario,
+                    string queryProductos = @"SELECT dv.ProductoNombre, dv.Cantidad, dv.PrecioUnitario,
                                             (dv.Cantidad * dv.PrecioUnitario) as Total
-                                            FROM DetalleVenta dv
-                                            INNER JOIN Productos p ON dv.ProductoId = p.Id
+                                            FROM DetalleVentas dv
                                             WHERE dv.VentaId = @VentaId";
 
                     using (var cmd = new SQLiteCommand(queryProductos, connection))
