@@ -34,6 +34,10 @@ namespace TuTiendita
                 using (var connection = Database.GetConnection())
                 {
                     connection.Open();
+
+                    // Primero verificar y agregar columnas faltantes si es necesario
+                    VerificarYAgregarColumnasBackup(connection);
+
                     string query = @"SELECT NombreTienda, RUC, Direccion, Telefono, Email,
                                    IVA, MensajePiePagina, MonedaSimbolo,
                                    BackupAutomatico, IntervaloBackupHoras
@@ -54,8 +58,8 @@ namespace TuTiendita
                                 txtMensajePie.Text = reader.IsDBNull(6) ? "Gracias por su compra" : reader.GetString(6);
                                 txtMonedaSimbolo.Text = reader.IsDBNull(7) ? "$" : reader.GetString(7);
 
-                                chkBackupAutomatico.IsChecked = reader.GetInt32(8) == 1;
-                                int intervalo = reader.GetInt32(9);
+                                chkBackupAutomatico.IsChecked = reader.IsDBNull(8) ? false : reader.GetInt32(8) == 1;
+                                int intervalo = reader.IsDBNull(9) ? 24 : reader.GetInt32(9);
                                 cmbIntervaloBackup.SelectedIndex = intervalo switch
                                 {
                                     6 => 0,
@@ -74,6 +78,59 @@ namespace TuTiendita
             {
                 MessageBox.Show($"Error al cargar configuración: {ex.Message}", "Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        /// <summary>
+        /// Verifica si existen las columnas de backup y las agrega si no existen
+        /// </summary>
+        private void VerificarYAgregarColumnasBackup(SQLiteConnection connection)
+        {
+            try
+            {
+                // Verificar si existe la columna BackupAutomatico
+                string queryCheck = "PRAGMA table_info(Configuracion)";
+                bool existeBackupAutomatico = false;
+                bool existeIntervaloBackupHoras = false;
+
+                using (var cmd = new SQLiteCommand(queryCheck, connection))
+                {
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            string columnName = reader.GetString(1); // name está en el índice 1
+                            if (columnName == "BackupAutomatico")
+                                existeBackupAutomatico = true;
+                            if (columnName == "IntervaloBackupHoras")
+                                existeIntervaloBackupHoras = true;
+                        }
+                    }
+                }
+
+                // Agregar columnas si no existen
+                if (!existeBackupAutomatico)
+                {
+                    string queryAdd = "ALTER TABLE Configuracion ADD COLUMN BackupAutomatico INTEGER DEFAULT 0";
+                    using (var cmd = new SQLiteCommand(queryAdd, connection))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+
+                if (!existeIntervaloBackupHoras)
+                {
+                    string queryAdd = "ALTER TABLE Configuracion ADD COLUMN IntervaloBackupHoras INTEGER DEFAULT 24";
+                    using (var cmd = new SQLiteCommand(queryAdd, connection))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Si hay error, no hacer nada - probablemente las columnas ya existen
+                System.Diagnostics.Debug.WriteLine($"Error al verificar/agregar columnas: {ex.Message}");
             }
         }
 

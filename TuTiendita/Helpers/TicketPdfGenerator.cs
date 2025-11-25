@@ -29,10 +29,17 @@ namespace TuTiendita.Helpers
         {
             try
             {
+                // Crear directorio si no existe
+                string directorio = Path.GetDirectoryName(rutaArchivo);
+                if (!string.IsNullOrEmpty(directorio) && !Directory.Exists(directorio))
+                {
+                    Directory.CreateDirectory(directorio);
+                }
+
                 var datosVenta = ObtenerDatosVenta(ventaId);
                 if (datosVenta == null)
                 {
-                    return false;
+                    throw new Exception("No se pudieron obtener los datos de la venta.");
                 }
 
                 var configuracion = ObtenerConfiguracion();
@@ -179,6 +186,11 @@ namespace TuTiendita.Helpers
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error al generar ticket PDF: {ex.Message}");
+                System.Windows.MessageBox.Show(
+                    $"Error al generar el ticket PDF:\n\n{ex.Message}\n\nPor favor contacte al administrador del sistema.",
+                    "Error de Generación de PDF",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Error);
                 return false;
             }
         }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
+using System.IO;
 using System.Linq;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
@@ -25,9 +26,18 @@ namespace TuTiendita.Helpers
         {
             try
             {
+                // Crear directorio si no existe
+                string directorio = Path.GetDirectoryName(rutaArchivo);
+                if (!string.IsNullOrEmpty(directorio) && !Directory.Exists(directorio))
+                {
+                    System.IO.Directory.CreateDirectory(directorio);
+                }
+
                 var datosCierre = ObtenerDatosCierreCaja(turnoId);
                 if (datosCierre == null)
-                    return false;
+                {
+                    throw new Exception("No se pudieron obtener los datos del cierre de caja.");
+                }
 
                 var config = ObtenerConfiguracion();
 
@@ -197,6 +207,11 @@ namespace TuTiendita.Helpers
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error al generar reporte de cierre: {ex.Message}");
+                System.Windows.MessageBox.Show(
+                    $"Error al generar el reporte de cierre de caja:\n\n{ex.Message}\n\nPor favor contacte al administrador del sistema.",
+                    "Error de Generación de PDF",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Error);
                 return false;
             }
         }
@@ -208,6 +223,13 @@ namespace TuTiendita.Helpers
         {
             try
             {
+                // Crear directorio si no existe
+                string directorio = Path.GetDirectoryName(rutaArchivo);
+                if (!string.IsNullOrEmpty(directorio) && !System.IO.Directory.Exists(directorio))
+                {
+                    System.IO.Directory.CreateDirectory(directorio);
+                }
+
                 var datosVentas = ObtenerDatosVentas(fechaInicio, fechaFin);
                 var config = ObtenerConfiguracion();
 
@@ -323,6 +345,11 @@ namespace TuTiendita.Helpers
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error al generar reporte de ventas: {ex.Message}");
+                System.Windows.MessageBox.Show(
+                    $"Error al generar el reporte de ventas:\n\n{ex.Message}\n\nPor favor contacte al administrador del sistema.",
+                    "Error de Generación de PDF",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Error);
                 return false;
             }
         }
