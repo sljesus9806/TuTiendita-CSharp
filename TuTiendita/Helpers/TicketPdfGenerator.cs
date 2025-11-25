@@ -194,7 +194,7 @@ namespace TuTiendita.Helpers
                 {
                     connection.Open();
 
-                    var datos = new DatosVenta { Productos = new List<ProductoVenta>() };
+                    var datos = new DatosVenta();
 
                     // Obtener información de la venta
                     string queryVenta = @"SELECT v.Fecha, v.Total, v.TurnoId, u.Nombre
@@ -246,7 +246,7 @@ namespace TuTiendita.Helpers
                     var config = ObtenerConfiguracion();
                     if (config.IVA > 0)
                     {
-                        datos.Subtotal = datos.Total / (1 + (decimal)config.IVA / 100m);
+                        datos.Subtotal = datos.Total / (1m + (decimal)config.IVA / 100m);
                         datos.MontoIVA = datos.Total - datos.Subtotal;
                     }
                     else
@@ -405,7 +405,7 @@ namespace TuTiendita.Helpers
         public decimal Monto { get; set; }
     }
 
-    file class ConfiguracionTienda
+    private class ConfiguracionTienda
     {
         public string NombreTienda { get; set; } = string.Empty;
         public string RUC { get; set; } = string.Empty;
