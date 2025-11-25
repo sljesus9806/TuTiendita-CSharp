@@ -519,14 +519,13 @@ namespace TuTiendita.Helpers
                     }
 
                     // Productos más vendidos
-                    string queryProductos = @"SELECT p.Nombre,
+                    string queryProductos = @"SELECT dv.ProductoNombre,
                                             SUM(dv.Cantidad) as CantidadVendida,
                                             SUM(dv.Cantidad * dv.PrecioUnitario) as TotalVendido
-                                            FROM DetalleVenta dv
-                                            INNER JOIN Productos p ON dv.ProductoId = p.Id
+                                            FROM DetalleVentas dv
                                             INNER JOIN Ventas v ON dv.VentaId = v.Id
                                             WHERE v.Fecha >= @FechaInicio AND v.Fecha <= @FechaFin
-                                            GROUP BY p.Nombre
+                                            GROUP BY dv.ProductoNombre
                                             ORDER BY CantidadVendida DESC";
 
                     using (var cmd = new SQLiteCommand(queryProductos, connection))
