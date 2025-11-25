@@ -81,7 +81,7 @@
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="60"/>
                     <DataGridTextColumn Header="Nombre" Binding="{Binding Nombre}" Width="200"/>
-                    <DataGridTextColumn Header="RFC" Binding="{Binding RUC}" Width="120"/>
+                    <DataGridTextColumn Header="RFC" Binding="{Binding RFC}" Width="120"/>
                     <DataGridTextColumn Header="Contacto" Binding="{Binding Contacto}" Width="150"/>
                     <DataGridTextColumn Header="Teléfono" Binding="{Binding Telefono}" Width="120"/>
                     <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="180"/>

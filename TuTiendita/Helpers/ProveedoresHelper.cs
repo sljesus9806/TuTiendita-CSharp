@@ -44,7 +44,7 @@ namespace TuTiendita.Helpers
                                     Telefono = reader.IsDBNull(3) ? null : reader.GetString(3),
                                     Email = reader.IsDBNull(4) ? null : reader.GetString(4),
                                     Direccion = reader.IsDBNull(5) ? null : reader.GetString(5),
-                                    RUC = reader.IsDBNull(6) ? null : reader.GetString(6),
+                                    RFC = reader.IsDBNull(6) ? null : reader.GetString(6),
                                     Activo = reader.GetInt32(7) == 1,
                                     Notas = reader.IsDBNull(8) ? null : reader.GetString(8),
                                     TotalOrdenes = reader.GetInt32(9),
@@ -96,7 +96,7 @@ namespace TuTiendita.Helpers
                                     Telefono = reader.IsDBNull(3) ? null : reader.GetString(3),
                                     Email = reader.IsDBNull(4) ? null : reader.GetString(4),
                                     Direccion = reader.IsDBNull(5) ? null : reader.GetString(5),
-                                    RUC = reader.IsDBNull(6) ? null : reader.GetString(6),
+                                    RFC = reader.IsDBNull(6) ? null : reader.GetString(6),
                                     Activo = reader.GetInt32(7) == 1,
                                     Notas = reader.IsDBNull(8) ? null : reader.GetString(8),
                                     TotalOrdenes = reader.GetInt32(9),
@@ -172,7 +172,7 @@ namespace TuTiendita.Helpers
                         cmd.Parameters.AddWithValue("@Telefono", proveedor.Telefono ?? (object)DBNull.Value);
                         cmd.Parameters.AddWithValue("@Email", proveedor.Email ?? (object)DBNull.Value);
                         cmd.Parameters.AddWithValue("@Direccion", proveedor.Direccion ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@RUC", proveedor.RUC ?? (object)DBNull.Value);
+                        cmd.Parameters.AddWithValue("@RUC", proveedor.RFC ?? (object)DBNull.Value);
                         cmd.Parameters.AddWithValue("@Notas", proveedor.Notas ?? (object)DBNull.Value);
 
                         int nuevoId = Convert.ToInt32(cmd.ExecuteScalar());
@@ -183,7 +183,7 @@ namespace TuTiendita.Helpers
                             AuditLogger.RegistrarCreacion(usuario, "Proveedores", nuevoId.ToString(), new
                             {
                                 proveedor.Nombre,
-                                proveedor.RUC
+                                proveedor.RFC
                             });
                         }
 
@@ -226,7 +226,7 @@ namespace TuTiendita.Helpers
                         cmd.Parameters.AddWithValue("@Telefono", proveedor.Telefono ?? (object)DBNull.Value);
                         cmd.Parameters.AddWithValue("@Email", proveedor.Email ?? (object)DBNull.Value);
                         cmd.Parameters.AddWithValue("@Direccion", proveedor.Direccion ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@RUC", proveedor.RUC ?? (object)DBNull.Value);
+                        cmd.Parameters.AddWithValue("@RUC", proveedor.RFC ?? (object)DBNull.Value);
                         cmd.Parameters.AddWithValue("@Notas", proveedor.Notas ?? (object)DBNull.Value);
 
                         cmd.ExecuteNonQuery();
@@ -532,7 +532,7 @@ namespace TuTiendita.Helpers
         public string Telefono { get; set; }
         public string Email { get; set; }
         public string Direccion { get; set; }
-        public string RUC { get; set; }
+        public string RFC { get; set; }
         public bool Activo { get; set; }
         public string Notas { get; set; }
 

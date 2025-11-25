@@ -52,7 +52,7 @@ namespace TuTiendita
             {
                 var proveedoresFiltrados = proveedoresActuales.Where(p =>
                     p.Nombre.ToLower().Contains(busqueda) ||
-                    (p.RUC?.ToLower().Contains(busqueda) ?? false) ||
+                    (p.RFC?.ToLower().Contains(busqueda) ?? false) ||
                     (p.Contacto?.ToLower().Contains(busqueda) ?? false) ||
                     (p.Telefono?.ToLower().Contains(busqueda) ?? false)
                 ).ToList();

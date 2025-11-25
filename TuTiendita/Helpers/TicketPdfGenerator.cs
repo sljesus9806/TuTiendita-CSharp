@@ -53,9 +53,9 @@ namespace TuTiendita.Helpers
                             column.Item().AlignCenter().Text(configuracion.NombreTienda)
                                 .FontSize(14).Bold();
 
-                            if (!string.IsNullOrEmpty(configuracion.RUC))
+                            if (!string.IsNullOrEmpty(configuracion.RFC))
                             {
-                                column.Item().AlignCenter().Text($"RFC: {configuracion.RUC}")
+                                column.Item().AlignCenter().Text($"RFC: {configuracion.RFC}")
                                     .FontSize(8);
                             }
 
@@ -329,7 +329,7 @@ namespace TuTiendita.Helpers
                                 return new TicketConfiguracionTienda
                                 {
                                     NombreTienda = reader.GetString(0),
-                                    RUC = reader.IsDBNull(1) ? null : reader.GetString(1),
+                                    RFC = reader.IsDBNull(1) ? null : reader.GetString(1),
                                     Direccion = reader.IsDBNull(2) ? null : reader.GetString(2),
                                     Telefono = reader.IsDBNull(3) ? null : reader.GetString(3),
                                     Email = reader.IsDBNull(4) ? null : reader.GetString(4),
@@ -408,7 +408,7 @@ namespace TuTiendita.Helpers
     internal class TicketConfiguracionTienda
     {
         public string NombreTienda { get; set; } = string.Empty;
-        public string? RUC { get; set; }
+        public string? RFC { get; set; }
         public string? Direccion { get; set; }
         public string? Telefono { get; set; }
         public string? Email { get; set; }
