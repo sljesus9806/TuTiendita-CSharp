@@ -329,13 +329,13 @@ namespace TuTiendita.Helpers
 
         #region Métodos auxiliares
 
-        private static void AgregarFilaTabla(IContainer table, string concepto, decimal monto)
+        private static void AgregarFilaTabla(TableDescriptor table, string concepto, decimal monto)
         {
             table.Cell().Padding(5).Text(concepto);
             table.Cell().Padding(5).AlignRight().Text($"${monto:N2}");
         }
 
-        private static void AgregarFilaTabla(IContainer table, string concepto, string valor)
+        private static void AgregarFilaTabla(TableDescriptor table, string concepto, string valor)
         {
             table.Cell().Padding(5).Text(concepto);
             table.Cell().Padding(5).AlignRight().Text(valor);
@@ -529,7 +529,7 @@ namespace TuTiendita.Helpers
             return datos;
         }
 
-        private static ConfiguracionTienda ObtenerConfiguracion()
+        private static ReporteConfiguracionTienda ObtenerConfiguracion()
         {
             try
             {
@@ -544,7 +544,7 @@ namespace TuTiendita.Helpers
                         {
                             if (reader.Read())
                             {
-                                return new ConfiguracionTienda { NombreTienda = reader.GetString(0) };
+                                return new ReporteConfiguracionTienda { NombreTienda = reader.GetString(0) };
                             }
                         }
                     }
@@ -552,7 +552,7 @@ namespace TuTiendita.Helpers
             }
             catch { }
 
-            return new ConfiguracionTienda { NombreTienda = "TuTiendita" };
+            return new ReporteConfiguracionTienda { NombreTienda = "TuTiendita" };
         }
 
         #endregion
@@ -611,7 +611,7 @@ namespace TuTiendita.Helpers
         public decimal Total { get; set; }
     }
 
-    private class ConfiguracionTienda
+    internal class ReporteConfiguracionTienda
     {
         public string NombreTienda { get; set; } = string.Empty;
     }
