@@ -309,7 +309,7 @@ namespace TuTiendita.Helpers
         /// <summary>
         /// Obtiene la configuración de la tienda
         /// </summary>
-        private static ConfiguracionTienda ObtenerConfiguracion()
+        private static TicketConfiguracionTienda ObtenerConfiguracion()
         {
             try
             {
@@ -326,7 +326,7 @@ namespace TuTiendita.Helpers
                         {
                             if (reader.Read())
                             {
-                                return new ConfiguracionTienda
+                                return new TicketConfiguracionTienda
                                 {
                                     NombreTienda = reader.GetString(0),
                                     RUC = reader.IsDBNull(1) ? null : reader.GetString(1),
@@ -345,7 +345,7 @@ namespace TuTiendita.Helpers
             catch { }
 
             // Configuración por defecto
-            return new ConfiguracionTienda
+            return new TicketConfiguracionTienda
             {
                 NombreTienda = "TuTiendita",
                 IVA = 0,
@@ -405,15 +405,15 @@ namespace TuTiendita.Helpers
         public decimal Monto { get; set; }
     }
 
-    private class ConfiguracionTienda
+    internal class TicketConfiguracionTienda
     {
         public string NombreTienda { get; set; } = string.Empty;
-        public string RUC { get; set; } = string.Empty;
-        public string Direccion { get; set; } = string.Empty;
-        public string Telefono { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
+        public string? RUC { get; set; }
+        public string? Direccion { get; set; }
+        public string? Telefono { get; set; }
+        public string? Email { get; set; }
         public double IVA { get; set; }
-        public string MensajePiePagina { get; set; } = string.Empty;
+        public string? MensajePiePagina { get; set; }
         public string MonedaSimbolo { get; set; } = string.Empty;
     }
 
