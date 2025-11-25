@@ -5,44 +5,173 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d">
 
-    <Grid Margin="10">
+    <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Sección para agregar usuario -->
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,10">
-            <Label Content="Nombre:" VerticalAlignment="Center" Margin="0,0,5,0"/>
-            <TextBox x:Name="txtNombre" Width="150"/>
-
-            <Label Content="Contraseña:" VerticalAlignment="Center" Margin="10,0,5,0"/>
-            <PasswordBox x:Name="txtContrasena" Width="150"/>
-
-            <Label Content="Nivel de Acceso:" VerticalAlignment="Center" Margin="10,0,5,0"/>
-            <ComboBox x:Name="cmbNivelAcceso" Width="150">
-                <ComboBoxItem Content="Cajero"/>
-                <ComboBoxItem Content="Gerente"/>
-            </ComboBox>
-
-            <Button x:Name="btnAgregarUsuario" Content="Agregar" Width="100" Margin="10,0,0,0" Click="BtnAgregarUsuario_Click"/>
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,20">
+            <TextBlock Text="👥 Gestión de Usuarios" FontSize="24" FontWeight="Bold"/>
+            <TextBlock Text="Administra los usuarios del sistema y sus niveles de acceso"
+                       FontSize="13" Foreground="#7F8C8D" Margin="0,5,0,0"/>
         </StackPanel>
 
-        <!-- DataGrid para mostrar usuarios -->
-        <DataGrid x:Name="dgUsuarios" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="False" Margin="0,0,0,10">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="ID Usuario" Binding="{Binding IdUsuario}" Width="100"/>
-                <DataGridTextColumn Header="Nombre" Binding="{Binding Nombre}" Width="200"/>
-                <DataGridTextColumn Header="Contraseña" Binding="{Binding Contrasena}" Width="150"/>
-                <DataGridTextColumn Header="Nivel de Acceso" Binding="{Binding NivelAcceso}" Width="150"/>
-            </DataGrid.Columns>
-        </DataGrid>
+        <!-- Summary Cards -->
+        <Grid Grid.Row="1" Margin="0,0,0,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-        <!-- Botones para gestionar usuarios -->
-        <StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Right">
-            <Button x:Name="btnEditarUsuario" Content="Editar" Width="100" Margin="0,0,10,0" Click="BtnEditarUsuario_Click"/>
-            <Button x:Name="btnEliminarUsuario" Content="Eliminar" Width="100" Click="BtnEliminarUsuario_Click"/>
-        </StackPanel>
+            <Border Grid.Column="0" Background="#3498DB" Padding="15" Margin="0,0,10,0" CornerRadius="8">
+                <StackPanel>
+                    <TextBlock Text="Total Usuarios" FontSize="12" Foreground="White" Opacity="0.9"/>
+                    <TextBlock x:Name="txtTotalUsuarios" Text="0" FontSize="24" FontWeight="Bold" Foreground="White"/>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="1" Background="#27AE60" Padding="15" Margin="0,0,10,0" CornerRadius="8">
+                <StackPanel>
+                    <TextBlock Text="Gerentes" FontSize="12" Foreground="White" Opacity="0.9"/>
+                    <TextBlock x:Name="txtTotalGerentes" Text="0" FontSize="24" FontWeight="Bold" Foreground="White"/>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="2" Background="#9B59B6" Padding="15" CornerRadius="8">
+                <StackPanel>
+                    <TextBlock Text="Cajeros" FontSize="12" Foreground="White" Opacity="0.9"/>
+                    <TextBlock x:Name="txtTotalCajeros" Text="0" FontSize="24" FontWeight="Bold" Foreground="White"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Add User Section -->
+        <Border Grid.Row="2" Background="White" BorderBrush="#E0E0E0" BorderThickness="1"
+                CornerRadius="10" Padding="20" Margin="0,0,0,20">
+            <StackPanel>
+                <TextBlock Text="➕ Agregar Nuevo Usuario" FontSize="16" FontWeight="Bold" Margin="0,0,0,15"/>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                        <TextBlock Text="Nombre de Usuario:" FontSize="12" Margin="0,0,0,5"/>
+                        <TextBox x:Name="txtNombre" Height="35" Padding="10" FontSize="14"
+                                 BorderBrush="#BDC3C7" BorderThickness="1"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Margin="0,0,10,0">
+                        <TextBlock Text="Contraseña:" FontSize="12" Margin="0,0,0,5"/>
+                        <PasswordBox x:Name="txtContrasena" Height="35" Padding="10" FontSize="14"
+                                     BorderBrush="#BDC3C7" BorderThickness="1"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Margin="0,0,10,0">
+                        <TextBlock Text="Nivel de Acceso:" FontSize="12" Margin="0,0,0,5"/>
+                        <ComboBox x:Name="cmbNivelAcceso" Height="35" Padding="10" FontSize="14"
+                                  BorderBrush="#BDC3C7" BorderThickness="1" SelectedIndex="0">
+                            <ComboBoxItem Content="Cajero"/>
+                            <ComboBoxItem Content="Gerente"/>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <Button Grid.Column="3" x:Name="btnAgregarUsuario" Content="➕ Agregar Usuario"
+                            Width="150" Height="35" Margin="0,20,0,0"
+                            Background="#27AE60" Foreground="White" FontWeight="Bold"
+                            BorderThickness="0" FontSize="13" Cursor="Hand"
+                            Click="BtnAgregarUsuario_Click"/>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <!-- Users DataGrid -->
+        <Border Grid.Row="3" Background="White" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="10">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" Background="#F8F9FA" Padding="15">
+                    <TextBlock Text="📋 Lista de Usuarios" FontSize="15" FontWeight="Bold"/>
+                </StackPanel>
+
+                <DataGrid x:Name="dgUsuarios" Grid.Row="1" AutoGenerateColumns="False"
+                          IsReadOnly="True" SelectionMode="Single"
+                          CanUserAddRows="False" CanUserDeleteRows="False"
+                          HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                          RowHeight="45" AlternatingRowBackground="#F8F9FA">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="ID" Binding="{Binding IdUsuario}" Width="80">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                    <Setter Property="Foreground" Value="#7F8C8D"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Nombre de Usuario" Binding="{Binding Nombre}" Width="250">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="FontSize" Value="14"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Contraseña" Binding="{Binding Contrasena}" Width="200">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="#95A5A6"/>
+                                    <Setter Property="FontFamily" Value="Consolas"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Nivel de Acceso" Binding="{Binding NivelAcceso}" Width="*">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding NivelAcceso}" Value="Gerente">
+                                            <Setter Property="Foreground" Value="#E74C3C"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding NivelAcceso}" Value="Cajero">
+                                            <Setter Property="Foreground" Value="#3498DB"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTemplateColumn Header="Acciones" Width="250">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <Button Content="✏️ Editar" Width="100" Height="32" Margin="5,0"
+                                                Background="#3498DB" Foreground="White" FontSize="12"
+                                                BorderThickness="0" Click="BtnEditarUsuario_Click" Cursor="Hand"
+                                                FontWeight="Bold"
+                                                Tag="{Binding IdUsuario}"/>
+                                        <Button Content="🗑️ Eliminar" Width="100" Height="32" Margin="5,0"
+                                                Background="#E74C3C" Foreground="White" FontSize="12"
+                                                BorderThickness="0" Click="BtnEliminarUsuario_Click" Cursor="Hand"
+                                                FontWeight="Bold"
+                                                Tag="{Binding IdUsuario}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </Border>
     </Grid>
 </UserControl>
