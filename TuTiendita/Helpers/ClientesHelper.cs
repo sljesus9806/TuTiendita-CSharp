@@ -517,7 +517,6 @@ namespace TuTiendita.Helpers
         }
 
         /// <summary>
-<<<<<<< HEAD
         /// Obtiene un crédito por su ID
         /// </summary>
         public static CreditoCliente ObtenerCreditoPorId(int creditoId)
@@ -562,8 +561,6 @@ namespace TuTiendita.Helpers
         }
 
         /// <summary>
-=======
->>>>>>> origin/master
         /// Obtiene los pagos realizados para un crédito específico
         /// </summary>
         public static List<PagoCredito> ObtenerPagosCliente(int creditoId)
