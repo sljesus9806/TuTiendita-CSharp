@@ -88,7 +88,7 @@ namespace TuTiendita
                             string passwordHash = reader["Contrasena"].ToString();
 
                             // Verificar contraseña usando BCrypt (compatible con texto plano durante migración)
-                            if (Helpers.SecurityHelper.VerifyPasswordCompat(contrasena, passwordHash))
+                            if (Helpers.SecurityHelper.VerifyPasswordCompat(contrasena, passwordHash, out bool esHash))
                             {
                                 usuario = new Usuario
                                 {

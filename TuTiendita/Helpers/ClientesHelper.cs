@@ -311,6 +311,40 @@ namespace TuTiendita.Helpers
         }
 
         /// <summary>
+        /// Elimina (desactiva) un cliente
+        /// </summary>
+        public static bool EliminarCliente(int clienteId, Usuario usuario)
+        {
+            try
+            {
+                using (var connection = Database.GetConnection())
+                {
+                    connection.Open();
+                    string query = "UPDATE Clientes SET Activo = 0 WHERE Id = @Id";
+
+                    using (var cmd = new SQLiteCommand(query, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@Id", clienteId);
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+
+                // Registrar en auditoría
+                if (usuario != null)
+                {
+                    AuditLogger.RegistrarEliminacion(usuario, "Clientes", clienteId.ToString());
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error al eliminar cliente: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Verifica si un cliente tiene crédito disponible
         /// </summary>
         public static bool TieneCreditoDisponible(int clienteId, decimal monto)
@@ -384,7 +418,7 @@ namespace TuTiendita.Helpers
                                 cmd.Parameters.AddWithValue("@Monto", monto);
                                 cmd.Parameters.AddWithValue("@FechaPago", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
                                 cmd.Parameters.AddWithValue("@MetodoPago", metodoPago);
-                                cmd.Parameters.AddWithValue("@UsuarioId", usuario?.Id ?? (object)DBNull.Value);
+                                cmd.Parameters.AddWithValue("@UsuarioId", usuario?.IdUsuario ?? (object)DBNull.Value);
                                 cmd.Parameters.AddWithValue("@Notas", notas ?? (object)DBNull.Value);
 
                                 cmd.ExecuteNonQuery();
@@ -480,6 +514,51 @@ namespace TuTiendita.Helpers
             }
 
             return creditos;
+        }
+
+        /// <summary>
+        /// Obtiene los pagos realizados para un crédito específico
+        /// </summary>
+        public static List<PagoCredito> ObtenerPagosCliente(int creditoId)
+        {
+            var pagos = new List<PagoCredito>();
+
+            try
+            {
+                using (var connection = Database.GetConnection())
+                {
+                    connection.Open();
+                    string query = @"SELECT * FROM PagosCredito
+                                   WHERE CreditoId = @CreditoId
+                                   ORDER BY FechaPago DESC";
+
+                    using (var cmd = new SQLiteCommand(query, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@CreditoId", creditoId);
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                pagos.Add(new PagoCredito
+                                {
+                                    Id = reader.GetInt32(0),
+                                    CreditoId = reader.GetInt32(1),
+                                    Monto = reader.GetDecimal(2),
+                                    FechaPago = reader.GetString(3),
+                                    MetodoPago = reader.GetString(4),
+                                    Notas = reader.IsDBNull(6) ? null : reader.GetString(6)
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error al obtener pagos: {ex.Message}");
+            }
+
+            return pagos;
         }
     }
 

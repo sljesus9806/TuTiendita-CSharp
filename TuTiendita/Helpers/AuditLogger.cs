@@ -94,7 +94,7 @@ namespace TuTiendita.Helpers
         public static void RegistrarLogin(Usuario usuario)
         {
             RegistrarAccion(
-                usuarioId: usuario.Id,
+                usuarioId: usuario.IdUsuario,
                 usuarioNombre: usuario.Nombre,
                 accion: TipoAccion.Login,
                 detalles: $"Login exitoso desde IP: {ObtenerIPLocal()}"
@@ -107,7 +107,7 @@ namespace TuTiendita.Helpers
         public static void RegistrarLogout(Usuario usuario)
         {
             RegistrarAccion(
-                usuarioId: usuario.Id,
+                usuarioId: usuario.IdUsuario,
                 usuarioNombre: usuario.Nombre,
                 accion: TipoAccion.Logout,
                 detalles: "Sesión cerrada correctamente"
@@ -120,7 +120,7 @@ namespace TuTiendita.Helpers
         public static void RegistrarVenta(Usuario usuario, int ventaId, decimal total, int cantidadProductos)
         {
             RegistrarAccion(
-                usuarioId: usuario.Id,
+                usuarioId: usuario.IdUsuario,
                 usuarioNombre: usuario.Nombre,
                 accion: TipoAccion.VentaRealizada,
                 tabla: "Ventas",
@@ -135,7 +135,7 @@ namespace TuTiendita.Helpers
         public static void RegistrarAperturaTurno(Usuario usuario, int turnoId, decimal montoInicial)
         {
             RegistrarAccion(
-                usuarioId: usuario.Id,
+                usuarioId: usuario.IdUsuario,
                 usuarioNombre: usuario.Nombre,
                 accion: TipoAccion.TurnoAbierto,
                 tabla: "Turnos",
@@ -150,7 +150,7 @@ namespace TuTiendita.Helpers
         public static void RegistrarCierreTurno(Usuario usuario, int turnoId, decimal totalEfectivo, decimal diferencia)
         {
             RegistrarAccion(
-                usuarioId: usuario.Id,
+                usuarioId: usuario.IdUsuario,
                 usuarioNombre: usuario.Nombre,
                 accion: TipoAccion.TurnoCerrado,
                 tabla: "Turnos",
@@ -165,7 +165,7 @@ namespace TuTiendita.Helpers
         public static void RegistrarMovimientoCaja(Usuario usuario, string tipo, decimal monto, string concepto)
         {
             RegistrarAccion(
-                usuarioId: usuario.Id,
+                usuarioId: usuario.IdUsuario,
                 usuarioNombre: usuario.Nombre,
                 accion: TipoAccion.MovimientoCaja,
                 tabla: "MovimientosCaja",
@@ -179,7 +179,7 @@ namespace TuTiendita.Helpers
         public static void RegistrarCreacion(Usuario usuario, string tabla, string registroId, object datosNuevos)
         {
             RegistrarAccion(
-                usuarioId: usuario.Id,
+                usuarioId: usuario.IdUsuario,
                 usuarioNombre: usuario.Nombre,
                 accion: TipoAccion.Crear,
                 tabla: tabla,
@@ -196,7 +196,7 @@ namespace TuTiendita.Helpers
             object datosAnteriores, object datosNuevos)
         {
             RegistrarAccion(
-                usuarioId: usuario.Id,
+                usuarioId: usuario.IdUsuario,
                 usuarioNombre: usuario.Nombre,
                 accion: TipoAccion.Actualizar,
                 tabla: tabla,
@@ -213,7 +213,7 @@ namespace TuTiendita.Helpers
         public static void RegistrarEliminacion(Usuario usuario, string tabla, string registroId, object datosAnteriores)
         {
             RegistrarAccion(
-                usuarioId: usuario.Id,
+                usuarioId: usuario.IdUsuario,
                 usuarioNombre: usuario.Nombre,
                 accion: TipoAccion.Eliminar,
                 tabla: tabla,
@@ -229,7 +229,7 @@ namespace TuTiendita.Helpers
         public static void RegistrarCambioPassword(Usuario usuario, int usuarioAfectadoId, string nombreAfectado)
         {
             RegistrarAccion(
-                usuarioId: usuario.Id,
+                usuarioId: usuario.IdUsuario,
                 usuarioNombre: usuario.Nombre,
                 accion: TipoAccion.CambioPassword,
                 tabla: "Usuarios",
@@ -244,7 +244,7 @@ namespace TuTiendita.Helpers
         public static void RegistrarCambioConfiguracion(Usuario usuario, string campo, object valorAnterior, object valorNuevo)
         {
             RegistrarAccion(
-                usuarioId: usuario.Id,
+                usuarioId: usuario.IdUsuario,
                 usuarioNombre: usuario.Nombre,
                 accion: TipoAccion.ConfiguracionCambiada,
                 tabla: "Configuracion",
@@ -273,7 +273,7 @@ namespace TuTiendita.Helpers
         public static void RegistrarRestauracion(Usuario usuario, string rutaArchivo)
         {
             RegistrarAccion(
-                usuarioId: usuario.Id,
+                usuarioId: usuario.IdUsuario,
                 usuarioNombre: usuario.Nombre,
                 accion: TipoAccion.BackupRestaurado,
                 detalles: $"Base de datos restaurada desde: {rutaArchivo}"
@@ -286,7 +286,7 @@ namespace TuTiendita.Helpers
         public static void RegistrarPermisosDenegados(Usuario usuario, string accionIntentada)
         {
             RegistrarAccion(
-                usuarioId: usuario.Id,
+                usuarioId: usuario.IdUsuario,
                 usuarioNombre: usuario.Nombre,
                 accion: TipoAccion.PermisosDenegados,
                 detalles: $"Acceso denegado a: {accionIntentada}"

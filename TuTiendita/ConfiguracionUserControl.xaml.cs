@@ -370,7 +370,7 @@ namespace TuTiendita
                     }
 
                     // Verificar contraseña actual (compatible con BCrypt y plaintext)
-                    bool passwordCorrecta = SecurityHelper.VerifyPasswordCompat(txtPasswordActual.Password, passwordActualDb);
+                    bool passwordCorrecta = SecurityHelper.VerifyPasswordCompat(txtPasswordActual.Password, passwordActualDb, out bool esHash);
 
                     if (!passwordCorrecta)
                     {
