@@ -349,7 +349,7 @@ namespace TuTiendita.Helpers
                 {
                     connection.Open();
 
-                    var datos = new DatosCierreCaja { Movimientos = new List<MovimientoCaja>() };
+                    var datos = new DatosCierreCaja();
 
                     // Obtener información del turno
                     string queryTurno = @"SELECT t.FechaApertura, t.FechaCierre, t.MontoInicial,
@@ -430,11 +430,7 @@ namespace TuTiendita.Helpers
 
         private static DatosReporteVentas ObtenerDatosVentas(DateTime fechaInicio, DateTime fechaFin)
         {
-            var datos = new DatosReporteVentas
-            {
-                VentasPorCajero = new List<VentaPorCajero>(),
-                ProductosMasVendidos = new List<ProductoVendido>()
-            };
+            var datos = new DatosReporteVentas();
 
             try
             {
@@ -566,9 +562,9 @@ namespace TuTiendita.Helpers
 
     internal class DatosCierreCaja
     {
-        public string FechaApertura { get; set; }
-        public string FechaCierre { get; set; }
-        public string NombreCajero { get; set; }
+        public string FechaApertura { get; set; } = string.Empty;
+        public string? FechaCierre { get; set; }
+        public string NombreCajero { get; set; } = string.Empty;
         public decimal MontoInicial { get; set; }
         public decimal TotalEfectivo { get; set; }
         public decimal TotalTarjeta { get; set; }
@@ -579,15 +575,15 @@ namespace TuTiendita.Helpers
         public decimal EfectivoEsperado { get; set; }
         public decimal EfectivoContado { get; set; }
         public decimal? DiferenciaEfectivo { get; set; }
-        public string Notas { get; set; }
-        public List<MovimientoCaja> Movimientos { get; set; }
+        public string? Notas { get; set; }
+        public List<MovimientoCaja> Movimientos { get; set; } = new();
     }
 
     internal class MovimientoCaja
     {
-        public string Fecha { get; set; }
-        public string Tipo { get; set; }
-        public string Concepto { get; set; }
+        public string Fecha { get; set; } = string.Empty;
+        public string Tipo { get; set; } = string.Empty;
+        public string Concepto { get; set; } = string.Empty;
         public decimal Monto { get; set; }
     }
 
@@ -596,13 +592,13 @@ namespace TuTiendita.Helpers
         public int TotalVentas { get; set; }
         public decimal MontoTotal { get; set; }
         public decimal TicketPromedio { get; set; }
-        public List<VentaPorCajero> VentasPorCajero { get; set; }
-        public List<ProductoVendido> ProductosMasVendidos { get; set; }
+        public List<VentaPorCajero> VentasPorCajero { get; set; } = new();
+        public List<ProductoVendido> ProductosMasVendidos { get; set; } = new();
     }
 
     internal class VentaPorCajero
     {
-        public string Nombre { get; set; }
+        public string Nombre { get; set; } = string.Empty;
         public int Cantidad { get; set; }
         public decimal Total { get; set; }
         public decimal Promedio { get; set; }
@@ -610,14 +606,14 @@ namespace TuTiendita.Helpers
 
     internal class ProductoVendido
     {
-        public string Nombre { get; set; }
+        public string Nombre { get; set; } = string.Empty;
         public int Cantidad { get; set; }
         public decimal Total { get; set; }
     }
 
-    file class ConfiguracionTienda
+    private class ConfiguracionTienda
     {
-        public string NombreTienda { get; set; }
+        public string NombreTienda { get; set; } = string.Empty;
     }
 
     #endregion
