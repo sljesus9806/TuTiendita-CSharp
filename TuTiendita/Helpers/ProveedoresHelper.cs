@@ -137,7 +137,7 @@ namespace TuTiendita.Helpers
                 // Registrar en auditoría
                 if (usuario != null)
                 {
-                    AuditLogger.RegistrarEliminacion(usuario, "Proveedores", proveedorId.ToString());
+                    AuditLogger.RegistrarEliminacion(usuario, "Proveedores", proveedorId.ToString(), null);
                 }
 
                 return true;
