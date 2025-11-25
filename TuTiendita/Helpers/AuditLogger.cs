@@ -260,7 +260,7 @@ namespace TuTiendita.Helpers
         public static void RegistrarBackup(Usuario usuario, string rutaArchivo, long tamanoBytes)
         {
             RegistrarAccion(
-                usuarioId: usuario?.Id,
+                usuarioId: usuario?.IdUsuario,
                 usuarioNombre: usuario?.Nombre ?? "Sistema",
                 accion: TipoAccion.BackupCreado,
                 detalles: $"Backup creado: {rutaArchivo} ({tamanoBytes / 1024.0:N2} KB)"
