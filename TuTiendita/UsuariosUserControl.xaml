@@ -102,9 +102,9 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <StackPanel Grid.Row="0" Background="#F8F9FA" Padding="15">
+                <Border Grid.Row="0" Background="#F8F9FA" Padding="15">
                     <TextBlock Text="📋 Lista de Usuarios" FontSize="15" FontWeight="Bold"/>
-                </StackPanel>
+                </Border>
 
                 <DataGrid x:Name="dgUsuarios" Grid.Row="1" AutoGenerateColumns="False"
                           IsReadOnly="True" SelectionMode="Single"

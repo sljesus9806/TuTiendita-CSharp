@@ -89,11 +89,13 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <StackPanel Grid.Row="0" Background="#F8F9FA" Padding="15">
-                        <TextBlock Text="📦 Productos Disponibles" FontSize="14" FontWeight="Bold"/>
-                        <TextBlock Text="Haz doble clic en un producto para agregarlo al carrito"
-                                   FontSize="11" Foreground="#7F8C8D" Margin="0,3,0,0"/>
-                    </StackPanel>
+                    <Border Grid.Row="0" Background="#F8F9FA" Padding="15">
+                        <StackPanel>
+                            <TextBlock Text="📦 Productos Disponibles" FontSize="14" FontWeight="Bold"/>
+                            <TextBlock Text="Haz doble clic en un producto para agregarlo al carrito"
+                                       FontSize="11" Foreground="#7F8C8D" Margin="0,3,0,0"/>
+                        </StackPanel>
+                    </Border>
 
                     <DataGrid x:Name="dgProductos" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True"
                               MouseDoubleClick="DgProductos_MouseDoubleClick"
@@ -164,9 +166,9 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <StackPanel Grid.Row="0" Background="#3498DB" Padding="15">
+                    <Border Grid.Row="0" Background="#3498DB" Padding="15">
                         <TextBlock Text="🛒 Carrito de Compras" FontSize="15" FontWeight="Bold" Foreground="White"/>
-                    </StackPanel>
+                    </Border>
 
                     <DataGrid x:Name="dgVenta" Grid.Row="1" AutoGenerateColumns="False"
                               CanUserAddRows="False" HeadersVisibility="Column"
