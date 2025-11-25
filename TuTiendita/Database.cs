@@ -446,5 +446,10 @@ namespace TuTiendita
         {
             return new SQLiteConnection(dbPath);
         }
+
+        public static string GetDatabasePath()
+        {
+            return "productos.db";
+        }
     }
 }

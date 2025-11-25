@@ -64,6 +64,92 @@ namespace TuTiendita.Helpers
         }
 
         /// <summary>
+        /// Obtiene un proveedor por ID
+        /// </summary>
+        public static Proveedor ObtenerProveedorPorId(int proveedorId)
+        {
+            try
+            {
+                using (var connection = Database.GetConnection())
+                {
+                    connection.Open();
+                    string query = @"SELECT p.*,
+                                   COUNT(DISTINCT oc.Id) as TotalOrdenes,
+                                   COALESCE(SUM(oc.Total), 0) as TotalCompras
+                                   FROM Proveedores p
+                                   LEFT JOIN OrdenesCompra oc ON oc.ProveedorId = p.Id
+                                   WHERE p.Id = @Id
+                                   GROUP BY p.Id";
+
+                    using (var cmd = new SQLiteCommand(query, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@Id", proveedorId);
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                return new Proveedor
+                                {
+                                    Id = reader.GetInt32(0),
+                                    Nombre = reader.GetString(1),
+                                    Contacto = reader.IsDBNull(2) ? null : reader.GetString(2),
+                                    Telefono = reader.IsDBNull(3) ? null : reader.GetString(3),
+                                    Email = reader.IsDBNull(4) ? null : reader.GetString(4),
+                                    Direccion = reader.IsDBNull(5) ? null : reader.GetString(5),
+                                    RUC = reader.IsDBNull(6) ? null : reader.GetString(6),
+                                    Activo = reader.GetInt32(7) == 1,
+                                    Notas = reader.IsDBNull(8) ? null : reader.GetString(8),
+                                    TotalOrdenes = reader.GetInt32(9),
+                                    TotalCompras = reader.GetDecimal(10)
+                                };
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error al obtener proveedor: {ex.Message}");
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Elimina (desactiva) un proveedor
+        /// </summary>
+        public static bool EliminarProveedor(int proveedorId, Usuario usuario)
+        {
+            try
+            {
+                using (var connection = Database.GetConnection())
+                {
+                    connection.Open();
+                    string query = "UPDATE Proveedores SET Activo = 0 WHERE Id = @Id";
+
+                    using (var cmd = new SQLiteCommand(query, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@Id", proveedorId);
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+
+                // Registrar en auditoría
+                if (usuario != null)
+                {
+                    AuditLogger.RegistrarEliminacion(usuario, "Proveedores", proveedorId.ToString());
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error al eliminar proveedor: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Crea un nuevo proveedor
         /// </summary>
         public static int CrearProveedor(Proveedor proveedor, Usuario usuario)
