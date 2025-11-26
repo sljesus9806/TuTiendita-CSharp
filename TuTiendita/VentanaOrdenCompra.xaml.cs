@@ -61,6 +61,10 @@ namespace TuTiendita
 
         private void CmbTipoPago_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            // Validar que los controles estén inicializados
+            if (pnlDiasCredito == null || txtFechaVencimiento == null)
+                return;
+
             if (cmbTipoPago.SelectedIndex == 1) // Crédito
             {
                 pnlDiasCredito.Visibility = Visibility.Visible;
@@ -77,13 +81,19 @@ namespace TuTiendita
 
         private void TxtDiasCredito_TextChanged(object sender, TextChangedEventArgs e)
         {
+            // Validar que los controles estén inicializados
+            if (txtFechaVencimiento == null || cmbTipoPago == null)
+                return;
+
             ActualizarFechaVencimiento();
             ActualizarInfoPago();
         }
 
         private void ActualizarFechaVencimiento()
         {
-            if (cmbTipoPago != null && cmbTipoPago.SelectedIndex == 1 && int.TryParse(txtDiasCredito.Text, out int dias))
+            if (cmbTipoPago != null && txtFechaVencimiento != null &&
+                cmbTipoPago.SelectedIndex == 1 &&
+                txtDiasCredito != null && int.TryParse(txtDiasCredito.Text, out int dias))
             {
                 var fechaVenc = DateTime.Now.AddDays(dias);
                 txtFechaVencimiento.Text = $"Vence: {fechaVenc:dd/MM/yyyy}";
@@ -92,7 +102,7 @@ namespace TuTiendita
 
         private void ActualizarInfoPago()
         {
-            if (txtInfoPago == null || cmbTipoPago == null)
+            if (txtInfoPago == null || cmbTipoPago == null || txtDiasCredito == null)
                 return;
 
             if (cmbTipoPago.SelectedIndex == 1 && int.TryParse(txtDiasCredito.Text, out int dias))
