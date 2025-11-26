@@ -122,6 +122,10 @@ namespace TuTiendita
 
         private void CalcularSubtotal()
         {
+            // Validar que los controles estén inicializados
+            if (txtCantidad == null || txtPrecio == null || txtSubtotal == null)
+                return;
+
             if (int.TryParse(txtCantidad.Text, out int cantidad) &&
                 decimal.TryParse(txtPrecio.Text, out decimal precio))
             {
