@@ -93,11 +93,7 @@ namespace TuTiendita
         {
             if (cmbTipoPago != null && txtFechaVencimiento != null &&
                 cmbTipoPago.SelectedIndex == 1 &&
-                txtDiasCredito != null && int.TryParse(txtDiasCredito.Text, out int diasCredito))
-            {
-                var fechaVenc = DateTime.Now.AddDays(diasCredito);
                 txtDiasCredito != null && int.TryParse(txtDiasCredito.Text, out int dias))
-            if (cmbTipoPago != null && cmbTipoPago.SelectedIndex == 1 && int.TryParse(txtDiasCredito.Text, out int dias))
             {
                 var fechaVenc = DateTime.Now.AddDays(dias);
                 txtFechaVencimiento.Text = $"Vence: {fechaVenc:dd/MM/yyyy}";
@@ -107,12 +103,6 @@ namespace TuTiendita
         private void ActualizarInfoPago()
         {
             if (txtInfoPago == null || cmbTipoPago == null || txtDiasCredito == null)
-                return;
-
-            if (cmbTipoPago.SelectedIndex == 1 && int.TryParse(txtDiasCredito.Text, out int diasInfo))
-            {
-                txtInfoPago.Text = $"💳 Crédito a {diasInfo} días";
-            if (txtInfoPago == null || cmbTipoPago == null)
                 return;
 
             if (cmbTipoPago.SelectedIndex == 1 && int.TryParse(txtDiasCredito.Text, out int dias))
@@ -299,20 +289,6 @@ namespace TuTiendita
                                    $"Tipo de Pago: {tipoPago}\n";
 
                     if (tipoPago == "Crédito")
-                    {
-                        mensaje += $"Días de Crédito: {diasCredito}\n" +
-                                 $"Fecha de Vencimiento: {DateTime.Parse(fechaVencimiento):dd/MM/yyyy}\n";
-                    }
-
-                    if (recibirInmediato)
-                    {
-                    {
-                        mensaje += $"Días de Crédito: {diasCredito}\n" +
-                                 $"Fecha de Vencimiento: {DateTime.Parse(fechaVencimiento):dd/MM/yyyy}\n";
-                    }
-
-                    if (recibirInmediato)
-                    {
                     {
                         mensaje += $"Días de Crédito: {diasCredito}\n" +
                                  $"Fecha de Vencimiento: {DateTime.Parse(fechaVencimiento):dd/MM/yyyy}\n";
