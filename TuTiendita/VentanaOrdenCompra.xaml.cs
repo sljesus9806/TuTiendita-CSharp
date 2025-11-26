@@ -93,9 +93,9 @@ namespace TuTiendita
         {
             if (cmbTipoPago != null && txtFechaVencimiento != null &&
                 cmbTipoPago.SelectedIndex == 1 &&
-                txtDiasCredito != null && int.TryParse(txtDiasCredito.Text, out int dias))
+                txtDiasCredito != null && int.TryParse(txtDiasCredito.Text, out int diasCredito))
             {
-                var fechaVenc = DateTime.Now.AddDays(dias);
+                var fechaVenc = DateTime.Now.AddDays(diasCredito);
                 txtFechaVencimiento.Text = $"Vence: {fechaVenc:dd/MM/yyyy}";
             }
         }
@@ -105,9 +105,9 @@ namespace TuTiendita
             if (txtInfoPago == null || cmbTipoPago == null || txtDiasCredito == null)
                 return;
 
-            if (cmbTipoPago.SelectedIndex == 1 && int.TryParse(txtDiasCredito.Text, out int dias))
+            if (cmbTipoPago.SelectedIndex == 1 && int.TryParse(txtDiasCredito.Text, out int diasInfo))
             {
-                txtInfoPago.Text = $"💳 Crédito a {dias} días";
+                txtInfoPago.Text = $"💳 Crédito a {diasInfo} días";
             }
             else
             {
