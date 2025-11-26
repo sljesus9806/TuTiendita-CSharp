@@ -22,10 +22,13 @@ namespace TuTiendita
             proveedorActual = proveedor;
             usuarioActual = usuario;
 
-            txtProveedor.Text = $"Proveedor: {proveedor.Nombre} | RFC: {proveedor.RFC ?? "N/A"}";
+            // Validar que los controles críticos estén inicializados
+            if (txtProveedor != null)
+                txtProveedor.Text = $"Proveedor: {proveedor.Nombre} | RFC: {proveedor.RFC ?? "N/A"}";
 
             detallesOrden = new ObservableCollection<DetalleOrdenCompraTemp>();
-            dgDetalles.ItemsSource = detallesOrden;
+            if (dgDetalles != null)
+                dgDetalles.ItemsSource = detallesOrden;
 
             CargarProductos();
             ActualizarFechaVencimiento();
@@ -33,6 +36,10 @@ namespace TuTiendita
 
         private void CargarProductos()
         {
+            // Validar que el control esté inicializado
+            if (cmbProductos == null)
+                return;
+
             try
             {
                 productosDisponibles = ProductosUserControl.Producto.ObtenerTodos();
@@ -50,6 +57,10 @@ namespace TuTiendita
 
         private void CmbProductos_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            // Validar que los controles estén inicializados
+            if (txtPrecio == null || txtCantidad == null)
+                return;
+
             if (cmbProductos.SelectedItem is ProductosUserControl.Producto producto)
             {
                 // Pre-fill with product cost
@@ -122,6 +133,10 @@ namespace TuTiendita
 
         private void CalcularSubtotal()
         {
+            // Validar que los controles estén inicializados
+            if (txtCantidad == null || txtPrecio == null || txtSubtotal == null)
+                return;
+
             if (int.TryParse(txtCantidad.Text, out int cantidad) &&
                 decimal.TryParse(txtPrecio.Text, out decimal precio))
             {
@@ -187,7 +202,8 @@ namespace TuTiendita
             cmbProductos.SelectedIndex = -1;
             txtCantidad.Text = "1";
             txtPrecio.Text = "0";
-            txtSubtotal.Text = "$0.00";
+            if (txtSubtotal != null)
+                txtSubtotal.Text = "$0.00";
             cmbProductos.Focus();
 
             ActualizarTotales();
@@ -204,6 +220,10 @@ namespace TuTiendita
 
         private void ActualizarTotales()
         {
+            // Validar que los controles estén inicializados
+            if (txtTotalOrden == null || txtTotalItems == null)
+                return;
+
             decimal total = detallesOrden.Sum(d => d.Subtotal);
             int totalItems = detallesOrden.Sum(d => d.Cantidad);
 

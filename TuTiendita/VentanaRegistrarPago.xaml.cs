@@ -21,6 +21,11 @@ namespace TuTiendita
 
         private void CargarDatos()
         {
+            // Validar que los controles estén inicializados
+            if (txtCreditoId == null || txtMontoTotal == null ||
+                txtMontoAbonado == null || txtMontoPendiente == null)
+                return;
+
             txtCreditoId.Text = creditoActual.Id.ToString();
             txtMontoTotal.Text = creditoActual.MontoTotalFormateado;
             txtMontoAbonado.Text = creditoActual.MontoAbonadoFormateado;
@@ -29,6 +34,10 @@ namespace TuTiendita
 
         private void TxtMonto_TextChanged(object sender, TextChangedEventArgs e)
         {
+            // Validar que los controles estén inicializados
+            if (txtMonto == null || txtAviso == null)
+                return;
+
             if (decimal.TryParse(txtMonto.Text, out decimal monto))
             {
                 if (monto > creditoActual.MontoPendiente)

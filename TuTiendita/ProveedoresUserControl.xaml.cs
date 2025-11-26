@@ -26,6 +26,10 @@ namespace TuTiendita
 
         private void CargarProveedores()
         {
+            // Validar que el control esté inicializado
+            if (dgProveedores == null)
+                return;
+
             try
             {
                 proveedoresActuales = ProveedoresHelper.ObtenerProveedoresActivos();
@@ -40,7 +44,9 @@ namespace TuTiendita
 
         private void TxtBuscar_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (proveedoresActuales == null) return;
+            // Validar que los controles estén inicializados
+            if (txtBuscar == null || dgProveedores == null || proveedoresActuales == null)
+                return;
 
             string busqueda = txtBuscar.Text.ToLower();
 

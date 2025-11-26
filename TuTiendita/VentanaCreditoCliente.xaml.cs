@@ -16,14 +16,23 @@ namespace TuTiendita
             clienteActual = cliente;
             usuarioActual = usuario;
 
-            txtTitulo.Text = $"💳 Gestión de Crédito - {cliente.NombreCompleto}";
-            txtCliente.Text = $"Cliente: {cliente.NombreCompleto} | Documento: {cliente.Documento ?? "N/A"}";
+            // Validar que los controles críticos estén inicializados
+            if (txtTitulo != null)
+                txtTitulo.Text = $"💳 Gestión de Crédito - {cliente.NombreCompleto}";
+            if (txtCliente != null)
+                txtCliente.Text = $"Cliente: {cliente.NombreCompleto} | Documento: {cliente.Documento ?? "N/A"}";
 
             CargarDatos();
         }
 
         private void CargarDatos()
         {
+            // Validar que los controles estén inicializados
+            if (txtLimiteCredito == null || txtDeudaActual == null ||
+                txtCreditoDisponible == null || dgCreditos == null ||
+                dgPagos == null || txtTotalPagado == null)
+                return;
+
             // Actualizar tarjetas de resumen
             txtLimiteCredito.Text = clienteActual.LimiteCreditoFormateado;
             txtDeudaActual.Text = clienteActual.DeudaTotalFormateada;

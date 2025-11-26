@@ -144,6 +144,10 @@ namespace TuTiendita
 
         private void AplicarFiltros()
         {
+            // Validar que los controles estén inicializados
+            if (dgProductos == null || productos == null)
+                return;
+
             string textoBusqueda = txtBuscar?.Text?.ToLower() ?? "";
             bool soloStockBajo = chkStockBajo?.IsChecked ?? false;
 
