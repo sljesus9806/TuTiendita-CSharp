@@ -66,6 +66,12 @@ namespace TuTiendita
             CargarProveedores();
         }
 
+        private void BtnVerCreditos_Click(object sender, RoutedEventArgs e)
+        {
+            var ventana = new VentanaCreditosPendientes();
+            ventana.ShowDialog();
+        }
+
         private void BtnNuevoProveedor_Click(object sender, RoutedEventArgs e)
         {
             var ventana = new VentanaEditarProveedor(null, usuarioActual);

@@ -62,6 +62,9 @@
 
             <!-- Action Buttons -->
             <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button x:Name="btnVerCreditos" Content="💳 Ver Créditos" Width="140" Height="40"
+                        Background="#E67E22" Foreground="White" FontWeight="Bold" BorderThickness="0"
+                        Margin="0,0,10,0" Click="BtnVerCreditos_Click" Cursor="Hand"/>
                 <Button x:Name="btnNuevoProveedor" Content="➕ Nuevo Proveedor" Width="160" Height="40"
                         Background="#27AE60" Foreground="White" FontWeight="Bold" BorderThickness="0"
                         Margin="0,0,10,0" Click="BtnNuevoProveedor_Click" Cursor="Hand"/>
