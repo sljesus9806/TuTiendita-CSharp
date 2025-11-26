@@ -27,6 +27,10 @@ namespace TuTiendita
 
         private void VerificarPermisos()
         {
+            // Validar que el control esté inicializado
+            if (btnNuevoCliente == null)
+                return;
+
             // Solo los gerentes pueden agregar, editar o eliminar clientes
             if (usuarioActual.NivelAcceso != "Gerente")
             {
@@ -39,6 +43,10 @@ namespace TuTiendita
 
         private void CargarClientes()
         {
+            // Validar que el control esté inicializado
+            if (dgClientes == null)
+                return;
+
             try
             {
                 clientesActuales = ClientesHelper.ObtenerClientesActivos();
@@ -53,7 +61,9 @@ namespace TuTiendita
 
         private void TxtBuscar_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (clientesActuales == null) return;
+            // Validar que los controles estén inicializados
+            if (txtBuscar == null || dgClientes == null || clientesActuales == null)
+                return;
 
             string busqueda = txtBuscar.Text.ToLower();
 
