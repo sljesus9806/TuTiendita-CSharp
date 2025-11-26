@@ -14,6 +14,7 @@ namespace TuTiendita
         private Usuario usuarioActual;
         private List<ProductosUserControl.Producto> productosDisponibles;
         private ObservableCollection<DetalleOrdenCompraTemp> detallesOrden;
+        private bool recibirInmediato = false;
 
         public VentanaOrdenCompra(Proveedor proveedor, Usuario usuario)
         {
@@ -27,6 +28,7 @@ namespace TuTiendita
             dgDetalles.ItemsSource = detallesOrden;
 
             CargarProductos();
+            ActualizarFechaVencimiento();
         }
 
         private void CargarProductos()
@@ -54,6 +56,52 @@ namespace TuTiendita
                 txtPrecio.Text = producto.Costo.ToString();
                 txtCantidad.Focus();
                 txtCantidad.SelectAll();
+            }
+        }
+
+        private void CmbTipoPago_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (cmbTipoPago.SelectedIndex == 1) // Crédito
+            {
+                pnlDiasCredito.Visibility = Visibility.Visible;
+                ActualizarFechaVencimiento();
+            }
+            else // Contado
+            {
+                pnlDiasCredito.Visibility = Visibility.Collapsed;
+                txtFechaVencimiento.Text = "";
+            }
+
+            ActualizarInfoPago();
+        }
+
+        private void TxtDiasCredito_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            ActualizarFechaVencimiento();
+            ActualizarInfoPago();
+        }
+
+        private void ActualizarFechaVencimiento()
+        {
+            if (cmbTipoPago != null && cmbTipoPago.SelectedIndex == 1 && int.TryParse(txtDiasCredito.Text, out int dias))
+            {
+                var fechaVenc = DateTime.Now.AddDays(dias);
+                txtFechaVencimiento.Text = $"Vence: {fechaVenc:dd/MM/yyyy}";
+            }
+        }
+
+        private void ActualizarInfoPago()
+        {
+            if (txtInfoPago == null || cmbTipoPago == null)
+                return;
+
+            if (cmbTipoPago.SelectedIndex == 1 && int.TryParse(txtDiasCredito.Text, out int dias))
+            {
+                txtInfoPago.Text = $"💳 Crédito a {dias} días";
+            }
+            else
+            {
+                txtInfoPago.Text = "💵 Pago de contado";
             }
         }
 
@@ -150,10 +198,22 @@ namespace TuTiendita
             int totalItems = detallesOrden.Sum(d => d.Cantidad);
 
             txtTotalOrden.Text = total.ToString("C");
-            txtTotalItems.Text = $"{totalItems} items";
+            txtTotalItems.Text = $"{totalItems} producto{(totalItems != 1 ? "s" : "")}";
         }
 
         private void BtnGuardar_Click(object sender, RoutedEventArgs e)
+        {
+            recibirInmediato = false;
+            GuardarOrden();
+        }
+
+        private void BtnGuardarRecibir_Click(object sender, RoutedEventArgs e)
+        {
+            recibirInmediato = true;
+            GuardarOrden();
+        }
+
+        private void GuardarOrden()
         {
             if (detallesOrden.Count == 0)
             {
@@ -162,9 +222,32 @@ namespace TuTiendita
                 return;
             }
 
+            // Validar días de crédito si es necesario
+            if (cmbTipoPago.SelectedIndex == 1)
+            {
+                if (!int.TryParse(txtDiasCredito.Text, out int dias) || dias <= 0)
+                {
+                    MessageBox.Show("Ingrese un número válido de días de crédito.", "Validación",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    txtDiasCredito.Focus();
+                    return;
+                }
+            }
+
             try
             {
                 decimal total = detallesOrden.Sum(d => d.Subtotal);
+
+                // Preparar datos de pago
+                string tipoPago = cmbTipoPago.SelectedIndex == 1 ? "Crédito" : "Contado";
+                int diasCredito = 0;
+                string fechaVencimiento = null;
+
+                if (tipoPago == "Crédito")
+                {
+                    diasCredito = int.Parse(txtDiasCredito.Text);
+                    fechaVencimiento = DateTime.Now.AddDays(diasCredito).ToString("yyyy-MM-dd HH:mm:ss");
+                }
 
                 var orden = new OrdenCompra
                 {
@@ -172,7 +255,10 @@ namespace TuTiendita
                     FechaOrden = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
                     Total = total,
                     Estado = "Pendiente",
-                    UsuarioId = usuarioActual.IdUsuario
+                    UsuarioId = usuarioActual.IdUsuario,
+                    TipoPago = tipoPago,
+                    DiasCredito = diasCredito,
+                    FechaVencimiento = fechaVencimiento
                 };
 
                 var detalles = detallesOrden.Select(d => new DetalleOrdenCompra
@@ -187,24 +273,47 @@ namespace TuTiendita
 
                 if (ordenId > 0)
                 {
-                    var resultado = MessageBox.Show(
-                        $"Orden de compra #{ordenId} creada correctamente.\n\n" +
-                        $"Total: {total:C}\n" +
-                        $"Estado: Pendiente\n\n" +
-                        $"¿Desea marcar la orden como recibida ahora?",
-                        "Éxito",
-                        MessageBoxButton.YesNo,
-                        MessageBoxImage.Information);
+                    string mensaje = $"✅ Orden de compra #{ordenId} creada correctamente.\n\n" +
+                                   $"Total: {total:C}\n" +
+                                   $"Estado: Pendiente\n" +
+                                   $"Tipo de Pago: {tipoPago}\n";
 
-                    if (resultado == MessageBoxResult.Yes)
+                    if (tipoPago == "Crédito")
                     {
+                        mensaje += $"Días de Crédito: {diasCredito}\n" +
+                                 $"Fecha de Vencimiento: {DateTime.Parse(fechaVencimiento):dd/MM/yyyy}\n";
+                    }
+
+                    if (recibirInmediato)
+                    {
+                        // Recibir orden inmediatamente
                         if (ProveedoresHelper.RecibirOrdenCompra(ordenId, usuarioActual))
                         {
                             MessageBox.Show(
-                                "Orden recibida correctamente.\nEl inventario ha sido actualizado.",
+                                mensaje + "\n✅ Orden recibida correctamente.\nEl inventario ha sido actualizado.",
                                 "Éxito",
                                 MessageBoxButton.OK,
                                 MessageBoxImage.Information);
+                        }
+                    }
+                    else
+                    {
+                        var resultado = MessageBox.Show(
+                            mensaje + "\n¿Desea marcar la orden como recibida ahora?",
+                            "Éxito",
+                            MessageBoxButton.YesNo,
+                            MessageBoxImage.Information);
+
+                        if (resultado == MessageBoxResult.Yes)
+                        {
+                            if (ProveedoresHelper.RecibirOrdenCompra(ordenId, usuarioActual))
+                            {
+                                MessageBox.Show(
+                                    "✅ Orden recibida correctamente.\nEl inventario ha sido actualizado.",
+                                    "Éxito",
+                                    MessageBoxButton.OK,
+                                    MessageBoxImage.Information);
+                            }
                         }
                     }
 
@@ -213,13 +322,13 @@ namespace TuTiendita
                 }
                 else
                 {
-                    MessageBox.Show("Error al crear la orden de compra.", "Error",
+                    MessageBox.Show("❌ Error al crear la orden de compra.", "Error",
                         MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error al crear la orden: {ex.Message}", "Error",
+                MessageBox.Show($"❌ Error al crear la orden: {ex.Message}", "Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }

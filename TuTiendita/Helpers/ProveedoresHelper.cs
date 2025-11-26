@@ -267,9 +267,9 @@ namespace TuTiendita.Helpers
                         {
                             // Crear orden
                             string queryOrden = @"INSERT INTO OrdenesCompra
-                                                (ProveedorId, FechaOrden, FechaEntrega, Total, Estado, UsuarioId, Notas)
+                                                (ProveedorId, FechaOrden, FechaEntrega, Total, Estado, UsuarioId, Notas, TipoPago, DiasCredito, FechaVencimiento)
                                                 VALUES
-                                                (@ProveedorId, @FechaOrden, @FechaEntrega, @Total, @Estado, @UsuarioId, @Notas);
+                                                (@ProveedorId, @FechaOrden, @FechaEntrega, @Total, @Estado, @UsuarioId, @Notas, @TipoPago, @DiasCredito, @FechaVencimiento);
                                                 SELECT last_insert_rowid();";
 
                             int ordenId;
@@ -282,6 +282,9 @@ namespace TuTiendita.Helpers
                                 cmd.Parameters.AddWithValue("@Estado", "Pendiente");
                                 cmd.Parameters.AddWithValue("@UsuarioId", usuario?.IdUsuario ?? (object)DBNull.Value);
                                 cmd.Parameters.AddWithValue("@Notas", orden.Notas ?? (object)DBNull.Value);
+                                cmd.Parameters.AddWithValue("@TipoPago", orden.TipoPago ?? "Contado");
+                                cmd.Parameters.AddWithValue("@DiasCredito", orden.DiasCredito);
+                                cmd.Parameters.AddWithValue("@FechaVencimiento", orden.FechaVencimiento ?? (object)DBNull.Value);
 
                                 ordenId = Convert.ToInt32(cmd.ExecuteScalar());
                             }
@@ -437,7 +440,9 @@ namespace TuTiendita.Helpers
                 using (var connection = Database.GetConnection())
                 {
                     connection.Open();
-                    string query = @"SELECT oc.*, p.Nombre as ProveedorNombre
+                    string query = @"SELECT oc.Id, oc.ProveedorId, oc.FechaOrden, oc.FechaEntrega, oc.Total,
+                                   oc.Estado, oc.UsuarioId, oc.Notas, oc.TipoPago, oc.DiasCredito,
+                                   oc.FechaVencimiento, p.Nombre as ProveedorNombre
                                    FROM OrdenesCompra oc
                                    INNER JOIN Proveedores p ON oc.ProveedorId = p.Id
                                    ORDER BY oc.FechaOrden DESC";
@@ -458,7 +463,10 @@ namespace TuTiendita.Helpers
                                     Estado = reader.GetString(5),
                                     UsuarioId = reader.IsDBNull(6) ? (int?)null : reader.GetInt32(6),
                                     Notas = reader.IsDBNull(7) ? null : reader.GetString(7),
-                                    ProveedorNombre = reader.GetString(8)
+                                    TipoPago = reader.IsDBNull(8) ? "Contado" : reader.GetString(8),
+                                    DiasCredito = reader.IsDBNull(9) ? 0 : reader.GetInt32(9),
+                                    FechaVencimiento = reader.IsDBNull(10) ? null : reader.GetString(10),
+                                    ProveedorNombre = reader.GetString(11)
                                 });
                             }
                         }
@@ -519,6 +527,60 @@ namespace TuTiendita.Helpers
 
             return detalles;
         }
+
+        /// <summary>
+        /// Obtiene las órdenes de compra con crédito pendiente
+        /// </summary>
+        public static List<OrdenCompra> ObtenerOrdenesCreditoPendiente()
+        {
+            var ordenes = new List<OrdenCompra>();
+
+            try
+            {
+                using (var connection = Database.GetConnection())
+                {
+                    connection.Open();
+                    string query = @"SELECT oc.Id, oc.ProveedorId, oc.FechaOrden, oc.FechaEntrega, oc.Total,
+                                   oc.Estado, oc.UsuarioId, oc.Notas, oc.TipoPago, oc.DiasCredito,
+                                   oc.FechaVencimiento, p.Nombre as ProveedorNombre
+                                   FROM OrdenesCompra oc
+                                   INNER JOIN Proveedores p ON oc.ProveedorId = p.Id
+                                   WHERE oc.TipoPago = 'Crédito' AND oc.Estado != 'Recibido'
+                                   ORDER BY oc.FechaVencimiento ASC";
+
+                    using (var cmd = new SQLiteCommand(query, connection))
+                    {
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                ordenes.Add(new OrdenCompra
+                                {
+                                    Id = reader.GetInt32(0),
+                                    ProveedorId = reader.GetInt32(1),
+                                    FechaOrden = reader.GetString(2),
+                                    FechaEntrega = reader.IsDBNull(3) ? null : reader.GetString(3),
+                                    Total = reader.GetDecimal(4),
+                                    Estado = reader.GetString(5),
+                                    UsuarioId = reader.IsDBNull(6) ? (int?)null : reader.GetInt32(6),
+                                    Notas = reader.IsDBNull(7) ? null : reader.GetString(7),
+                                    TipoPago = reader.IsDBNull(8) ? "Contado" : reader.GetString(8),
+                                    DiasCredito = reader.IsDBNull(9) ? 0 : reader.GetInt32(9),
+                                    FechaVencimiento = reader.IsDBNull(10) ? null : reader.GetString(10),
+                                    ProveedorNombre = reader.GetString(11)
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error al obtener órdenes con crédito pendiente: {ex.Message}");
+            }
+
+            return ordenes;
+        }
     }
 
     /// <summary>
@@ -557,6 +619,11 @@ namespace TuTiendita.Helpers
         public int? UsuarioId { get; set; }
         public string Notas { get; set; }
 
+        // Nuevos campos de pago
+        public string TipoPago { get; set; } = "Contado";
+        public int DiasCredito { get; set; } = 0;
+        public string FechaVencimiento { get; set; }
+
         // Campos relacionados
         public string ProveedorNombre { get; set; }
 
@@ -568,6 +635,51 @@ namespace TuTiendita.Helpers
             "Cancelado" => "✗ Cancelado",
             _ => Estado
         };
+
+        // Propiedades calculadas para crédito
+        public int DiasRestantes
+        {
+            get
+            {
+                if (TipoPago != "Crédito" || string.IsNullOrEmpty(FechaVencimiento))
+                    return 0;
+
+                try
+                {
+                    var fechaVenc = DateTime.Parse(FechaVencimiento);
+                    var dias = (fechaVenc - DateTime.Now).Days;
+                    return dias > 0 ? dias : 0;
+                }
+                catch
+                {
+                    return 0;
+                }
+            }
+        }
+
+        public string EstadoCredito
+        {
+            get
+            {
+                if (TipoPago != "Crédito")
+                    return "N/A";
+
+                if (Estado == "Recibido")
+                    return "💰 Pagado";
+
+                var diasRestantes = DiasRestantes;
+                if (diasRestantes == 0)
+                    return "⚠️ Vencido";
+                else if (diasRestantes <= 3)
+                    return $"⚠️ {diasRestantes} días";
+                else
+                    return $"✅ {diasRestantes} días";
+            }
+        }
+
+        public string TipoPagoFormateado => TipoPago == "Crédito"
+            ? $"💳 Crédito ({DiasCredito} días)"
+            : "💵 Contado";
     }
 
     /// <summary>

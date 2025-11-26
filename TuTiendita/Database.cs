@@ -380,6 +380,9 @@ namespace TuTiendita
                                                 [Estado] TEXT DEFAULT 'Pendiente',
                                                 [UsuarioId] INTEGER,
                                                 [Notas] TEXT,
+                                                [TipoPago] TEXT DEFAULT 'Contado',
+                                                [DiasCredito] INTEGER DEFAULT 0,
+                                                [FechaVencimiento] TEXT,
                                                 FOREIGN KEY ([ProveedorId]) REFERENCES [Proveedores]([Id]),
                                                 FOREIGN KEY ([UsuarioId]) REFERENCES [Usuarios]([Id])
                                                 )";
@@ -387,6 +390,37 @@ namespace TuTiendita
                     {
                         cmd.ExecuteNonQuery();
                     }
+
+                    // Alter OrdenesCompra table to add new payment columns if they don't exist
+                    try
+                    {
+                        string alterOrdenTipoPago = "ALTER TABLE OrdenesCompra ADD COLUMN TipoPago TEXT DEFAULT 'Contado'";
+                        using (var cmd = new SQLiteCommand(alterOrdenTipoPago, connection))
+                        {
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                    catch { /* Column already exists */ }
+
+                    try
+                    {
+                        string alterOrdenDiasCredito = "ALTER TABLE OrdenesCompra ADD COLUMN DiasCredito INTEGER DEFAULT 0";
+                        using (var cmd = new SQLiteCommand(alterOrdenDiasCredito, connection))
+                        {
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                    catch { /* Column already exists */ }
+
+                    try
+                    {
+                        string alterOrdenFechaVencimiento = "ALTER TABLE OrdenesCompra ADD COLUMN FechaVencimiento TEXT";
+                        using (var cmd = new SQLiteCommand(alterOrdenFechaVencimiento, connection))
+                        {
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                    catch { /* Column already exists */ }
 
                     // Create DetalleOrdenCompra table
                     string createDetalleOrdenQuery = @"CREATE TABLE IF NOT EXISTS [DetalleOrdenCompra] (

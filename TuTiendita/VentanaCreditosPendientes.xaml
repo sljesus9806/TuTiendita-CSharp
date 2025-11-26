@@ -1,0 +1,207 @@
+<Window x:Class="TuTiendita.VentanaCreditosPendientes"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Créditos Pendientes con Proveedores" Height="650" Width="1200"
+        WindowStartupLocation="CenterScreen"
+        Background="#F5F7FA">
+
+    <Window.Resources>
+        <!-- Card Style -->
+        <Style x:Key="Card" TargetType="Border">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="20"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.1" Color="#000000"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Modern Button Style -->
+        <Style x:Key="ModernButton" TargetType="Button">
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="15,8"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Opacity" Value="0.8"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="30">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Style="{StaticResource Card}" Margin="0,0,0,20">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="💳 Créditos Pendientes con Proveedores" FontSize="26" FontWeight="Bold" Foreground="#2C3E50"/>
+                    <TextBlock Text="Gestiona los pagos pendientes a tus proveedores" FontSize="14" Foreground="#7F8C8D" Margin="0,8,0,0"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <Button Content="🔄 Actualizar" Width="130" Height="40"
+                            Background="#3498DB" Foreground="White" Style="{StaticResource ModernButton}"
+                            Click="BtnActualizar_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Summary Cards -->
+        <Grid Grid.Row="1" Margin="0,0,0,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="15"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="15"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Total Pendiente -->
+            <Border Grid.Column="0" Style="{StaticResource Card}" Background="#FFF3E0">
+                <StackPanel>
+                    <TextBlock Text="💰 Total Pendiente" FontSize="14" FontWeight="Bold" Foreground="#E67E22"/>
+                    <TextBlock x:Name="txtTotalPendiente" Text="$0.00" FontSize="28" FontWeight="Bold"
+                               Foreground="#E67E22" Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Órdenes Vencidas -->
+            <Border Grid.Column="2" Style="{StaticResource Card}" Background="#FFEBEE">
+                <StackPanel>
+                    <TextBlock Text="⚠️ Órdenes Vencidas" FontSize="14" FontWeight="Bold" Foreground="#E74C3C"/>
+                    <TextBlock x:Name="txtOrdenesVencidas" Text="0" FontSize="28" FontWeight="Bold"
+                               Foreground="#E74C3C" Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Próximas a Vencer -->
+            <Border Grid.Column="4" Style="{StaticResource Card}" Background="#FFF9C4">
+                <StackPanel>
+                    <TextBlock Text="⏰ Por Vencer (3 días)" FontSize="14" FontWeight="Bold" Foreground="#F39C12"/>
+                    <TextBlock x:Name="txtProximasVencer" Text="0" FontSize="28" FontWeight="Bold"
+                               Foreground="#F39C12" Margin="0,8,0,0"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Credits DataGrid -->
+        <Border Grid.Row="2" Style="{StaticResource Card}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Text="📋 Lista de Créditos Pendientes" FontSize="16" FontWeight="Bold"
+                           Foreground="#2C3E50" Margin="0,0,0,15"/>
+
+                <DataGrid Grid.Row="1" x:Name="dgCreditos" AutoGenerateColumns="False"
+                          IsReadOnly="True" SelectionMode="Single"
+                          CanUserAddRows="False" HeadersVisibility="Column"
+                          GridLinesVisibility="Horizontal" RowHeight="50"
+                          AlternatingRowBackground="#F8F9FA"
+                          BorderThickness="0">
+                    <DataGrid.ColumnHeaderStyle>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="Background" Value="#ECF0F1"/>
+                            <Setter Property="Foreground" Value="#2C3E50"/>
+                            <Setter Property="FontWeight" Value="Bold"/>
+                            <Setter Property="Padding" Value="10"/>
+                            <Setter Property="BorderThickness" Value="0,0,0,2"/>
+                            <Setter Property="BorderBrush" Value="#DFE4EA"/>
+                            <Setter Property="FontSize" Value="13"/>
+                        </Style>
+                    </DataGrid.ColumnHeaderStyle>
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="# Orden" Binding="{Binding Id}" Width="80">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="Padding" Value="10,0"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Proveedor" Binding="{Binding ProveedorNombre}" Width="200">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="Padding" Value="10,0"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Total" Binding="{Binding TotalFormateado}" Width="120">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                    <Setter Property="Foreground" Value="#27AE60"/>
+                                    <Setter Property="TextAlignment" Value="Right"/>
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="Padding" Value="0,0,10,0"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Tipo de Pago" Binding="{Binding TipoPagoFormateado}" Width="150">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="Padding" Value="10,0"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Fecha Orden" Width="130">
+                            <DataGridTextColumn.Binding>
+                                <Binding Path="FechaOrden" StringFormat="{}{0:dd/MM/yyyy}"/>
+                            </DataGridTextColumn.Binding>
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="Padding" Value="10,0"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Días Restantes" Binding="{Binding DiasRestantes}" Width="130">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                    <Setter Property="TextAlignment" Value="Center"/>
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Estado" Binding="{Binding EstadoCredito}" Width="*">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                    <Setter Property="TextAlignment" Value="Center"/>
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </Border>
+
+        <!-- Close Button -->
+        <Button Grid.Row="3" Content="✖ Cerrar" Width="130" Height="40"
+                Background="#95A5A6" Foreground="White" Style="{StaticResource ModernButton}"
+                HorizontalAlignment="Right" Margin="0,20,0,0"
+                Click="BtnCerrar_Click"/>
+    </Grid>
+</Window>
