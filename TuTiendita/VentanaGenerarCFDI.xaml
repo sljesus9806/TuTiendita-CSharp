@@ -1,0 +1,320 @@
+<Window x:Class="TuTiendita.VentanaGenerarCFDI"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Generar Factura Electrónica CFDI 4.0"
+        Height="800" Width="1000"
+        WindowStartupLocation="CenterScreen"
+        Background="#F5F5F5"
+        ResizeMode="CanResize"
+        MinHeight="600" MinWidth="800">
+
+    <Window.Resources>
+        <Style x:Key="LabelStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="#333"/>
+            <Setter Property="Margin" Value="0,0,0,5"/>
+        </Style>
+
+        <Style x:Key="InputStyle" TargetType="TextBox">
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Margin" Value="0,0,0,15"/>
+            <Setter Property="BorderBrush" Value="#DDD"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+
+        <Style x:Key="ComboStyle" TargetType="ComboBox">
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Margin" Value="0,0,0,15"/>
+        </Style>
+
+        <Style x:Key="SectionTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#2196F3"/>
+            <Setter Property="Margin" Value="0,0,0,15"/>
+        </Style>
+
+        <Style x:Key="CardStyle" TargetType="Border">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="20"/>
+            <Setter Property="Margin" Value="0,0,0,15"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.1"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" Padding="20">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="350"/>
+                    <ColumnDefinition Width="20"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Panel izquierdo: Selección de venta -->
+                <StackPanel Grid.Column="0">
+                    <!-- Encabezado -->
+                    <TextBlock Text="Nueva Factura CFDI 4.0"
+                               FontSize="22" FontWeight="Bold" Foreground="#333"
+                               Margin="0,0,0,5"/>
+                    <TextBlock Text="Seleccione una venta para facturar"
+                               FontSize="13" Foreground="#666" Margin="0,0,0,20"/>
+
+                    <!-- Búsqueda de ventas -->
+                    <Border Style="{StaticResource CardStyle}">
+                        <StackPanel>
+                            <TextBlock Text="Ventas Disponibles" Style="{StaticResource SectionTitle}"/>
+
+                            <TextBox x:Name="txtBuscarVenta" Padding="10,8"
+                                     TextChanged="txtBuscarVenta_TextChanged"
+                                     ToolTip="Buscar por ID o nombre de cliente"/>
+                            <TextBlock Text="Buscar venta..." FontSize="11"
+                                       Foreground="#999" Margin="0,0,0,10"/>
+
+                            <ListBox x:Name="lstVentas" Height="350"
+                                     SelectionChanged="lstVentas_SelectionChanged"
+                                     BorderThickness="1" BorderBrush="#DDD">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Padding="10,8" BorderBrush="#EEE"
+                                                BorderThickness="0,0,0,1">
+                                            <StackPanel>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="Venta #"
+                                                               FontWeight="SemiBold" Foreground="#333"/>
+                                                    <TextBlock Text="{Binding Id}"
+                                                               FontWeight="SemiBold" Foreground="#2196F3"/>
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding ClienteNombre}"
+                                                           FontSize="12" Foreground="#666"/>
+                                                <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                                    <TextBlock Text="{Binding Fecha}"
+                                                               FontSize="11" Foreground="#999"/>
+                                                    <TextBlock Text=" | " Foreground="#DDD"/>
+                                                    <TextBlock Text="{Binding Total, StringFormat=C}"
+                                                               FontSize="12" FontWeight="SemiBold"
+                                                               Foreground="#4CAF50"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- Panel derecho: Datos del CFDI -->
+                <StackPanel Grid.Column="2">
+                    <!-- Datos del Receptor -->
+                    <Border Style="{StaticResource CardStyle}">
+                        <StackPanel>
+                            <TextBlock Text="Datos del Receptor (Cliente)" Style="{StaticResource SectionTitle}"/>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="20"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+
+                                <StackPanel Grid.Column="0" Grid.Row="0">
+                                    <TextBlock Style="{StaticResource LabelStyle}">
+                                        <Run Text="RFC del Receptor"/>
+                                        <Run Text="*" Foreground="Red"/>
+                                    </TextBlock>
+                                    <TextBox x:Name="txtReceptorRFC" Style="{StaticResource InputStyle}"
+                                             MaxLength="13" CharacterCasing="Upper"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2" Grid.Row="0">
+                                    <TextBlock Style="{StaticResource LabelStyle}">
+                                        <Run Text="Código Postal"/>
+                                        <Run Text="*" Foreground="Red"/>
+                                    </TextBlock>
+                                    <TextBox x:Name="txtReceptorCP" Style="{StaticResource InputStyle}"
+                                             MaxLength="5"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="3">
+                                    <TextBlock Style="{StaticResource LabelStyle}">
+                                        <Run Text="Nombre / Razón Social"/>
+                                        <Run Text="*" Foreground="Red"/>
+                                    </TextBlock>
+                                    <TextBox x:Name="txtReceptorNombre" Style="{StaticResource InputStyle}"
+                                             CharacterCasing="Upper"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="0" Grid.Row="2">
+                                    <TextBlock Style="{StaticResource LabelStyle}">
+                                        <Run Text="Régimen Fiscal"/>
+                                        <Run Text="*" Foreground="Red"/>
+                                    </TextBlock>
+                                    <ComboBox x:Name="cmbReceptorRegimen" Style="{StaticResource ComboStyle}"
+                                              DisplayMemberPath="ToString"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2" Grid.Row="2">
+                                    <TextBlock Style="{StaticResource LabelStyle}">
+                                        <Run Text="Uso del CFDI"/>
+                                        <Run Text="*" Foreground="Red"/>
+                                    </TextBlock>
+                                    <ComboBox x:Name="cmbUsoCFDI" Style="{StaticResource ComboStyle}"
+                                              DisplayMemberPath="ToString"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- Botón para cargar datos del cliente -->
+                            <Button x:Name="btnCargarCliente" Content="Cargar datos de cliente registrado"
+                                    Padding="15,8" HorizontalAlignment="Left"
+                                    Click="btnCargarCliente_Click"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Datos del Comprobante -->
+                    <Border Style="{StaticResource CardStyle}">
+                        <StackPanel>
+                            <TextBlock Text="Datos del Comprobante" Style="{StaticResource SectionTitle}"/>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="20"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Style="{StaticResource LabelStyle}">
+                                        <Run Text="Forma de Pago"/>
+                                        <Run Text="*" Foreground="Red"/>
+                                    </TextBlock>
+                                    <ComboBox x:Name="cmbFormaPago" Style="{StaticResource ComboStyle}"
+                                              DisplayMemberPath="ToString"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Style="{StaticResource LabelStyle}">
+                                        <Run Text="Método de Pago"/>
+                                        <Run Text="*" Foreground="Red"/>
+                                    </TextBlock>
+                                    <ComboBox x:Name="cmbMetodoPago" Style="{StaticResource ComboStyle}"
+                                              DisplayMemberPath="ToString"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Resumen de la Factura -->
+                    <Border Style="{StaticResource CardStyle}">
+                        <StackPanel>
+                            <TextBlock Text="Resumen de Factura" Style="{StaticResource SectionTitle}"/>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                    <RowDefinition Height="10"/>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Subtotal:"
+                                           FontSize="14" Foreground="#666"/>
+                                <TextBlock x:Name="txtSubtotal" Grid.Row="0" Grid.Column="1"
+                                           Text="$0.00" FontSize="14" FontWeight="SemiBold"
+                                           HorizontalAlignment="Right"/>
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="IVA (16%):"
+                                           FontSize="14" Foreground="#666"/>
+                                <TextBlock x:Name="txtIVA" Grid.Row="1" Grid.Column="1"
+                                           Text="$0.00" FontSize="14" FontWeight="SemiBold"
+                                           HorizontalAlignment="Right"/>
+
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Descuento:"
+                                           FontSize="14" Foreground="#666"/>
+                                <TextBlock x:Name="txtDescuento" Grid.Row="2" Grid.Column="1"
+                                           Text="$0.00" FontSize="14"
+                                           HorizontalAlignment="Right"/>
+
+                                <Border Grid.Row="3" Grid.ColumnSpan="2"
+                                        BorderBrush="#DDD" BorderThickness="0,1,0,0"/>
+
+                                <TextBlock Grid.Row="4" Grid.Column="0" Text="TOTAL:"
+                                           FontSize="18" FontWeight="Bold" Foreground="#333"/>
+                                <TextBlock x:Name="txtTotal" Grid.Row="4" Grid.Column="1"
+                                           Text="$0.00" FontSize="18" FontWeight="Bold"
+                                           Foreground="#4CAF50" HorizontalAlignment="Right"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Conceptos -->
+                    <Border Style="{StaticResource CardStyle}">
+                        <StackPanel>
+                            <TextBlock Text="Conceptos / Productos" Style="{StaticResource SectionTitle}"/>
+                            <DataGrid x:Name="dgConceptos" AutoGenerateColumns="False"
+                                      IsReadOnly="True" Height="150"
+                                      CanUserAddRows="False" HeadersVisibility="Column"
+                                      GridLinesVisibility="Horizontal" BorderThickness="1">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Cantidad" Binding="{Binding Cantidad}" Width="80"/>
+                                    <DataGridTextColumn Header="Descripción" Binding="{Binding ProductoNombre}" Width="*"/>
+                                    <DataGridTextColumn Header="P. Unitario" Binding="{Binding PrecioUnitario, StringFormat=C}" Width="100"/>
+                                    <DataGridTextColumn Header="Importe" Binding="{Binding Subtotal, StringFormat=C}" Width="100"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+
+        <!-- Botones de acción -->
+        <Border Grid.Row="1" Background="White" Padding="20">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="10" ShadowDepth="-2" Opacity="0.1"/>
+            </Border.Effect>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock x:Name="txtEstadoGeneracion" Grid.Column="0"
+                           VerticalAlignment="Center" FontSize="13" Foreground="#666"/>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button x:Name="btnCancelar" Content="Cancelar"
+                            Padding="25,12" FontSize="14"
+                            Click="btnCancelar_Click" Margin="0,0,10,0"/>
+                    <Button x:Name="btnGenerarCFDI" Content="Generar Factura"
+                            Background="#4CAF50" Foreground="White"
+                            Padding="25,12" FontSize="14" FontWeight="SemiBold"
+                            BorderThickness="0" Click="btnGenerarCFDI_Click"
+                            IsEnabled="False"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

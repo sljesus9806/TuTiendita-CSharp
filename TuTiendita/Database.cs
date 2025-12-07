@@ -438,6 +438,214 @@ namespace TuTiendita
                         cmd.ExecuteNonQuery();
                     }
 
+                    // =====================================================
+                    // MÓDULO DE FACTURACIÓN ELECTRÓNICA CFDI 4.0 - MÉXICO
+                    // =====================================================
+
+                    // Create ConfiguracionFiscal table (tax/fiscal configuration)
+                    string createConfiguracionFiscalQuery = @"CREATE TABLE IF NOT EXISTS [ConfiguracionFiscal] (
+                                                [Id] INTEGER PRIMARY KEY CHECK ([Id] = 1),
+                                                [RFC] TEXT NOT NULL,
+                                                [RazonSocial] TEXT NOT NULL,
+                                                [RegimenFiscalClave] TEXT NOT NULL,
+                                                [CodigoPostal] TEXT NOT NULL,
+                                                [Calle] TEXT,
+                                                [NumeroExterior] TEXT,
+                                                [NumeroInterior] TEXT,
+                                                [Colonia] TEXT,
+                                                [Municipio] TEXT,
+                                                [Estado] TEXT,
+                                                [Pais] TEXT DEFAULT 'MEX',
+                                                [CertificadoCSD] TEXT,
+                                                [LlaveCSD] TEXT,
+                                                [ContrasenaLlaveCSD] TEXT,
+                                                [PAC] TEXT,
+                                                [PACUsuario] TEXT,
+                                                [PACContrasena] TEXT,
+                                                [PACModoProduccion] INTEGER DEFAULT 0,
+                                                [LugarExpedicion] TEXT,
+                                                [SerieFactura] TEXT DEFAULT 'A',
+                                                [UltimoFolio] INTEGER DEFAULT 0,
+                                                [LogoEmpresa] BLOB,
+                                                [Activo] INTEGER DEFAULT 1,
+                                                [FechaActualizacion] TEXT
+                                                )";
+                    using (var cmd = new SQLiteCommand(createConfiguracionFiscalQuery, connection))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    // Create CFDI table (electronic invoices)
+                    string createCFDIQuery = @"CREATE TABLE IF NOT EXISTS [CFDI] (
+                                                [Id] INTEGER PRIMARY KEY AUTOINCREMENT,
+                                                [UUID] TEXT UNIQUE,
+                                                [Serie] TEXT,
+                                                [Folio] TEXT NOT NULL,
+                                                [Fecha] TEXT NOT NULL,
+                                                [FormaPagoClave] TEXT NOT NULL,
+                                                [MetodoPagoClave] TEXT NOT NULL,
+                                                [TipoComprobante] TEXT NOT NULL DEFAULT 'I',
+                                                [Exportacion] TEXT DEFAULT '01',
+                                                [Moneda] TEXT DEFAULT 'MXN',
+                                                [TipoCambio] REAL DEFAULT 1,
+                                                [LugarExpedicion] TEXT NOT NULL,
+                                                [Subtotal] REAL NOT NULL,
+                                                [Descuento] REAL DEFAULT 0,
+                                                [IVATrasladado] REAL DEFAULT 0,
+                                                [IVARetenido] REAL DEFAULT 0,
+                                                [ISRRetenido] REAL DEFAULT 0,
+                                                [Total] REAL NOT NULL,
+                                                [EmisorRFC] TEXT NOT NULL,
+                                                [EmisorNombre] TEXT NOT NULL,
+                                                [EmisorRegimenFiscal] TEXT NOT NULL,
+                                                [ReceptorRFC] TEXT NOT NULL,
+                                                [ReceptorNombre] TEXT NOT NULL,
+                                                [ReceptorRegimenFiscal] TEXT,
+                                                [ReceptorDomicilioFiscalCP] TEXT NOT NULL,
+                                                [ReceptorUsoCFDI] TEXT NOT NULL,
+                                                [VentaId] INTEGER,
+                                                [ClienteId] INTEGER,
+                                                [CadenaOriginal] TEXT,
+                                                [SelloDigitalCFDI] TEXT,
+                                                [SelloSAT] TEXT,
+                                                [NoCertificadoEmisor] TEXT,
+                                                [NoCertificadoSAT] TEXT,
+                                                [FechaTimbrado] TEXT,
+                                                [XMLOriginal] TEXT,
+                                                [XMLTimbrado] TEXT,
+                                                [Estado] TEXT DEFAULT 'Pendiente',
+                                                [MotivoCancelacion] TEXT,
+                                                [FechaCancelacion] TEXT,
+                                                [UUIDSustituto] TEXT,
+                                                [Notas] TEXT,
+                                                [UsuarioId] INTEGER,
+                                                [FechaCreacion] TEXT NOT NULL,
+                                                FOREIGN KEY ([VentaId]) REFERENCES [Ventas]([Id]),
+                                                FOREIGN KEY ([ClienteId]) REFERENCES [Clientes]([Id]),
+                                                FOREIGN KEY ([UsuarioId]) REFERENCES [Usuarios]([Id])
+                                                )";
+                    using (var cmd = new SQLiteCommand(createCFDIQuery, connection))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    // Create DetalleCFDI table (invoice line items/concepts)
+                    string createDetalleCFDIQuery = @"CREATE TABLE IF NOT EXISTS [DetalleCFDI] (
+                                                [Id] INTEGER PRIMARY KEY AUTOINCREMENT,
+                                                [CFDIId] INTEGER NOT NULL,
+                                                [ClaveProdServ] TEXT NOT NULL,
+                                                [NoIdentificacion] TEXT,
+                                                [ClaveUnidad] TEXT NOT NULL,
+                                                [Unidad] TEXT,
+                                                [Descripcion] TEXT NOT NULL,
+                                                [Cantidad] REAL NOT NULL,
+                                                [ValorUnitario] REAL NOT NULL,
+                                                [Importe] REAL NOT NULL,
+                                                [Descuento] REAL DEFAULT 0,
+                                                [ObjetoImpClave] TEXT DEFAULT '02',
+                                                [ImpuestoTrasladado] TEXT,
+                                                [TasaOCuota] REAL,
+                                                [TipoFactor] TEXT,
+                                                [ImporteImpuesto] REAL DEFAULT 0,
+                                                FOREIGN KEY ([CFDIId]) REFERENCES [CFDI]([Id]) ON DELETE CASCADE
+                                                )";
+                    using (var cmd = new SQLiteCommand(createDetalleCFDIQuery, connection))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    // Alter Clientes table to add fiscal data columns
+                    try
+                    {
+                        string alterClientesRFC = "ALTER TABLE Clientes ADD COLUMN RFC TEXT";
+                        using (var cmd = new SQLiteCommand(alterClientesRFC, connection))
+                        {
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                    catch { /* Column already exists */ }
+
+                    try
+                    {
+                        string alterClientesRazonSocial = "ALTER TABLE Clientes ADD COLUMN RazonSocial TEXT";
+                        using (var cmd = new SQLiteCommand(alterClientesRazonSocial, connection))
+                        {
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                    catch { /* Column already exists */ }
+
+                    try
+                    {
+                        string alterClientesRegimenFiscal = "ALTER TABLE Clientes ADD COLUMN RegimenFiscalClave TEXT";
+                        using (var cmd = new SQLiteCommand(alterClientesRegimenFiscal, connection))
+                        {
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                    catch { /* Column already exists */ }
+
+                    try
+                    {
+                        string alterClientesDomicilioFiscalCP = "ALTER TABLE Clientes ADD COLUMN DomicilioFiscalCP TEXT";
+                        using (var cmd = new SQLiteCommand(alterClientesDomicilioFiscalCP, connection))
+                        {
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                    catch { /* Column already exists */ }
+
+                    try
+                    {
+                        string alterClientesUsoCFDI = "ALTER TABLE Clientes ADD COLUMN UsoCFDIDefault TEXT DEFAULT 'G03'";
+                        using (var cmd = new SQLiteCommand(alterClientesUsoCFDI, connection))
+                        {
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                    catch { /* Column already exists */ }
+
+                    // Alter Productos table to add SAT catalog keys
+                    try
+                    {
+                        string alterProductosClaveSAT = "ALTER TABLE Productos ADD COLUMN ClaveProdServSAT TEXT DEFAULT '01010101'";
+                        using (var cmd = new SQLiteCommand(alterProductosClaveSAT, connection))
+                        {
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                    catch { /* Column already exists */ }
+
+                    try
+                    {
+                        string alterProductosClaveUnidad = "ALTER TABLE Productos ADD COLUMN ClaveUnidadSAT TEXT DEFAULT 'H87'";
+                        using (var cmd = new SQLiteCommand(alterProductosClaveUnidad, connection))
+                        {
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                    catch { /* Column already exists */ }
+
+                    try
+                    {
+                        string alterProductosObjetoImp = "ALTER TABLE Productos ADD COLUMN ObjetoImpClave TEXT DEFAULT '02'";
+                        using (var cmd = new SQLiteCommand(alterProductosObjetoImp, connection))
+                        {
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                    catch { /* Column already exists */ }
+
+                    try
+                    {
+                        string alterProductosTasaIVA = "ALTER TABLE Productos ADD COLUMN TasaIVA REAL DEFAULT 0.16";
+                        using (var cmd = new SQLiteCommand(alterProductosTasaIVA, connection))
+                        {
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                    catch { /* Column already exists */ }
+
                 // Create default data if database is new
                 if (isNewDatabase)
                 {
