@@ -167,8 +167,7 @@
                                         <Run Text="Régimen Fiscal"/>
                                         <Run Text="*" Foreground="Red"/>
                                     </TextBlock>
-                                    <ComboBox x:Name="cmbReceptorRegimen" Style="{StaticResource ComboStyle}"
-                                              DisplayMemberPath="ToString"/>
+                                    <ComboBox x:Name="cmbReceptorRegimen" Style="{StaticResource ComboStyle}"/>
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="2" Grid.Row="2">
@@ -176,8 +175,7 @@
                                         <Run Text="Uso del CFDI"/>
                                         <Run Text="*" Foreground="Red"/>
                                     </TextBlock>
-                                    <ComboBox x:Name="cmbUsoCFDI" Style="{StaticResource ComboStyle}"
-                                              DisplayMemberPath="ToString"/>
+                                    <ComboBox x:Name="cmbUsoCFDI" Style="{StaticResource ComboStyle}"/>
                                 </StackPanel>
                             </Grid>
 
@@ -205,8 +203,7 @@
                                         <Run Text="Forma de Pago"/>
                                         <Run Text="*" Foreground="Red"/>
                                     </TextBlock>
-                                    <ComboBox x:Name="cmbFormaPago" Style="{StaticResource ComboStyle}"
-                                              DisplayMemberPath="ToString"/>
+                                    <ComboBox x:Name="cmbFormaPago" Style="{StaticResource ComboStyle}"/>
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="2">
@@ -214,8 +211,7 @@
                                         <Run Text="Método de Pago"/>
                                         <Run Text="*" Foreground="Red"/>
                                     </TextBlock>
-                                    <ComboBox x:Name="cmbMetodoPago" Style="{StaticResource ComboStyle}"
-                                              DisplayMemberPath="ToString"/>
+                                    <ComboBox x:Name="cmbMetodoPago" Style="{StaticResource ComboStyle}"/>
                                 </StackPanel>
                             </Grid>
                         </StackPanel>
