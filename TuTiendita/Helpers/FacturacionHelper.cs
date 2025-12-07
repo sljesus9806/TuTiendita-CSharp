@@ -925,7 +925,7 @@ namespace TuTiendita.Helpers
                     Importe = detalle.Cantidad * detalle.PrecioUnitario,
                     ObjetoImpClave = detalle.ObjetoImpClave ?? "02",
                     ImpuestoTrasladado = "002", // IVA
-                    TasaOCuota = detalle.TasaIVA ?? 0.16m,
+                    TasaOCuota = detalle.TasaIVA,
                     TipoFactor = "Tasa"
                 };
 
