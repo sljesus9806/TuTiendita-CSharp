@@ -190,15 +190,22 @@
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
-                            <DataGridTextColumn Header="Cantidad" Binding="{Binding Cantidad, UpdateSourceTrigger=PropertyChanged}" Width="100">
-                                <DataGridTextColumn.ElementStyle>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="TextAlignment" Value="Center"/>
-                                        <Setter Property="FontWeight" Value="Bold"/>
-                                        <Setter Property="FontSize" Value="14"/>
-                                    </Style>
-                                </DataGridTextColumn.ElementStyle>
-                            </DataGridTextColumn>
+                            <DataGridTemplateColumn Header="Cantidad" Width="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <Button Content="-" Width="25" Height="25" Click="BtnDisminuirCantidad_Click"
+                                                    Background="#E74C3C" Foreground="White" FontWeight="Bold"
+                                                    BorderThickness="0" Cursor="Hand" FontSize="14" Margin="0,0,5,0"/>
+                                            <TextBlock Text="{Binding Cantidad}" FontWeight="Bold" FontSize="14"
+                                                       VerticalAlignment="Center" Width="30" TextAlignment="Center"/>
+                                            <Button Content="+" Width="25" Height="25" Click="BtnAumentarCantidad_Click"
+                                                    Background="#27AE60" Foreground="White" FontWeight="Bold"
+                                                    BorderThickness="0" Cursor="Hand" FontSize="14" Margin="5,0,0,0"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                             <DataGridTextColumn Header="Precio Unit." Binding="{Binding Precio, StringFormat=C}" Width="120" IsReadOnly="True">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">

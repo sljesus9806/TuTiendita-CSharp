@@ -25,6 +25,13 @@ namespace TuTiendita
             {
                 MetodoPagoSeleccionado = "Transferencia";
             }
+            else
+            {
+                // No se selecciono ningun metodo de pago
+                MessageBox.Show("Debe seleccionar un metodo de pago.", "Validacion",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             DialogResult = true;
             Close();

@@ -71,13 +71,22 @@ namespace TuTiendita
         // Método para configurar la interfaz según el nivel de acceso del usuario
         private void ConfigurarInterfazSegunUsuario()
         {
-            // Ejemplo: Ocultar el botón "Usuarios" si el usuario no es un gerente
+            // Ocultar opciones que solo son para gerentes
             if (usuarioActual.NivelAcceso != "Gerente")
             {
                 Usuarios.Visibility = Visibility.Collapsed;
+                Clientes.Visibility = Visibility.Collapsed;
+                Compras.Visibility = Visibility.Collapsed;
+                Configuracion.Visibility = Visibility.Collapsed;
             }
-
-            // Puedes agregar más lógica para configurar la interfaz según sea necesario
+            else
+            {
+                // Mostrar todas las opciones para gerentes
+                Usuarios.Visibility = Visibility.Visible;
+                Clientes.Visibility = Visibility.Visible;
+                Compras.Visibility = Visibility.Visible;
+                Configuracion.Visibility = Visibility.Visible;
+            }
         }
 
         private void Dashboard_Click(object sender, RoutedEventArgs e)
@@ -117,7 +126,7 @@ namespace TuTiendita
 
         private void Reportes_Click(object sender, RoutedEventArgs e)
         {
-            MainContent.Content = new ReportesUserControl();
+            MainContent.Content = new ReportesUserControl(usuarioActual);
         }
 
         private void Configuracion_Click(object sender, RoutedEventArgs e)
@@ -228,7 +237,7 @@ namespace TuTiendita
             }
             else if (MainContent.Content is ReportesUserControl)
             {
-                MainContent.Content = new ReportesUserControl();
+                MainContent.Content = new ReportesUserControl(usuarioActual);
             }
             else if (MainContent.Content is FacturacionUserControl)
             {

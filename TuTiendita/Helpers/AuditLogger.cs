@@ -14,21 +14,67 @@ namespace TuTiendita.Helpers
         /// </summary>
         public enum TipoAccion
         {
+            // Autenticación
             Login,
             Logout,
+            LoginFallido,
+
+            // CRUD General
             Crear,
             Actualizar,
             Eliminar,
             Consultar,
+
+            // Ventas
             VentaRealizada,
+            VentaCancelada,
+            VentaModificada,
+            DevolucionRealizada,
+
+            // Turnos y Caja
             TurnoAbierto,
             TurnoCerrado,
             MovimientoCaja,
+            ArqueoCaja,
+
+            // Productos
+            ProductoCreado,
+            ProductoEditado,
+            ProductoEliminado,
+            StockModificado,
+
+            // Clientes
+            ClienteCreado,
+            ClienteEditado,
+            ClienteEliminado,
+            CreditoOtorgado,
+            PagoCredito,
+
+            // Proveedores
+            ProveedorCreado,
+            ProveedorEditado,
+            ProveedorEliminado,
+            OrdenCompraCreada,
+            OrdenCompraRecibida,
+            OrdenCompraCancelada,
+
+            // Usuarios
+            UsuarioCreado,
+            UsuarioEditado,
+            UsuarioEliminado,
             CambioPassword,
+            CambioRol,
+
+            // Sistema
             ConfiguracionCambiada,
             BackupCreado,
             BackupRestaurado,
-            PermisosDenegados
+            PermisosDenegados,
+            ErrorSistema,
+
+            // Reportes
+            ReporteGenerado,
+            ExportacionDatos
         }
 
         /// <summary>
@@ -290,6 +336,188 @@ namespace TuTiendita.Helpers
                 usuarioNombre: usuario.Nombre,
                 accion: TipoAccion.PermisosDenegados,
                 detalles: $"Acceso denegado a: {accionIntentada}"
+            );
+        }
+
+        /// <summary>
+        /// Registra cancelación de una venta
+        /// </summary>
+        public static void RegistrarCancelacionVenta(Usuario usuario, int ventaId, decimal total, string motivo, object datosVenta)
+        {
+            RegistrarAccion(
+                usuarioId: usuario.IdUsuario,
+                usuarioNombre: usuario.Nombre,
+                accion: TipoAccion.VentaCancelada,
+                tabla: "Ventas",
+                registroId: ventaId.ToString(),
+                datosAnteriores: datosVenta,
+                detalles: $"Venta #{ventaId} cancelada por {total:C}. Motivo: {motivo}"
+            );
+        }
+
+        /// <summary>
+        /// Registra un intento de login fallido
+        /// </summary>
+        public static void RegistrarLoginFallido(string nombreUsuario)
+        {
+            RegistrarAccion(
+                usuarioId: null,
+                usuarioNombre: nombreUsuario,
+                accion: TipoAccion.LoginFallido,
+                detalles: $"Intento de login fallido desde IP: {ObtenerIPLocal()}"
+            );
+        }
+
+        /// <summary>
+        /// Registra la creación de un producto
+        /// </summary>
+        public static void RegistrarProductoCreado(Usuario usuario, string codigo, string nombre, decimal precio, int stock)
+        {
+            RegistrarAccion(
+                usuarioId: usuario?.IdUsuario,
+                usuarioNombre: usuario?.Nombre ?? "Sistema",
+                accion: TipoAccion.ProductoCreado,
+                tabla: "Productos",
+                registroId: codigo,
+                datosNuevos: new { codigo, nombre, precio, stock },
+                detalles: $"Producto '{nombre}' ({codigo}) creado con precio {precio:C} y stock {stock}"
+            );
+        }
+
+        /// <summary>
+        /// Registra la edición de un producto
+        /// </summary>
+        public static void RegistrarProductoEditado(Usuario usuario, string codigo, object datosAnteriores, object datosNuevos)
+        {
+            RegistrarAccion(
+                usuarioId: usuario?.IdUsuario,
+                usuarioNombre: usuario?.Nombre ?? "Sistema",
+                accion: TipoAccion.ProductoEditado,
+                tabla: "Productos",
+                registroId: codigo,
+                datosAnteriores: datosAnteriores,
+                datosNuevos: datosNuevos,
+                detalles: $"Producto {codigo} modificado"
+            );
+        }
+
+        /// <summary>
+        /// Registra la eliminación de un producto
+        /// </summary>
+        public static void RegistrarProductoEliminado(Usuario usuario, string codigo, string nombre, object datosProducto)
+        {
+            RegistrarAccion(
+                usuarioId: usuario?.IdUsuario,
+                usuarioNombre: usuario?.Nombre ?? "Sistema",
+                accion: TipoAccion.ProductoEliminado,
+                tabla: "Productos",
+                registroId: codigo,
+                datosAnteriores: datosProducto,
+                detalles: $"Producto '{nombre}' ({codigo}) eliminado"
+            );
+        }
+
+        /// <summary>
+        /// Registra modificación de stock
+        /// </summary>
+        public static void RegistrarModificacionStock(Usuario usuario, string codigo, int stockAnterior, int stockNuevo, string razon)
+        {
+            RegistrarAccion(
+                usuarioId: usuario?.IdUsuario,
+                usuarioNombre: usuario?.Nombre ?? "Sistema",
+                accion: TipoAccion.StockModificado,
+                tabla: "Productos",
+                registroId: codigo,
+                datosAnteriores: new { stock = stockAnterior },
+                datosNuevos: new { stock = stockNuevo },
+                detalles: $"Stock de {codigo} cambió de {stockAnterior} a {stockNuevo}. Razón: {razon}"
+            );
+        }
+
+        /// <summary>
+        /// Registra creación de usuario
+        /// </summary>
+        public static void RegistrarUsuarioCreado(Usuario adminUsuario, int nuevoUsuarioId, string nombreNuevo, string rolNuevo)
+        {
+            RegistrarAccion(
+                usuarioId: adminUsuario.IdUsuario,
+                usuarioNombre: adminUsuario.Nombre,
+                accion: TipoAccion.UsuarioCreado,
+                tabla: "Usuarios",
+                registroId: nuevoUsuarioId.ToString(),
+                datosNuevos: new { nombre = nombreNuevo, rol = rolNuevo },
+                detalles: $"Usuario '{nombreNuevo}' creado con rol '{rolNuevo}'"
+            );
+        }
+
+        /// <summary>
+        /// Registra eliminación de usuario
+        /// </summary>
+        public static void RegistrarUsuarioEliminado(Usuario adminUsuario, int usuarioEliminadoId, string nombreEliminado)
+        {
+            RegistrarAccion(
+                usuarioId: adminUsuario.IdUsuario,
+                usuarioNombre: adminUsuario.Nombre,
+                accion: TipoAccion.UsuarioEliminado,
+                tabla: "Usuarios",
+                registroId: usuarioEliminadoId.ToString(),
+                detalles: $"Usuario '{nombreEliminado}' eliminado del sistema"
+            );
+        }
+
+        /// <summary>
+        /// Registra cambio de rol de usuario
+        /// </summary>
+        public static void RegistrarCambioRol(Usuario adminUsuario, int usuarioAfectadoId, string nombreAfectado, string rolAnterior, string rolNuevo)
+        {
+            RegistrarAccion(
+                usuarioId: adminUsuario.IdUsuario,
+                usuarioNombre: adminUsuario.Nombre,
+                accion: TipoAccion.CambioRol,
+                tabla: "Usuarios",
+                registroId: usuarioAfectadoId.ToString(),
+                datosAnteriores: new { rol = rolAnterior },
+                datosNuevos: new { rol = rolNuevo },
+                detalles: $"Rol de '{nombreAfectado}' cambiado de '{rolAnterior}' a '{rolNuevo}'"
+            );
+        }
+
+        /// <summary>
+        /// Registra generación de reporte
+        /// </summary>
+        public static void RegistrarReporteGenerado(Usuario usuario, string tipoReporte, string rutaArchivo)
+        {
+            RegistrarAccion(
+                usuarioId: usuario?.IdUsuario,
+                usuarioNombre: usuario?.Nombre ?? "Sistema",
+                accion: TipoAccion.ReporteGenerado,
+                detalles: $"Reporte '{tipoReporte}' generado: {rutaArchivo}"
+            );
+        }
+
+        /// <summary>
+        /// Registra exportación de datos
+        /// </summary>
+        public static void RegistrarExportacion(Usuario usuario, string tipoExportacion, string rutaArchivo, int cantidadRegistros)
+        {
+            RegistrarAccion(
+                usuarioId: usuario?.IdUsuario,
+                usuarioNombre: usuario?.Nombre ?? "Sistema",
+                accion: TipoAccion.ExportacionDatos,
+                detalles: $"Exportación {tipoExportacion}: {cantidadRegistros} registros a {rutaArchivo}"
+            );
+        }
+
+        /// <summary>
+        /// Registra error del sistema
+        /// </summary>
+        public static void RegistrarError(Usuario usuario, string operacion, string mensajeError)
+        {
+            RegistrarAccion(
+                usuarioId: usuario?.IdUsuario,
+                usuarioNombre: usuario?.Nombre ?? "Sistema",
+                accion: TipoAccion.ErrorSistema,
+                detalles: $"Error en '{operacion}': {mensajeError}"
             );
         }
 

@@ -11,9 +11,16 @@ namespace TuTiendita
 {
     public partial class ReportesUserControl : UserControl
     {
-        public ReportesUserControl()
+        private Usuario usuarioActual;
+
+        public ReportesUserControl() : this(null)
+        {
+        }
+
+        public ReportesUserControl(Usuario usuario)
         {
             InitializeComponent();
+            usuarioActual = usuario;
             InicializarFechas();
             CargarReporteInventario();
         }
@@ -80,9 +87,15 @@ namespace TuTiendita
 
                 if (exito)
                 {
+                    // Registrar en auditoría
+                    if (usuarioActual != null)
+                    {
+                        Helpers.AuditLogger.RegistrarReporteGenerado(usuarioActual, "Reporte de Ventas", fileName);
+                    }
+
                     // Preguntar si desea abrir el reporte
                     var resultado = MessageBox.Show(
-                        "✓ Reporte de ventas exportado exitosamente a PDF\n\n¿Desea abrir el reporte?",
+                        "Reporte de ventas exportado exitosamente a PDF\n\n¿Desea abrir el reporte?",
                         "Exportación Exitosa",
                         MessageBoxButton.YesNo,
                         MessageBoxImage.Information);
@@ -117,6 +130,7 @@ namespace TuTiendita
             {
                 var ventas = new List<Venta>();
                 decimal totalVentas = 0;
+                decimal totalVentasCanceladas = 0;
                 int totalProductos = 0;
 
                 string fechaDesde = dpFechaDesde.SelectedDate.Value.ToString("yyyy-MM-dd 00:00:00");
@@ -126,8 +140,11 @@ namespace TuTiendita
                 {
                     connection.Open();
 
-                    // Get sales
-                    string query = @"SELECT * FROM Ventas
+                    // Get sales with Estado column
+                    string query = @"SELECT Id, TurnoId, UsuarioId, UsuarioNombre, Fecha, Total, MontoPagado, Cambio,
+                                           COALESCE(Estado, 'Completada') as Estado,
+                                           MotivoCancelacion, CanceladoPor, FechaCancelacion
+                                   FROM Ventas
                                    WHERE Fecha BETWEEN @fechaDesde AND @fechaHasta
                                    ORDER BY Fecha DESC";
 
@@ -140,7 +157,7 @@ namespace TuTiendita
                         {
                             while (reader.Read())
                             {
-                                ventas.Add(new Venta
+                                var venta = new Venta
                                 {
                                     Id = reader.GetInt32(0),
                                     TurnoId = reader.IsDBNull(1) ? (int?)null : reader.GetInt32(1),
@@ -149,19 +166,34 @@ namespace TuTiendita
                                     Fecha = reader.GetString(4),
                                     Total = reader.GetDecimal(5),
                                     MontoPagado = reader.GetDecimal(6),
-                                    Cambio = reader.GetDecimal(7)
-                                });
+                                    Cambio = reader.GetDecimal(7),
+                                    Estado = reader.IsDBNull(8) ? "Completada" : reader.GetString(8),
+                                    MotivoCancelacion = reader.IsDBNull(9) ? null : reader.GetString(9),
+                                    CanceladoPor = reader.IsDBNull(10) ? null : reader.GetString(10),
+                                    FechaCancelacion = reader.IsDBNull(11) ? null : reader.GetString(11)
+                                };
 
-                                totalVentas += reader.GetDecimal(5);
+                                ventas.Add(venta);
+
+                                // Solo sumar ventas completadas al total
+                                if (venta.Estado == "Completada")
+                                {
+                                    totalVentas += venta.Total;
+                                }
+                                else
+                                {
+                                    totalVentasCanceladas += venta.Total;
+                                }
                             }
                         }
                     }
 
-                    // Get total products sold
+                    // Get total products sold (solo de ventas completadas)
                     string productsQuery = @"SELECT SUM(dv.Cantidad)
                                            FROM DetalleVentas dv
                                            INNER JOIN Ventas v ON dv.VentaId = v.Id
-                                           WHERE v.Fecha BETWEEN @fechaDesde AND @fechaHasta";
+                                           WHERE v.Fecha BETWEEN @fechaDesde AND @fechaHasta
+                                           AND COALESCE(v.Estado, 'Completada') = 'Completada'";
 
                     using (var cmd = new SQLiteCommand(productsQuery, connection))
                     {
@@ -177,9 +209,11 @@ namespace TuTiendita
 
                 // Update UI
                 dgVentas.ItemsSource = ventas;
+
+                int ventasCompletadas = ventas.Count(v => v.Estado == "Completada");
                 txtTotalVentas.Text = totalVentas.ToString("C");
-                txtNumTransacciones.Text = ventas.Count.ToString();
-                txtVentaPromedio.Text = ventas.Count > 0 ? (totalVentas / ventas.Count).ToString("C") : "$0.00";
+                txtNumTransacciones.Text = $"{ventasCompletadas} ({ventas.Count(v => v.Estado == "Cancelada")} canceladas)";
+                txtVentaPromedio.Text = ventasCompletadas > 0 ? (totalVentas / ventasCompletadas).ToString("C") : "$0.00";
                 txtProductosVendidos.Text = totalProductos.ToString();
             }
             catch (Exception ex)
@@ -241,11 +275,190 @@ namespace TuTiendita
                 txtDetallePagado.Text = venta.MontoPagado.ToString("C");
                 txtDetalleCambio.Text = venta.Cambio.ToString("C");
 
+                // Mostrar información de cancelación si aplica
+                if (venta.Estado == "Cancelada")
+                {
+                    pnlInfoCancelacion.Visibility = Visibility.Visible;
+                    txtCanceladoPor.Text = venta.CanceladoPor ?? "N/A";
+                    txtFechaCancelacion.Text = venta.FechaCancelacion ?? "N/A";
+                    txtMotivoCancelacion.Text = venta.MotivoCancelacion ?? "Sin motivo especificado";
+                }
+                else
+                {
+                    pnlInfoCancelacion.Visibility = Visibility.Collapsed;
+                }
+
                 dgDetalleVenta.ItemsSource = detalles;
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error al cargar detalle de venta: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void BtnCancelarVenta_Click(object sender, RoutedEventArgs e)
+        {
+            if (usuarioActual == null)
+            {
+                MessageBox.Show("No se puede identificar el usuario actual.", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            if (sender is Button button && button.Tag is int ventaId)
+            {
+                // Buscar la venta en la lista actual
+                var ventas = dgVentas.ItemsSource as List<Venta>;
+                var venta = ventas?.FirstOrDefault(v => v.Id == ventaId);
+
+                if (venta == null)
+                {
+                    MessageBox.Show("No se encontró la venta.", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                if (venta.Estado == "Cancelada")
+                {
+                    MessageBox.Show("Esta venta ya fue cancelada.", "Advertencia",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                // Solicitar motivo de cancelación
+                var dialogoMotivo = new DialogoEntrada("Ingrese el motivo de la cancelación:");
+                if (dialogoMotivo.ShowDialog() != true || string.IsNullOrWhiteSpace(dialogoMotivo.InputText))
+                {
+                    MessageBox.Show("Debe ingresar un motivo para cancelar la venta.", "Advertencia",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                string motivo = dialogoMotivo.InputText;
+
+                // Confirmar cancelación
+                var resultado = MessageBox.Show(
+                    $"¿Está seguro de que desea cancelar la venta #{ventaId}?\n\n" +
+                    $"Total: {venta.Total:C}\n" +
+                    $"Fecha: {venta.Fecha}\n" +
+                    $"Vendedor: {venta.UsuarioNombre}\n\n" +
+                    $"Motivo: {motivo}\n\n" +
+                    "ADVERTENCIA: Esta acción restaurará el stock de los productos y quedará registrada en el log de auditoría.",
+                    "Confirmar Cancelación de Venta",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning);
+
+                if (resultado != MessageBoxResult.Yes)
+                {
+                    return;
+                }
+
+                // Proceder con la cancelación
+                try
+                {
+                    CancelarVenta(ventaId, motivo, venta);
+                    MessageBox.Show($"Venta #{ventaId} cancelada exitosamente.\nEl stock de los productos ha sido restaurado.",
+                        "Cancelación Exitosa", MessageBoxButton.OK, MessageBoxImage.Information);
+                    CargarReporteVentas();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error al cancelar la venta: {ex.Message}", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void CancelarVenta(int ventaId, string motivo, Venta venta)
+        {
+            using (var connection = Database.GetConnection())
+            {
+                connection.Open();
+                using (var transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        // 1. Obtener los detalles de la venta para restaurar stock
+                        var detalles = new List<(string codigo, int cantidad)>();
+                        string queryDetalles = "SELECT ProductoCodigo, Cantidad FROM DetalleVentas WHERE VentaId = @ventaId";
+                        using (var cmd = new SQLiteCommand(queryDetalles, connection, transaction))
+                        {
+                            cmd.Parameters.AddWithValue("@ventaId", ventaId);
+                            using (var reader = cmd.ExecuteReader())
+                            {
+                                while (reader.Read())
+                                {
+                                    detalles.Add((reader.GetString(0), reader.GetInt32(1)));
+                                }
+                            }
+                        }
+
+                        // 2. Restaurar el stock de cada producto
+                        foreach (var (codigo, cantidad) in detalles)
+                        {
+                            string queryStock = "UPDATE Productos SET Stock = Stock + @cantidad WHERE Codigo = @codigo";
+                            using (var cmd = new SQLiteCommand(queryStock, connection, transaction))
+                            {
+                                cmd.Parameters.AddWithValue("@cantidad", cantidad);
+                                cmd.Parameters.AddWithValue("@codigo", codigo);
+                                cmd.ExecuteNonQuery();
+                            }
+                        }
+
+                        // 3. Actualizar la venta con el estado de cancelación
+                        string queryUpdate = @"UPDATE Ventas
+                                             SET Estado = 'Cancelada',
+                                                 MotivoCancelacion = @motivo,
+                                                 CanceladoPor = @canceladoPor,
+                                                 FechaCancelacion = @fechaCancelacion
+                                             WHERE Id = @ventaId";
+                        using (var cmd = new SQLiteCommand(queryUpdate, connection, transaction))
+                        {
+                            cmd.Parameters.AddWithValue("@motivo", motivo);
+                            cmd.Parameters.AddWithValue("@canceladoPor", usuarioActual.Nombre);
+                            cmd.Parameters.AddWithValue("@fechaCancelacion", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                            cmd.Parameters.AddWithValue("@ventaId", ventaId);
+                            cmd.ExecuteNonQuery();
+                        }
+
+                        // 4. Si la venta tenía turno asociado, actualizar los totales del turno
+                        if (venta.TurnoId.HasValue)
+                        {
+                            string queryTurno = @"UPDATE Turnos
+                                                SET TotalVentas = TotalVentas - @total
+                                                WHERE Id = @turnoId";
+                            using (var cmd = new SQLiteCommand(queryTurno, connection, transaction))
+                            {
+                                cmd.Parameters.AddWithValue("@total", venta.Total);
+                                cmd.Parameters.AddWithValue("@turnoId", venta.TurnoId.Value);
+                                cmd.ExecuteNonQuery();
+                            }
+                        }
+
+                        transaction.Commit();
+
+                        // 5. Registrar en auditoría
+                        Helpers.AuditLogger.RegistrarCancelacionVenta(
+                            usuarioActual,
+                            ventaId,
+                            venta.Total,
+                            motivo,
+                            new
+                            {
+                                venta.Id,
+                                venta.Total,
+                                venta.Fecha,
+                                venta.UsuarioNombre,
+                                ProductosCancelados = detalles.Count
+                            }
+                        );
+                    }
+                    catch
+                    {
+                        transaction.Rollback();
+                        throw;
+                    }
+                }
             }
         }
 
@@ -291,10 +504,20 @@ namespace TuTiendita
         public decimal Total { get; set; }
         public decimal MontoPagado { get; set; }
         public decimal Cambio { get; set; }
+        public string Estado { get; set; } = "Completada";
+        public string MotivoCancelacion { get; set; }
+        public string CanceladoPor { get; set; }
+        public string FechaCancelacion { get; set; }
 
         public string TotalFormateado => Total.ToString("C");
         public string MontoPagadoFormateado => MontoPagado.ToString("C");
         public string CambioFormateado => Cambio.ToString("C");
+
+        // Color según estado
+        public string EstadoColor => Estado == "Cancelada" ? "#E74C3C" : "#27AE60";
+
+        // Visibilidad del botón cancelar (solo visible si no está cancelada)
+        public Visibility PuedeCancelar => Estado == "Completada" ? Visibility.Visible : Visibility.Collapsed;
 
         public event PropertyChangedEventHandler PropertyChanged;
     }

@@ -22,11 +22,28 @@ namespace TuTiendita
         private void ProveedoresUserControl_Loaded(object sender, RoutedEventArgs e)
         {
             CargarProveedores();
+            VerificarPermisos();
+        }
+
+        private void VerificarPermisos()
+        {
+            // Validar que el control este inicializado
+            if (btnNuevoProveedor == null)
+                return;
+
+            // Solo los gerentes pueden agregar, editar o eliminar proveedores
+            if (usuarioActual.NivelAcceso != "Gerente")
+            {
+                // Deshabilitar boton de nuevo proveedor
+                btnNuevoProveedor.IsEnabled = false;
+                btnNuevoProveedor.Opacity = 0.5;
+                btnNuevoProveedor.ToolTip = "Solo los gerentes pueden agregar proveedores";
+            }
         }
 
         private void CargarProveedores()
         {
-            // Validar que el control esté inicializado
+            // Validar que el control este inicializado
             if (dgProveedores == null)
                 return;
 
@@ -44,7 +61,7 @@ namespace TuTiendita
 
         private void TxtBuscar_TextChanged(object sender, TextChangedEventArgs e)
         {
-            // Validar que los controles estén inicializados
+            // Validar que los controles esten inicializados
             if (txtBuscar == null || dgProveedores == null || proveedoresActuales == null)
                 return;
 
@@ -74,75 +91,179 @@ namespace TuTiendita
 
         private void BtnVerCreditos_Click(object sender, RoutedEventArgs e)
         {
-            var ventana = new VentanaCreditosPendientes();
-            ventana.ShowDialog();
+            try
+            {
+                var ventana = new VentanaCreditosPendientes();
+                ventana.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al abrir ventana de creditos: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void BtnNuevoProveedor_Click(object sender, RoutedEventArgs e)
         {
-            var ventana = new VentanaEditarProveedor(null, usuarioActual);
-            if (ventana.ShowDialog() == true)
+            // Verificar permisos
+            if (usuarioActual.NivelAcceso != "Gerente")
             {
-                CargarProveedores();
+                MessageBox.Show("Solo los gerentes pueden agregar nuevos proveedores.", "Permiso Denegado",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                AuditLogger.RegistrarPermisosDenegados(usuarioActual, "Agregar proveedor");
+                return;
+            }
+
+            try
+            {
+                var ventana = new VentanaEditarProveedor(null, usuarioActual);
+                if (ventana.ShowDialog() == true)
+                {
+                    CargarProveedores();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al abrir ventana de nuevo proveedor: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
         private void BtnEditar_Click(object sender, RoutedEventArgs e)
         {
+            // Verificar permisos
+            if (usuarioActual.NivelAcceso != "Gerente")
+            {
+                MessageBox.Show("Solo los gerentes pueden editar proveedores.", "Permiso Denegado",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                AuditLogger.RegistrarPermisosDenegados(usuarioActual, "Editar proveedor");
+                return;
+            }
+
             if (sender is Button button && button.Tag is int proveedorId)
             {
-                var proveedor = ProveedoresHelper.ObtenerProveedorPorId(proveedorId);
-                if (proveedor != null)
+                try
                 {
-                    var ventana = new VentanaEditarProveedor(proveedor, usuarioActual);
-                    if (ventana.ShowDialog() == true)
+                    var proveedor = ProveedoresHelper.ObtenerProveedorPorId(proveedorId);
+                    if (proveedor != null)
                     {
-                        CargarProveedores();
+                        var ventana = new VentanaEditarProveedor(proveedor, usuarioActual);
+                        if (ventana.ShowDialog() == true)
+                        {
+                            CargarProveedores();
+                        }
                     }
+                    else
+                    {
+                        MessageBox.Show("Proveedor no encontrado.", "Error",
+                            MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error al editar proveedor: {ex.Message}", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }
 
         private void BtnNuevaOrden_Click(object sender, RoutedEventArgs e)
         {
+            // Verificar permisos
+            if (usuarioActual.NivelAcceso != "Gerente")
+            {
+                MessageBox.Show("Solo los gerentes pueden crear ordenes de compra.", "Permiso Denegado",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                AuditLogger.RegistrarPermisosDenegados(usuarioActual, "Crear orden de compra");
+                return;
+            }
+
             if (sender is Button button && button.Tag is int proveedorId)
             {
-                var proveedor = ProveedoresHelper.ObtenerProveedorPorId(proveedorId);
-                if (proveedor != null)
+                try
                 {
-                    var ventana = new VentanaOrdenCompra(proveedor, usuarioActual);
-                    ventana.ShowDialog();
+                    var proveedor = ProveedoresHelper.ObtenerProveedorPorId(proveedorId);
+                    if (proveedor != null)
+                    {
+                        var ventana = new VentanaOrdenCompra(proveedor, usuarioActual);
+                        ventana.ShowDialog();
+                        CargarProveedores(); // Refrescar por si cambiaron totales
+                    }
+                    else
+                    {
+                        MessageBox.Show("Proveedor no encontrado.", "Error",
+                            MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error al crear orden de compra: {ex.Message}", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }
 
         private void BtnEliminar_Click(object sender, RoutedEventArgs e)
         {
+            // Verificar permisos
+            if (usuarioActual.NivelAcceso != "Gerente")
+            {
+                MessageBox.Show("Solo los gerentes pueden eliminar proveedores.", "Permiso Denegado",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                AuditLogger.RegistrarPermisosDenegados(usuarioActual, "Eliminar proveedor");
+                return;
+            }
+
             if (sender is Button button && button.Tag is int proveedorId)
             {
-                var proveedor = ProveedoresHelper.ObtenerProveedorPorId(proveedorId);
-                if (proveedor == null) return;
-
-                var resultado = MessageBox.Show(
-                    $"¿Está seguro de que desea eliminar al proveedor '{proveedor.Nombre}'?\n\n" +
-                    $"El proveedor será desactivado pero se mantendrá su historial de órdenes.",
-                    "Confirmar Eliminación",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Warning);
-
-                if (resultado == MessageBoxResult.Yes)
+                try
                 {
-                    if (ProveedoresHelper.EliminarProveedor(proveedorId, usuarioActual))
+                    var proveedor = ProveedoresHelper.ObtenerProveedorPorId(proveedorId);
+                    if (proveedor == null)
                     {
-                        MessageBox.Show("Proveedor eliminado correctamente.", "Éxito",
-                            MessageBoxButton.OK, MessageBoxImage.Information);
-                        CargarProveedores();
-                    }
-                    else
-                    {
-                        MessageBox.Show("Error al eliminar el proveedor.", "Error",
+                        MessageBox.Show("Proveedor no encontrado.", "Error",
                             MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
                     }
+
+                    // Verificar si tiene ordenes pendientes
+                    var ordenesPendientes = ProveedoresHelper.ObtenerOrdenesCompra(proveedorId)
+                        .Count(o => o.Estado == "Pendiente");
+
+                    string mensajeAdvertencia = $"Esta seguro de que desea eliminar al proveedor '{proveedor.Nombre}'?\n\n";
+
+                    if (ordenesPendientes > 0)
+                    {
+                        mensajeAdvertencia += $"ADVERTENCIA: Este proveedor tiene {ordenesPendientes} orden(es) pendiente(s).\n\n";
+                    }
+
+                    mensajeAdvertencia += "El proveedor sera desactivado pero se mantendra su historial de ordenes.";
+
+                    var resultado = MessageBox.Show(
+                        mensajeAdvertencia,
+                        "Confirmar Eliminacion",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Warning);
+
+                    if (resultado == MessageBoxResult.Yes)
+                    {
+                        if (ProveedoresHelper.EliminarProveedor(proveedorId, usuarioActual))
+                        {
+                            MessageBox.Show("Proveedor eliminado correctamente.", "Exito",
+                                MessageBoxButton.OK, MessageBoxImage.Information);
+                            CargarProveedores();
+                        }
+                        else
+                        {
+                            MessageBox.Show("Error al eliminar el proveedor.", "Error",
+                                MessageBoxButton.OK, MessageBoxImage.Error);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error al eliminar proveedor: {ex.Message}", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }

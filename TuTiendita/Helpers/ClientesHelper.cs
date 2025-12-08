@@ -72,6 +72,48 @@ namespace TuTiendita.Helpers
         }
 
         /// <summary>
+        /// Busca un cliente por su documento (para validar duplicados)
+        /// </summary>
+        public static Cliente BuscarPorDocumento(string documento)
+        {
+            if (string.IsNullOrWhiteSpace(documento))
+                return null;
+
+            try
+            {
+                using (var connection = Database.GetConnection())
+                {
+                    connection.Open();
+                    string query = @"SELECT Id, Nombre, Apellido FROM Clientes
+                                   WHERE Documento = @Documento AND Activo = 1";
+
+                    using (var cmd = new SQLiteCommand(query, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@Documento", documento);
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                return new Cliente
+                                {
+                                    Id = reader.GetInt32(0),
+                                    Nombre = reader.GetString(1),
+                                    Apellido = reader.IsDBNull(2) ? null : reader.GetString(2)
+                                };
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error al buscar cliente por documento: {ex.Message}");
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Busca clientes por nombre, documento o teléfono
         /// </summary>
         public static List<Cliente> BuscarClientes(string busqueda)
