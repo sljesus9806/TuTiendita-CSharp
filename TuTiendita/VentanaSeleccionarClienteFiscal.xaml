@@ -1,0 +1,69 @@
+<Window x:Class="TuTiendita.VentanaSeleccionarClienteFiscal"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Seleccionar Cliente para Facturación"
+        Height="500" Width="700"
+        WindowStartupLocation="CenterScreen"
+        Background="#F5F5F5"
+        ResizeMode="NoResize">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Encabezado -->
+        <TextBlock Grid.Row="0" Text="Seleccionar Cliente con Datos Fiscales"
+                   FontSize="18" FontWeight="Bold" Foreground="#333" Margin="0,0,0,15"/>
+
+        <!-- Búsqueda -->
+        <Grid Grid.Row="1" Margin="0,0,0,15">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBox x:Name="txtBuscar" Grid.Column="0" Padding="12"
+                     FontSize="14" TextChanged="txtBuscar_TextChanged"/>
+            <TextBlock Text="Buscar por nombre, RFC o documento..." IsHitTestVisible="False"
+                       VerticalAlignment="Center" Margin="15,0,0,0"
+                       Foreground="#999" FontSize="13"
+                       Visibility="{Binding Text.Length, ElementName=txtBuscar, Converter={x:Null}}"/>
+        </Grid>
+
+        <!-- Lista de clientes -->
+        <Border Grid.Row="2" Background="White" CornerRadius="8" Padding="10">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.1"/>
+            </Border.Effect>
+
+            <DataGrid x:Name="dgClientes" AutoGenerateColumns="False"
+                      IsReadOnly="True" SelectionMode="Single"
+                      CanUserAddRows="False" BorderThickness="0"
+                      GridLinesVisibility="Horizontal"
+                      MouseDoubleClick="dgClientes_MouseDoubleClick">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="RFC" Binding="{Binding RFC}" Width="140"/>
+                    <DataGridTextColumn Header="Nombre" Binding="{Binding NombreCompleto}" Width="*"/>
+                    <DataGridTextColumn Header="Razón Social" Binding="{Binding RazonSocial}" Width="200"/>
+                    <DataGridTextColumn Header="C.P." Binding="{Binding DomicilioFiscalCP}" Width="80"/>
+                    <DataGridTextColumn Header="Régimen" Binding="{Binding RegimenFiscalClave}" Width="80"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+
+        <!-- Botones -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
+            <Button x:Name="btnCancelar" Content="Cancelar"
+                    Padding="25,12" FontSize="14"
+                    Click="btnCancelar_Click" Margin="0,0,10,0"/>
+            <Button x:Name="btnSeleccionar" Content="Seleccionar"
+                    Background="#4CAF50" Foreground="White"
+                    Padding="25,12" FontSize="14" FontWeight="SemiBold"
+                    BorderThickness="0" Click="btnSeleccionar_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

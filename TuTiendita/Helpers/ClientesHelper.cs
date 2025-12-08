@@ -387,6 +387,58 @@ namespace TuTiendita.Helpers
         }
 
         /// <summary>
+        /// Actualiza los datos fiscales de un cliente
+        /// </summary>
+        public static bool ActualizarDatosFiscales(int clienteId, string rfc, string razonSocial,
+            string regimenFiscalClave, string domicilioFiscalCP, string usoCFDIDefault, Usuario usuario)
+        {
+            try
+            {
+                using (var connection = Database.GetConnection())
+                {
+                    connection.Open();
+                    string query = @"UPDATE Clientes SET
+                                   RFC = @RFC,
+                                   RazonSocial = @RazonSocial,
+                                   RegimenFiscalClave = @RegimenFiscalClave,
+                                   DomicilioFiscalCP = @DomicilioFiscalCP,
+                                   UsoCFDIDefault = @UsoCFDIDefault
+                                   WHERE Id = @Id";
+
+                    using (var cmd = new SQLiteCommand(query, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@Id", clienteId);
+                        cmd.Parameters.AddWithValue("@RFC", rfc ?? (object)DBNull.Value);
+                        cmd.Parameters.AddWithValue("@RazonSocial", razonSocial ?? (object)DBNull.Value);
+                        cmd.Parameters.AddWithValue("@RegimenFiscalClave", regimenFiscalClave ?? (object)DBNull.Value);
+                        cmd.Parameters.AddWithValue("@DomicilioFiscalCP", domicilioFiscalCP ?? (object)DBNull.Value);
+                        cmd.Parameters.AddWithValue("@UsoCFDIDefault", usoCFDIDefault ?? "G03");
+
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+
+                // Registrar en auditoría
+                if (usuario != null)
+                {
+                    AuditLogger.RegistrarActualizacion(usuario, "Clientes", clienteId.ToString(), null, new
+                    {
+                        Accion = "Actualización de datos fiscales",
+                        RFC = rfc,
+                        RazonSocial = razonSocial
+                    });
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error al actualizar datos fiscales: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Verifica si un cliente tiene crédito disponible
         /// </summary>
         public static bool TieneCreditoDisponible(int clienteId, decimal monto)
@@ -667,6 +719,13 @@ namespace TuTiendita.Helpers
         public bool Activo { get; set; }
         public string Notas { get; set; }
 
+        // Datos Fiscales para CFDI 4.0
+        public string RFC { get; set; }
+        public string RazonSocial { get; set; }
+        public string RegimenFiscalClave { get; set; }
+        public string DomicilioFiscalCP { get; set; }
+        public string UsoCFDIDefault { get; set; }
+
         // Campos calculados
         public int TotalCompras { get; set; }
         public decimal TotalGastado { get; set; }
@@ -679,6 +738,13 @@ namespace TuTiendita.Helpers
         public string DescuentoFormateado => $"{DescuentoEspecial}%";
         public decimal CreditoDisponible => (decimal)LimiteCredito - DeudaTotal;
         public string CreditoDisponibleFormateado => CreditoDisponible.ToString("C");
+
+        // Propiedades calculadas para facturación
+        public bool TieneDatosFiscales => !string.IsNullOrWhiteSpace(RFC);
+        public string RegimenFiscalDescripcion =>
+            CatalogosSAT.GetRegimenFiscalPorClave(RegimenFiscalClave)?.Descripcion ?? "";
+        public string UsoCFDIDescripcion =>
+            CatalogosSAT.GetUsoCFDIPorClave(UsoCFDIDefault)?.Descripcion ?? "";
     }
 
     /// <summary>
