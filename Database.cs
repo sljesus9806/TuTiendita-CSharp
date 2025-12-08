@@ -162,6 +162,17 @@ namespace TuTiendita
                     }
                     catch { /* Column already exists */ }
 
+                    // Add MetodoPago column to Ventas table if not exists
+                    try
+                    {
+                        string addMetodoPagoColumn = "ALTER TABLE [Ventas] ADD COLUMN [MetodoPago] TEXT DEFAULT 'Efectivo'";
+                        using (var cmd = new SQLiteCommand(addMetodoPagoColumn, connection))
+                        {
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                    catch { /* Column already exists */ }
+
                 // Create default admin user if database is new
                 if (isNewDatabase)
                 {
