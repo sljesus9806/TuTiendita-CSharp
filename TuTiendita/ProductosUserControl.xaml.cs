@@ -42,12 +42,13 @@ namespace TuTiendita
 
         private void ConfigurarPermisos()
         {
-            // Si el usuario es Cajero, deshabilitar eliminación de productos
-            if (usuarioActual != null && usuarioActual.NivelAcceso == "Cajero")
-            {
-                // Ocultar botón de eliminar para cajeros
-                btnEliminar.Visibility = Visibility.Collapsed;
-            }
+            // Los permisos de eliminacion se verifican en el click del boton
+            // ya que los botones estan dentro del DataGrid
+        }
+
+        private void BtnActualizar_Click(object sender, RoutedEventArgs e)
+        {
+            CargarProductos();
         }
 
 
@@ -94,14 +95,108 @@ namespace TuTiendita
 
         private void BtnEditar_Click(object sender, RoutedEventArgs e)
         {
-            // Verifica que un producto esté seleccionado en el DataGrid
-            if (dgProductos.SelectedItem != null)
-            {
-                // Obtén el producto seleccionado
-                var producto = (Producto)dgProductos.SelectedItem;
+            Producto producto = null;
 
-                // Guardar datos anteriores para auditoría
-                var datosAnteriores = new
+            // Obtener producto desde el boton (nuevo estilo con Tag)
+            if (sender is Button btn && btn.Tag is string codigo)
+            {
+                producto = productos?.FirstOrDefault(p => p.Codigo == codigo);
+            }
+            // Fallback: usar seleccion del DataGrid
+            else if (dgProductos.SelectedItem != null)
+            {
+                producto = (Producto)dgProductos.SelectedItem;
+            }
+
+            if (producto == null)
+            {
+                MessageBox.Show("Seleccione un producto para editar.", "Advertencia", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // Guardar datos anteriores para auditoria
+            var datosAnteriores = new
+            {
+                producto.Codigo,
+                producto.Nombre,
+                producto.Precio,
+                producto.Costo,
+                producto.Stock,
+                producto.StockMinimo
+            };
+
+            // Crea una instancia de la ventana de edicion, pasando el producto seleccionado
+            var editarProductoWindow = new EditarProductoWindow(producto);
+
+            // Muestra la ventana de edicion como un dialogo modal
+            if (editarProductoWindow.ShowDialog() == true)
+            {
+                // Registrar en auditoria
+                try
+                {
+                    var datosNuevos = new
+                    {
+                        producto.Codigo,
+                        producto.Nombre,
+                        producto.Precio,
+                        producto.Costo,
+                        producto.Stock,
+                        producto.StockMinimo
+                    };
+                    Helpers.AuditLogger.RegistrarProductoEditado(
+                        usuarioActual,
+                        producto.Codigo,
+                        datosAnteriores,
+                        datosNuevos
+                    );
+                }
+                catch { }
+
+                // Si el dialogo se cierra con "true", significa que se guardaron los cambios
+                CargarProductos(); // Refresca la lista de productos en el DataGrid
+            }
+        }
+
+        private void BtnEliminar_Click(object sender, RoutedEventArgs e)
+        {
+            // Verificar permisos: solo gerentes pueden eliminar
+            if (usuarioActual != null && usuarioActual.NivelAcceso == "Cajero")
+            {
+                MessageBox.Show("Solo los gerentes pueden eliminar productos.", "Permiso Denegado",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                try
+                {
+                    Helpers.AuditLogger.RegistrarPermisosDenegados(usuarioActual, "Eliminar producto");
+                }
+                catch { }
+                return;
+            }
+
+            Producto producto = null;
+
+            // Obtener producto desde el boton (nuevo estilo con Tag)
+            if (sender is Button btn && btn.Tag is string codigo)
+            {
+                producto = productos?.FirstOrDefault(p => p.Codigo == codigo);
+            }
+            // Fallback: usar seleccion del DataGrid
+            else if (dgProductos.SelectedItem != null)
+            {
+                producto = (Producto)dgProductos.SelectedItem;
+            }
+
+            if (producto == null)
+            {
+                MessageBox.Show("Seleccione un producto para eliminar.", "Advertencia", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            MessageBoxResult result = MessageBox.Show($"¿Esta seguro de que desea eliminar el producto '{producto.Nombre}'?",
+                                                      "Confirmacion", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (result == MessageBoxResult.Yes)
+            {
+                // Guardar datos para auditoria antes de eliminar
+                var datosProducto = new
                 {
                     producto.Codigo,
                     producto.Nombre,
@@ -111,86 +206,22 @@ namespace TuTiendita
                     producto.StockMinimo
                 };
 
-                // Crea una instancia de la ventana de edición, pasando el producto seleccionado
-                var editarProductoWindow = new EditarProductoWindow(producto);
+                productos.Remove(producto);
+                Producto.EliminarProducto(producto);
 
-                // Muestra la ventana de edición como un diálogo modal
-                if (editarProductoWindow.ShowDialog() == true)
+                // Registrar en auditoria
+                try
                 {
-                    // Registrar en auditoría
-                    try
-                    {
-                        var datosNuevos = new
-                        {
-                            producto.Codigo,
-                            producto.Nombre,
-                            producto.Precio,
-                            producto.Costo,
-                            producto.Stock,
-                            producto.StockMinimo
-                        };
-                        Helpers.AuditLogger.RegistrarProductoEditado(
-                            usuarioActual,
-                            producto.Codigo,
-                            datosAnteriores,
-                            datosNuevos
-                        );
-                    }
-                    catch { }
-
-                    // Si el diálogo se cierra con "true", significa que se guardaron los cambios
-                    CargarProductos(); // Refresca la lista de productos en el DataGrid
-                }
-            }
-            else
-            {
-                // Muestra un mensaje si no se ha seleccionado ningún producto
-                MessageBox.Show("Seleccione un producto para editar.", "Advertencia", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-        }
-
-        private void BtnEliminar_Click(object sender, RoutedEventArgs e)
-        {
-            if (dgProductos.SelectedItem != null)
-            {
-                var producto = (Producto)dgProductos.SelectedItem;
-
-                MessageBoxResult result = MessageBox.Show($"¿Está seguro de que desea eliminar el producto {producto.Nombre}?",
-                                                          "Confirmación", MessageBoxButton.YesNo, MessageBoxImage.Question);
-                if (result == MessageBoxResult.Yes)
-                {
-                    // Guardar datos para auditoría antes de eliminar
-                    var datosProducto = new
-                    {
+                    Helpers.AuditLogger.RegistrarProductoEliminado(
+                        usuarioActual,
                         producto.Codigo,
                         producto.Nombre,
-                        producto.Precio,
-                        producto.Costo,
-                        producto.Stock,
-                        producto.StockMinimo
-                    };
-
-                    productos.Remove(producto);
-                    Producto.EliminarProducto(producto);
-
-                    // Registrar en auditoría
-                    try
-                    {
-                        Helpers.AuditLogger.RegistrarProductoEliminado(
-                            usuarioActual,
-                            producto.Codigo,
-                            producto.Nombre,
-                            datosProducto
-                        );
-                    }
-                    catch { }
-
-                    ActualizarDataGrid();
+                        datosProducto
+                    );
                 }
-            }
-            else
-            {
-                MessageBox.Show("Seleccione un producto para eliminar.", "Advertencia", MessageBoxButton.OK, MessageBoxImage.Warning);
+                catch { }
+
+                ActualizarDataGrid();
             }
         }
 
