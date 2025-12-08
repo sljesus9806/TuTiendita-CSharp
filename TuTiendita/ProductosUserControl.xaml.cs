@@ -68,26 +68,48 @@ namespace TuTiendita
 
         private void BtnAgregar_Click(object sender, RoutedEventArgs e)
         {
-
             var agregarProductoWindow = new AgregarProductoWindow();
 
             if (agregarProductoWindow.ShowDialog() == true)
             {
                 Producto nuevoProducto = agregarProductoWindow.Producto;
                 Producto.AgregarProducto(nuevoProducto); // Guardar en la base de datos
+
+                // Registrar en auditoría
+                try
+                {
+                    Helpers.AuditLogger.RegistrarProductoCreado(
+                        usuarioActual,
+                        nuevoProducto.Codigo,
+                        nuevoProducto.Nombre,
+                        nuevoProducto.Precio,
+                        nuevoProducto.Stock
+                    );
+                }
+                catch { }
+
                 CargarProductos(); // Refrescar el DataGrid
             }
-
         }
 
         private void BtnEditar_Click(object sender, RoutedEventArgs e)
         {
-
             // Verifica que un producto esté seleccionado en el DataGrid
             if (dgProductos.SelectedItem != null)
             {
                 // Obtén el producto seleccionado
                 var producto = (Producto)dgProductos.SelectedItem;
+
+                // Guardar datos anteriores para auditoría
+                var datosAnteriores = new
+                {
+                    producto.Codigo,
+                    producto.Nombre,
+                    producto.Precio,
+                    producto.Costo,
+                    producto.Stock,
+                    producto.StockMinimo
+                };
 
                 // Crea una instancia de la ventana de edición, pasando el producto seleccionado
                 var editarProductoWindow = new EditarProductoWindow(producto);
@@ -95,6 +117,27 @@ namespace TuTiendita
                 // Muestra la ventana de edición como un diálogo modal
                 if (editarProductoWindow.ShowDialog() == true)
                 {
+                    // Registrar en auditoría
+                    try
+                    {
+                        var datosNuevos = new
+                        {
+                            producto.Codigo,
+                            producto.Nombre,
+                            producto.Precio,
+                            producto.Costo,
+                            producto.Stock,
+                            producto.StockMinimo
+                        };
+                        Helpers.AuditLogger.RegistrarProductoEditado(
+                            usuarioActual,
+                            producto.Codigo,
+                            datosAnteriores,
+                            datosNuevos
+                        );
+                    }
+                    catch { }
+
                     // Si el diálogo se cierra con "true", significa que se guardaron los cambios
                     CargarProductos(); // Refresca la lista de productos en el DataGrid
                 }
@@ -104,9 +147,6 @@ namespace TuTiendita
                 // Muestra un mensaje si no se ha seleccionado ningún producto
                 MessageBox.Show("Seleccione un producto para editar.", "Advertencia", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
-
-
-
         }
 
         private void BtnEliminar_Click(object sender, RoutedEventArgs e)
@@ -119,8 +159,31 @@ namespace TuTiendita
                                                           "Confirmación", MessageBoxButton.YesNo, MessageBoxImage.Question);
                 if (result == MessageBoxResult.Yes)
                 {
+                    // Guardar datos para auditoría antes de eliminar
+                    var datosProducto = new
+                    {
+                        producto.Codigo,
+                        producto.Nombre,
+                        producto.Precio,
+                        producto.Costo,
+                        producto.Stock,
+                        producto.StockMinimo
+                    };
+
                     productos.Remove(producto);
                     Producto.EliminarProducto(producto);
+
+                    // Registrar en auditoría
+                    try
+                    {
+                        Helpers.AuditLogger.RegistrarProductoEliminado(
+                            usuarioActual,
+                            producto.Codigo,
+                            producto.Nombre,
+                            datosProducto
+                        );
+                    }
+                    catch { }
 
                     ActualizarDataGrid();
                 }
@@ -129,7 +192,6 @@ namespace TuTiendita
             {
                 MessageBox.Show("Seleccione un producto para eliminar.", "Advertencia", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
-
         }
 
         private void TxtBuscar_TextChanged(object sender, TextChangedEventArgs e)
@@ -181,6 +243,19 @@ namespace TuTiendita
                             writer.WriteLine($"{p.Codigo},{p.Nombre},{p.Precio},{p.Costo},{p.Stock},{p.StockMinimo},{p.CategoriaId}");
                         }
                     }
+
+                    // Registrar en auditoría
+                    try
+                    {
+                        Helpers.AuditLogger.RegistrarExportacion(
+                            usuarioActual,
+                            "Productos CSV",
+                            saveDialog.FileName,
+                            productos.Count
+                        );
+                    }
+                    catch { }
+
                     MessageBox.Show("Productos exportados exitosamente.", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }

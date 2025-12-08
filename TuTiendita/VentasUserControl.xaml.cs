@@ -54,6 +54,58 @@ namespace TuTiendita
             }
         }
 
+        private void BtnAumentarCantidad_Click(object sender, RoutedEventArgs e)
+        {
+            var button = sender as Button;
+            if (button != null && button.DataContext is Producto productoCarrito)
+            {
+                // Buscar el producto original para verificar stock
+                var productoOriginal = productosDisponibles.FirstOrDefault(p => p.Codigo == productoCarrito.Codigo);
+                if (productoOriginal != null)
+                {
+                    if (productoCarrito.Cantidad + 1 > productoOriginal.Stock)
+                    {
+                        MessageBox.Show($"Stock insuficiente. Stock disponible: {productoOriginal.Stock}",
+                                      "Stock Insuficiente", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+                }
+
+                productoCarrito.Cantidad++;
+                ActualizarDataGridVenta();
+                CalcularTotal();
+            }
+        }
+
+        private void BtnDisminuirCantidad_Click(object sender, RoutedEventArgs e)
+        {
+            var button = sender as Button;
+            if (button != null && button.DataContext is Producto productoCarrito)
+            {
+                if (productoCarrito.Cantidad > 1)
+                {
+                    productoCarrito.Cantidad--;
+                    ActualizarDataGridVenta();
+                    CalcularTotal();
+                }
+                else
+                {
+                    // Si la cantidad es 1, preguntar si desea eliminar el producto
+                    var resultado = MessageBox.Show(
+                        $"¿Desea eliminar '{productoCarrito.Nombre}' del carrito?",
+                        "Confirmar eliminación",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Question);
+
+                    if (resultado == MessageBoxResult.Yes)
+                    {
+                        productosSeleccionados.Remove(productoCarrito);
+                        ActualizarDataGridVenta();
+                        CalcularTotal();
+                    }
+                }
+            }
+        }
 
         private void BtnLimpiar_Click(object sender, RoutedEventArgs e)
         {

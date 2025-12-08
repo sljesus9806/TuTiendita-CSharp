@@ -154,6 +154,18 @@ namespace TuTiendita
                         }
                     }
 
+                    // Registrar en auditoría
+                    try
+                    {
+                        Helpers.AuditLogger.RegistrarMovimientoCaja(
+                            usuarioActual,
+                            dialogo.TipoMovimiento,
+                            dialogo.Monto,
+                            dialogo.Concepto
+                        );
+                    }
+                    catch { }
+
                     MessageBox.Show($"Movimiento registrado: {dialogo.TipoMovimiento} de {dialogo.Monto:C}",
                                   "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
                     CargarMovimientosCaja();
@@ -333,6 +345,25 @@ namespace TuTiendita
                         cmd.ExecuteNonQuery();
                     }
                 }
+
+                // Obtener el ID del turno recién creado
+                int turnoId = 0;
+                using (var connection2 = Database.GetConnection())
+                {
+                    connection2.Open();
+                    string queryId = "SELECT last_insert_rowid()";
+                    using (var cmdId = new SQLiteCommand(queryId, connection2))
+                    {
+                        turnoId = Convert.ToInt32(cmdId.ExecuteScalar());
+                    }
+                }
+
+                // Registrar en auditoría
+                try
+                {
+                    Helpers.AuditLogger.RegistrarAperturaTurno(usuarioActual, turnoId, montoInicial);
+                }
+                catch { }
 
                 MessageBox.Show($"Turno abierto exitosamente con ${montoInicial:F2}", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
                 txtMontoInicial.Clear();

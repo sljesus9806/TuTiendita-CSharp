@@ -99,6 +99,69 @@ namespace TuTiendita
                         cmd.ExecuteNonQuery();
                     }
 
+                    // Create AuditLog table for tracking ALL user actions
+                    string createAuditLogQuery = @"CREATE TABLE IF NOT EXISTS [AuditLog] (
+                                                [Id] INTEGER PRIMARY KEY AUTOINCREMENT,
+                                                [Fecha] TEXT NOT NULL,
+                                                [UsuarioId] INTEGER,
+                                                [UsuarioNombre] TEXT NOT NULL,
+                                                [Accion] TEXT NOT NULL,
+                                                [Tabla] TEXT,
+                                                [RegistroId] TEXT,
+                                                [DatosAnteriores] TEXT,
+                                                [DatosNuevos] TEXT,
+                                                [Detalles] TEXT,
+                                                [DireccionIP] TEXT
+                                                )";
+                    using (var cmd = new SQLiteCommand(createAuditLogQuery, connection))
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    // Add Estado column to Ventas table if not exists (for cancellations)
+                    try
+                    {
+                        string addEstadoColumn = "ALTER TABLE [Ventas] ADD COLUMN [Estado] TEXT DEFAULT 'Completada'";
+                        using (var cmd = new SQLiteCommand(addEstadoColumn, connection))
+                        {
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                    catch { /* Column already exists */ }
+
+                    // Add MotivoCancelacion column to Ventas table if not exists
+                    try
+                    {
+                        string addMotivoColumn = "ALTER TABLE [Ventas] ADD COLUMN [MotivoCancelacion] TEXT";
+                        using (var cmd = new SQLiteCommand(addMotivoColumn, connection))
+                        {
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                    catch { /* Column already exists */ }
+
+                    // Add CanceladoPor column to Ventas table if not exists
+                    try
+                    {
+                        string addCanceladoPorColumn = "ALTER TABLE [Ventas] ADD COLUMN [CanceladoPor] TEXT";
+                        using (var cmd = new SQLiteCommand(addCanceladoPorColumn, connection))
+                        {
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                    catch { /* Column already exists */ }
+
+                    // Add FechaCancelacion column to Ventas table if not exists
+                    try
+                    {
+                        string addFechaCancelacionColumn = "ALTER TABLE [Ventas] ADD COLUMN [FechaCancelacion] TEXT";
+                        using (var cmd = new SQLiteCommand(addFechaCancelacionColumn, connection))
+                        {
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                    catch { /* Column already exists */ }
+
                 // Create default admin user if database is new
                 if (isNewDatabase)
                 {

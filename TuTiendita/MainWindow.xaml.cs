@@ -49,10 +49,7 @@ namespace TuTiendita
 
             if (usuarioLogueado != null)
             {
-                // Usuario y contraseña correctos
-                MessageBox.Show("Inicio de sesión exitoso!");
-
-                // Crear y mostrar la ventana principal con el usuario logueado
+                // Usuario y contraseña correctos - abrir ventana principal directamente (sin MessageBox)
                 VentanaPrincipal ventanaPrincipal = new VentanaPrincipal(usuarioLogueado);
                 ventanaPrincipal.Show();
 
@@ -62,6 +59,13 @@ namespace TuTiendita
             else
             {
                 // Usuario o contraseña incorrectos
+                // Registrar intento fallido en auditoría
+                try
+                {
+                    Helpers.AuditLogger.RegistrarLoginFallido(nombreUsuario);
+                }
+                catch { }
+
                 MessageBox.Show("Usuario o contraseña incorrectos", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
