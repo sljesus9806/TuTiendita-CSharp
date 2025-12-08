@@ -523,6 +523,61 @@ namespace TuTiendita.Helpers
         }
 
         /// <summary>
+        /// Obtiene las órdenes de compra de un proveedor específico
+        /// </summary>
+        public static List<OrdenCompra> ObtenerOrdenesCompra(int proveedorId)
+        {
+            var ordenes = new List<OrdenCompra>();
+
+            try
+            {
+                using (var connection = Database.GetConnection())
+                {
+                    connection.Open();
+                    string query = @"SELECT oc.Id, oc.ProveedorId, oc.FechaOrden, oc.FechaEntrega, oc.Total,
+                                   oc.Estado, oc.UsuarioId, oc.Notas, oc.TipoPago, oc.DiasCredito,
+                                   oc.FechaVencimiento, p.Nombre as ProveedorNombre
+                                   FROM OrdenesCompra oc
+                                   INNER JOIN Proveedores p ON oc.ProveedorId = p.Id
+                                   WHERE oc.ProveedorId = @ProveedorId
+                                   ORDER BY oc.FechaOrden DESC";
+
+                    using (var cmd = new SQLiteCommand(query, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@ProveedorId", proveedorId);
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                ordenes.Add(new OrdenCompra
+                                {
+                                    Id = reader.GetInt32(0),
+                                    ProveedorId = reader.GetInt32(1),
+                                    FechaOrden = reader.GetString(2),
+                                    FechaEntrega = reader.IsDBNull(3) ? null : reader.GetString(3),
+                                    Total = reader.GetDecimal(4),
+                                    Estado = reader.GetString(5),
+                                    UsuarioId = reader.IsDBNull(6) ? (int?)null : reader.GetInt32(6),
+                                    Notas = reader.IsDBNull(7) ? null : reader.GetString(7),
+                                    TipoPago = reader.IsDBNull(8) ? "Contado" : reader.GetString(8),
+                                    DiasCredito = reader.IsDBNull(9) ? 0 : reader.GetInt32(9),
+                                    FechaVencimiento = reader.IsDBNull(10) ? null : reader.GetString(10),
+                                    ProveedorNombre = reader.GetString(11)
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error al obtener órdenes del proveedor: {ex.Message}");
+            }
+
+            return ordenes;
+        }
+
+        /// <summary>
         /// Obtiene los detalles de una orden
         /// </summary>
         public static List<DetalleOrdenCompra> ObtenerDetallesOrden(int ordenId)
