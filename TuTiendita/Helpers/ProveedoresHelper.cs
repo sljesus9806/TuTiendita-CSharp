@@ -116,6 +116,47 @@ namespace TuTiendita.Helpers
         }
 
         /// <summary>
+        /// Busca un proveedor por su RFC (para validar duplicados)
+        /// </summary>
+        public static Proveedor BuscarPorRFC(string rfc)
+        {
+            if (string.IsNullOrWhiteSpace(rfc))
+                return null;
+
+            try
+            {
+                using (var connection = Database.GetConnection())
+                {
+                    connection.Open();
+                    string query = @"SELECT Id, Nombre FROM Proveedores
+                                   WHERE RUC = @RFC AND Activo = 1";
+
+                    using (var cmd = new SQLiteCommand(query, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@RFC", rfc);
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                return new Proveedor
+                                {
+                                    Id = reader.GetInt32(0),
+                                    Nombre = reader.GetString(1)
+                                };
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error al buscar proveedor por RFC: {ex.Message}");
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Elimina (desactiva) un proveedor
         /// </summary>
         public static bool EliminarProveedor(int proveedorId, Usuario usuario)
