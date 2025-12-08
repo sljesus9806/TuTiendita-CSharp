@@ -125,6 +125,11 @@ namespace TuTiendita
             MainContent.Content = new ConfiguracionUserControl(usuarioActual);
         }
 
+        private void Facturacion_Click(object sender, RoutedEventArgs e)
+        {
+            MainContent.Content = new FacturacionUserControl(usuarioActual);
+        }
+
         private void BtnCambiarUsuario_Click(object sender, RoutedEventArgs e)
         {
             // Si hay un override activo, devolver control al usuario original
@@ -224,6 +229,10 @@ namespace TuTiendita
             else if (MainContent.Content is ReportesUserControl)
             {
                 MainContent.Content = new ReportesUserControl();
+            }
+            else if (MainContent.Content is FacturacionUserControl)
+            {
+                MainContent.Content = new FacturacionUserControl(usuarioActual);
             }
         }
 
