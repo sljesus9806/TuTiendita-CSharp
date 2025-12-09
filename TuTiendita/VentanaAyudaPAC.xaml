@@ -1,0 +1,598 @@
+<Window x:Class="TuTiendita.VentanaAyudaPAC"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Guia de Configuracion de PAC para Facturacion"
+        Height="700" Width="850"
+        WindowStartupLocation="CenterScreen"
+        Background="#F5F5F5">
+
+    <Window.Resources>
+        <Style x:Key="TituloSeccion" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="#1976D2"/>
+            <Setter Property="Margin" Value="0,15,0,8"/>
+        </Style>
+        <Style x:Key="SubTitulo" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#424242"/>
+            <Setter Property="Margin" Value="0,10,0,5"/>
+        </Style>
+        <Style x:Key="TextoNormal" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="#616161"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Margin" Value="0,3"/>
+        </Style>
+        <Style x:Key="ListaItem" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="#616161"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Margin" Value="15,2,0,2"/>
+        </Style>
+        <Style x:Key="Enlace" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="#1565C0"/>
+            <Setter Property="TextDecorations" Value="Underline"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Margin" Value="15,3,0,3"/>
+        </Style>
+        <Style x:Key="CajaInfo" TargetType="Border">
+            <Setter Property="Background" Value="#E3F2FD"/>
+            <Setter Property="BorderBrush" Value="#90CAF9"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="5"/>
+            <Setter Property="Padding" Value="12"/>
+            <Setter Property="Margin" Value="0,8"/>
+        </Style>
+        <Style x:Key="CajaAdvertencia" TargetType="Border">
+            <Setter Property="Background" Value="#FFF3E0"/>
+            <Setter Property="BorderBrush" Value="#FFB74D"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="5"/>
+            <Setter Property="Padding" Value="12"/>
+            <Setter Property="Margin" Value="0,8"/>
+        </Style>
+        <Style x:Key="CajaExito" TargetType="Border">
+            <Setter Property="Background" Value="#E8F5E9"/>
+            <Setter Property="BorderBrush" Value="#81C784"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="5"/>
+            <Setter Property="Padding" Value="12"/>
+            <Setter Property="Margin" Value="0,8"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Encabezado -->
+        <Border Grid.Row="0" Background="#1976D2" Padding="20">
+            <StackPanel>
+                <TextBlock Text="Guia de Configuracion de PAC"
+                           FontSize="22" FontWeight="Bold" Foreground="White"/>
+                <TextBlock Text="Todo lo que necesitas saber para comenzar a facturar electronicamente"
+                           FontSize="14" Foreground="#BBDEFB" Margin="0,5,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Contenido con pestañas -->
+        <TabControl Grid.Row="1" Margin="15">
+
+            <!-- Tab: Introduccion -->
+            <TabItem Header="  Introduccion  " Padding="10,5">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="15">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource TituloSeccion}" Text="Que es un PAC?"/>
+                        <TextBlock Style="{StaticResource TextoNormal}">
+                            Un PAC (Proveedor Autorizado de Certificacion) es una empresa autorizada por el SAT
+                            para validar y certificar (timbrar) tus facturas electronicas (CFDI). Sin un PAC,
+                            no puedes emitir facturas validas ante el SAT.
+                        </TextBlock>
+
+                        <Border Style="{StaticResource CajaInfo}">
+                            <StackPanel>
+                                <TextBlock FontWeight="Bold" Foreground="#1565C0" Text="En palabras simples:"/>
+                                <TextBlock Style="{StaticResource TextoNormal}" Margin="0,5,0,0">
+                                    Tu sistema genera la factura, pero el PAC es quien le pone el "sello oficial"
+                                    del SAT que la hace valida. Es como un notario digital para tus facturas.
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock Style="{StaticResource TituloSeccion}" Text="Que necesito para empezar a facturar?"/>
+
+                        <TextBlock Style="{StaticResource SubTitulo}" Text="1. Certificado de Sello Digital (CSD)"/>
+                        <TextBlock Style="{StaticResource TextoNormal}">
+                            Es tu firma electronica para facturas. Lo obtienes GRATIS en el portal del SAT.
+                        </TextBlock>
+                        <TextBlock Style="{StaticResource ListaItem}">• Archivo .cer (certificado publico)</TextBlock>
+                        <TextBlock Style="{StaticResource ListaItem}">• Archivo .key (llave privada)</TextBlock>
+                        <TextBlock Style="{StaticResource ListaItem}">• Contrasena de la llave</TextBlock>
+
+                        <TextBlock Style="{StaticResource Enlace}"
+                                   MouseLeftButtonUp="AbrirEnlace_Click"
+                                   Tag="https://www.sat.gob.mx/tramites/17507/solicita-la-generacion-de-tu-certificado-de-sello-digital-(csd)">
+                            Obtener CSD en el SAT (clic aqui)
+                        </TextBlock>
+
+                        <TextBlock Style="{StaticResource SubTitulo}" Text="2. Cuenta en un PAC"/>
+                        <TextBlock Style="{StaticResource TextoNormal}">
+                            Debes registrarte con un PAC y comprar timbres (creditos para facturar).
+                            Este sistema soporta dos opciones: Finkok y Facturama.
+                        </TextBlock>
+
+                        <TextBlock Style="{StaticResource SubTitulo}" Text="3. Datos fiscales completos"/>
+                        <TextBlock Style="{StaticResource TextoNormal}">
+                            RFC, razon social, regimen fiscal, codigo postal, etc.
+                            Todo debe coincidir exactamente con lo registrado en el SAT.
+                        </TextBlock>
+
+                        <Border Style="{StaticResource CajaAdvertencia}">
+                            <StackPanel>
+                                <TextBlock FontWeight="Bold" Foreground="#E65100" Text="IMPORTANTE:"/>
+                                <TextBlock Style="{StaticResource TextoNormal}" Margin="0,5,0,0">
+                                    Antes de facturar en PRODUCCION, siempre prueba en modo SANDBOX (pruebas).
+                                    Ambos PACs ofrecen ambiente de pruebas gratuito e ilimitado.
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Tab: Finkok -->
+            <TabItem Header="  Finkok  " Padding="10,5">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="15">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Style="{StaticResource TituloSeccion}" Text="Finkok - PAC Recomendado"/>
+                            <Border Grid.Column="1" Background="#4CAF50" CornerRadius="3" Padding="8,3" VerticalAlignment="Center">
+                                <TextBlock Text="RECOMENDADO" Foreground="White" FontSize="11" FontWeight="Bold"/>
+                            </Border>
+                        </Grid>
+
+                        <TextBlock Style="{StaticResource TextoNormal}">
+                            Finkok es uno de los PACs mas utilizados en Mexico. Ofrece precios competitivos,
+                            excelente soporte tecnico y una API muy estable.
+                        </TextBlock>
+
+                        <Border Style="{StaticResource CajaExito}">
+                            <StackPanel>
+                                <TextBlock FontWeight="Bold" Foreground="#2E7D32" Text="Ventajas de Finkok:"/>
+                                <TextBlock Style="{StaticResource ListaItem}">• Sandbox GRATUITO e ilimitado para pruebas</TextBlock>
+                                <TextBlock Style="{StaticResource ListaItem}">• Precios desde $0.50 MXN por timbre (volumen alto)</TextBlock>
+                                <TextBlock Style="{StaticResource ListaItem}">• Soporte tecnico en espanol</TextBlock>
+                                <TextBlock Style="{StaticResource ListaItem}">• Muy estable y confiable</TextBlock>
+                                <TextBlock Style="{StaticResource ListaItem}">• Documentacion completa</TextBlock>
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock Style="{StaticResource TituloSeccion}" Text="Como registrarse en Finkok"/>
+
+                        <TextBlock Style="{StaticResource SubTitulo}" Text="Paso 1: Crear cuenta de pruebas (GRATIS)"/>
+                        <TextBlock Style="{StaticResource TextoNormal}">
+                            Primero crea una cuenta en el ambiente de pruebas para verificar que todo funcione:
+                        </TextBlock>
+                        <TextBlock Style="{StaticResource Enlace}"
+                                   MouseLeftButtonUp="AbrirEnlace_Click"
+                                   Tag="https://demo-facturacion.finkok.com/registro">
+                            1. Ir a registro de Sandbox Finkok
+                        </TextBlock>
+                        <TextBlock Style="{StaticResource ListaItem}">2. Completa el formulario con tus datos</TextBlock>
+                        <TextBlock Style="{StaticResource ListaItem}">3. Recibiras un correo con tu usuario y contrasena</TextBlock>
+                        <TextBlock Style="{StaticResource ListaItem}">4. Usa esas credenciales en este sistema con "Modo Produccion" DESACTIVADO</TextBlock>
+
+                        <TextBlock Style="{StaticResource SubTitulo}" Text="Paso 2: Cuenta de produccion (cuando estes listo)"/>
+                        <TextBlock Style="{StaticResource TextoNormal}">
+                            Una vez que hayas probado todo en sandbox, crea tu cuenta de produccion:
+                        </TextBlock>
+                        <TextBlock Style="{StaticResource Enlace}"
+                                   MouseLeftButtonUp="AbrirEnlace_Click"
+                                   Tag="https://www.finkok.com/registro">
+                            1. Ir a registro de Produccion Finkok
+                        </TextBlock>
+                        <TextBlock Style="{StaticResource ListaItem}">2. Completa el registro con datos reales</TextBlock>
+                        <TextBlock Style="{StaticResource ListaItem}">3. Compra un paquete de timbres</TextBlock>
+                        <TextBlock Style="{StaticResource ListaItem}">4. Activa "Modo Produccion" en la configuracion</TextBlock>
+
+                        <TextBlock Style="{StaticResource TituloSeccion}" Text="Precios aproximados de Finkok"/>
+                        <Border Style="{StaticResource CajaInfo}">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource ListaItem}">• 100 timbres: ~$150 MXN ($1.50/timbre)</TextBlock>
+                                <TextBlock Style="{StaticResource ListaItem}">• 500 timbres: ~$500 MXN ($1.00/timbre)</TextBlock>
+                                <TextBlock Style="{StaticResource ListaItem}">• 1,000 timbres: ~$800 MXN ($0.80/timbre)</TextBlock>
+                                <TextBlock Style="{StaticResource ListaItem}">• 5,000+ timbres: Precios especiales</TextBlock>
+                                <TextBlock Style="{StaticResource TextoNormal}" Margin="0,8,0,0" FontStyle="Italic">
+                                    * Precios aproximados, consulta la pagina oficial para precios actualizados.
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock Style="{StaticResource Enlace}"
+                                   MouseLeftButtonUp="AbrirEnlace_Click"
+                                   Tag="https://www.finkok.com/precios">
+                            Ver precios actualizados de Finkok
+                        </TextBlock>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Tab: Facturama -->
+            <TabItem Header="  Facturama  " Padding="10,5">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="15">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource TituloSeccion}" Text="Facturama - Alternativa Moderna"/>
+
+                        <TextBlock Style="{StaticResource TextoNormal}">
+                            Facturama es un PAC moderno con una API REST muy facil de usar.
+                            Ideal si prefieres una interfaz web amigable para administrar tus facturas.
+                        </TextBlock>
+
+                        <Border Style="{StaticResource CajaExito}">
+                            <StackPanel>
+                                <TextBlock FontWeight="Bold" Foreground="#2E7D32" Text="Ventajas de Facturama:"/>
+                                <TextBlock Style="{StaticResource ListaItem}">• Interfaz web muy amigable</TextBlock>
+                                <TextBlock Style="{StaticResource ListaItem}">• API REST moderna (mas simple que SOAP)</TextBlock>
+                                <TextBlock Style="{StaticResource ListaItem}">• Sandbox gratuito para pruebas</TextBlock>
+                                <TextBlock Style="{StaticResource ListaItem}">• No requiere certificados para algunas operaciones</TextBlock>
+                                <TextBlock Style="{StaticResource ListaItem}">• Portal web para ver todas tus facturas</TextBlock>
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock Style="{StaticResource TituloSeccion}" Text="Como registrarse en Facturama"/>
+
+                        <TextBlock Style="{StaticResource SubTitulo}" Text="Paso 1: Crear cuenta de pruebas (GRATIS)"/>
+                        <TextBlock Style="{StaticResource Enlace}"
+                                   MouseLeftButtonUp="AbrirEnlace_Click"
+                                   Tag="https://apisandbox.facturama.mx/">
+                            1. Ir a Sandbox de Facturama
+                        </TextBlock>
+                        <TextBlock Style="{StaticResource ListaItem}">2. Clic en "Registrarse" o "Sign Up"</TextBlock>
+                        <TextBlock Style="{StaticResource ListaItem}">3. Completa el formulario</TextBlock>
+                        <TextBlock Style="{StaticResource ListaItem}">4. Usa tu correo y contrasena como credenciales</TextBlock>
+
+                        <TextBlock Style="{StaticResource SubTitulo}" Text="Paso 2: Cuenta de produccion"/>
+                        <TextBlock Style="{StaticResource Enlace}"
+                                   MouseLeftButtonUp="AbrirEnlace_Click"
+                                   Tag="https://facturama.mx/precios">
+                            1. Ver planes y precios de Facturama
+                        </TextBlock>
+                        <TextBlock Style="{StaticResource ListaItem}">2. Elige un plan segun tus necesidades</TextBlock>
+                        <TextBlock Style="{StaticResource ListaItem}">3. Registrate y configura tu cuenta</TextBlock>
+                        <TextBlock Style="{StaticResource ListaItem}">4. Activa "Modo Produccion" en la configuracion</TextBlock>
+
+                        <TextBlock Style="{StaticResource TituloSeccion}" Text="Planes de Facturama"/>
+                        <Border Style="{StaticResource CajaInfo}">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource ListaItem}">• Plan Basico: ~$199 MXN/mes (50 folios)</TextBlock>
+                                <TextBlock Style="{StaticResource ListaItem}">• Plan Emprendedor: ~$399 MXN/mes (150 folios)</TextBlock>
+                                <TextBlock Style="{StaticResource ListaItem}">• Plan Empresarial: ~$799 MXN/mes (500 folios)</TextBlock>
+                                <TextBlock Style="{StaticResource ListaItem}">• Folios adicionales disponibles</TextBlock>
+                                <TextBlock Style="{StaticResource TextoNormal}" Margin="0,8,0,0" FontStyle="Italic">
+                                    * Precios aproximados, consulta la pagina oficial.
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock Style="{StaticResource Enlace}"
+                                   MouseLeftButtonUp="AbrirEnlace_Click"
+                                   Tag="https://facturama.mx/">
+                            Visitar sitio web de Facturama
+                        </TextBlock>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Tab: Comparativa -->
+            <TabItem Header="  Comparativa  " Padding="10,5">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="15">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource TituloSeccion}" Text="Finkok vs Facturama - Cual elegir?"/>
+
+                        <Border BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="5" Margin="0,10">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- Encabezados -->
+                                <Border Grid.Row="0" Grid.Column="0" Background="#F5F5F5" Padding="10">
+                                    <TextBlock Text="Caracteristica" FontWeight="Bold"/>
+                                </Border>
+                                <Border Grid.Row="0" Grid.Column="1" Background="#E3F2FD" Padding="10">
+                                    <TextBlock Text="Finkok" FontWeight="Bold" Foreground="#1565C0"/>
+                                </Border>
+                                <Border Grid.Row="0" Grid.Column="2" Background="#FFF3E0" Padding="10">
+                                    <TextBlock Text="Facturama" FontWeight="Bold" Foreground="#E65100"/>
+                                </Border>
+
+                                <!-- Fila 1 -->
+                                <Border Grid.Row="1" Grid.Column="0" Padding="10" BorderBrush="#E0E0E0" BorderThickness="0,1,0,0">
+                                    <TextBlock Text="Modelo de cobro"/>
+                                </Border>
+                                <Border Grid.Row="1" Grid.Column="1" Padding="10" BorderBrush="#E0E0E0" BorderThickness="0,1,0,0">
+                                    <TextBlock Text="Por timbre"/>
+                                </Border>
+                                <Border Grid.Row="1" Grid.Column="2" Padding="10" BorderBrush="#E0E0E0" BorderThickness="0,1,0,0">
+                                    <TextBlock Text="Mensualidad + folios"/>
+                                </Border>
+
+                                <!-- Fila 2 -->
+                                <Border Grid.Row="2" Grid.Column="0" Padding="10" BorderBrush="#E0E0E0" BorderThickness="0,1,0,0">
+                                    <TextBlock Text="Mejor para"/>
+                                </Border>
+                                <Border Grid.Row="2" Grid.Column="1" Padding="10" BorderBrush="#E0E0E0" BorderThickness="0,1,0,0">
+                                    <TextBlock Text="Alto volumen" TextWrapping="Wrap"/>
+                                </Border>
+                                <Border Grid.Row="2" Grid.Column="2" Padding="10" BorderBrush="#E0E0E0" BorderThickness="0,1,0,0">
+                                    <TextBlock Text="Bajo volumen fijo" TextWrapping="Wrap"/>
+                                </Border>
+
+                                <!-- Fila 3 -->
+                                <Border Grid.Row="3" Grid.Column="0" Padding="10" BorderBrush="#E0E0E0" BorderThickness="0,1,0,0">
+                                    <TextBlock Text="Tipo de API"/>
+                                </Border>
+                                <Border Grid.Row="3" Grid.Column="1" Padding="10" BorderBrush="#E0E0E0" BorderThickness="0,1,0,0">
+                                    <TextBlock Text="SOAP"/>
+                                </Border>
+                                <Border Grid.Row="3" Grid.Column="2" Padding="10" BorderBrush="#E0E0E0" BorderThickness="0,1,0,0">
+                                    <TextBlock Text="REST"/>
+                                </Border>
+
+                                <!-- Fila 4 -->
+                                <Border Grid.Row="4" Grid.Column="0" Padding="10" BorderBrush="#E0E0E0" BorderThickness="0,1,0,0">
+                                    <TextBlock Text="Portal web"/>
+                                </Border>
+                                <Border Grid.Row="4" Grid.Column="1" Padding="10" BorderBrush="#E0E0E0" BorderThickness="0,1,0,0">
+                                    <TextBlock Text="Basico"/>
+                                </Border>
+                                <Border Grid.Row="4" Grid.Column="2" Padding="10" BorderBrush="#E0E0E0" BorderThickness="0,1,0,0">
+                                    <TextBlock Text="Muy completo"/>
+                                </Border>
+
+                                <!-- Fila 5 -->
+                                <Border Grid.Row="5" Grid.Column="0" Padding="10" BorderBrush="#E0E0E0" BorderThickness="0,1,0,0">
+                                    <TextBlock Text="Requiere CSD"/>
+                                </Border>
+                                <Border Grid.Row="5" Grid.Column="1" Padding="10" BorderBrush="#E0E0E0" BorderThickness="0,1,0,0">
+                                    <TextBlock Text="Si, siempre"/>
+                                </Border>
+                                <Border Grid.Row="5" Grid.Column="2" Padding="10" BorderBrush="#E0E0E0" BorderThickness="0,1,0,0">
+                                    <TextBlock Text="Opcional (API Lite)"/>
+                                </Border>
+
+                                <!-- Fila 6 -->
+                                <Border Grid.Row="6" Grid.Column="0" Padding="10" BorderBrush="#E0E0E0" BorderThickness="0,1,0,0">
+                                    <TextBlock Text="Sandbox gratuito"/>
+                                </Border>
+                                <Border Grid.Row="6" Grid.Column="1" Padding="10" BorderBrush="#E0E0E0" BorderThickness="0,1,0,0">
+                                    <TextBlock Text="Si, ilimitado" Foreground="#2E7D32"/>
+                                </Border>
+                                <Border Grid.Row="6" Grid.Column="2" Padding="10" BorderBrush="#E0E0E0" BorderThickness="0,1,0,0">
+                                    <TextBlock Text="Si, ilimitado" Foreground="#2E7D32"/>
+                                </Border>
+
+                                <!-- Fila 7 -->
+                                <Border Grid.Row="7" Grid.Column="0" Padding="10" BorderBrush="#E0E0E0" BorderThickness="0,1,0,0">
+                                    <TextBlock Text="Soporte"/>
+                                </Border>
+                                <Border Grid.Row="7" Grid.Column="1" Padding="10" BorderBrush="#E0E0E0" BorderThickness="0,1,0,0">
+                                    <TextBlock Text="Email, telefono"/>
+                                </Border>
+                                <Border Grid.Row="7" Grid.Column="2" Padding="10" BorderBrush="#E0E0E0" BorderThickness="0,1,0,0">
+                                    <TextBlock Text="Email, chat"/>
+                                </Border>
+                            </Grid>
+                        </Border>
+
+                        <TextBlock Style="{StaticResource TituloSeccion}" Text="Nuestra recomendacion"/>
+
+                        <Border Style="{StaticResource CajaExito}">
+                            <StackPanel>
+                                <TextBlock FontWeight="Bold" Foreground="#2E7D32" FontSize="14">
+                                    Para tiendas pequenas y medianas: FINKOK
+                                </TextBlock>
+                                <TextBlock Style="{StaticResource TextoNormal}" Margin="0,8,0,0">
+                                    Si tu tienda emite entre 50 y 500 facturas al mes, Finkok es la mejor opcion.
+                                    Pagas solo por lo que usas, sin mensualidades fijas. Ideal para negocios
+                                    con volumen variable de facturacion.
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource CajaInfo}">
+                            <StackPanel>
+                                <TextBlock FontWeight="Bold" Foreground="#1565C0" FontSize="14">
+                                    Para quienes prefieren portal web: FACTURAMA
+                                </TextBlock>
+                                <TextBlock Style="{StaticResource TextoNormal}" Margin="0,8,0,0">
+                                    Si quieres tener un portal web donde ver todas tus facturas, generar reportes
+                                    y tener una interfaz visual amigable ademas de este sistema, Facturama
+                                    es una excelente opcion.
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Tab: Pasos Rapidos -->
+            <TabItem Header="  Pasos Rapidos  " Padding="10,5">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="15">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource TituloSeccion}" Text="Configuracion Rapida - Paso a Paso"/>
+
+                        <Border Style="{StaticResource CajaInfo}" Margin="0,10">
+                            <StackPanel>
+                                <TextBlock FontWeight="Bold" FontSize="14" Foreground="#1565C0">
+                                    Paso 1: Obtener tu CSD del SAT (si no lo tienes)
+                                </TextBlock>
+                                <TextBlock Style="{StaticResource TextoNormal}" Margin="0,8,0,0">
+                                    1. Ingresa al portal del SAT con tu e.firma (FIEL)
+                                </TextBlock>
+                                <TextBlock Style="{StaticResource TextoNormal}">
+                                    2. Ve a "Tramites" → "Factura electronica" → "Solicitar CSD"
+                                </TextBlock>
+                                <TextBlock Style="{StaticResource TextoNormal}">
+                                    3. Genera y descarga tus archivos .cer y .key
+                                </TextBlock>
+                                <TextBlock Style="{StaticResource TextoNormal}">
+                                    4. Guarda la contrasena que creaste
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource CajaInfo}" Margin="0,10">
+                            <StackPanel>
+                                <TextBlock FontWeight="Bold" FontSize="14" Foreground="#1565C0">
+                                    Paso 2: Crear cuenta en el PAC (Sandbox primero)
+                                </TextBlock>
+                                <TextBlock Style="{StaticResource TextoNormal}" Margin="0,8,0,0">
+                                    1. Elige Finkok o Facturama (recomendamos Finkok)
+                                </TextBlock>
+                                <TextBlock Style="{StaticResource TextoNormal}">
+                                    2. Registrate en el SANDBOX (ambiente de pruebas)
+                                </TextBlock>
+                                <TextBlock Style="{StaticResource TextoNormal}">
+                                    3. Guarda tu usuario y contrasena
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource CajaInfo}" Margin="0,10">
+                            <StackPanel>
+                                <TextBlock FontWeight="Bold" FontSize="14" Foreground="#1565C0">
+                                    Paso 3: Configurar en TuTiendita
+                                </TextBlock>
+                                <TextBlock Style="{StaticResource TextoNormal}" Margin="0,8,0,0">
+                                    1. Ve a "Configuracion Fiscal" en el menu
+                                </TextBlock>
+                                <TextBlock Style="{StaticResource TextoNormal}">
+                                    2. Llena todos tus datos fiscales (RFC, razon social, etc.)
+                                </TextBlock>
+                                <TextBlock Style="{StaticResource TextoNormal}">
+                                    3. Selecciona tus archivos .cer y .key
+                                </TextBlock>
+                                <TextBlock Style="{StaticResource TextoNormal}">
+                                    4. Ingresa la contrasena de tu llave
+                                </TextBlock>
+                                <TextBlock Style="{StaticResource TextoNormal}">
+                                    5. Selecciona el PAC (Finkok o Facturama)
+                                </TextBlock>
+                                <TextBlock Style="{StaticResource TextoNormal}">
+                                    6. Ingresa tu usuario y contrasena del PAC
+                                </TextBlock>
+                                <TextBlock Style="{StaticResource TextoNormal}">
+                                    7. DEJA DESACTIVADO "Modo Produccion" para pruebas
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource CajaInfo}" Margin="0,10">
+                            <StackPanel>
+                                <TextBlock FontWeight="Bold" FontSize="14" Foreground="#1565C0">
+                                    Paso 4: Probar la conexion
+                                </TextBlock>
+                                <TextBlock Style="{StaticResource TextoNormal}" Margin="0,8,0,0">
+                                    1. Haz clic en "Probar Conexion con PAC"
+                                </TextBlock>
+                                <TextBlock Style="{StaticResource TextoNormal}">
+                                    2. Deberia mostrar "Conexion exitosa"
+                                </TextBlock>
+                                <TextBlock Style="{StaticResource TextoNormal}">
+                                    3. Guarda la configuracion
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource CajaInfo}" Margin="0,10">
+                            <StackPanel>
+                                <TextBlock FontWeight="Bold" FontSize="14" Foreground="#1565C0">
+                                    Paso 5: Crear tu primera factura de prueba
+                                </TextBlock>
+                                <TextBlock Style="{StaticResource TextoNormal}" Margin="0,8,0,0">
+                                    1. Crea una venta en el sistema
+                                </TextBlock>
+                                <TextBlock Style="{StaticResource TextoNormal}">
+                                    2. Ve a "Generar Factura"
+                                </TextBlock>
+                                <TextBlock Style="{StaticResource TextoNormal}">
+                                    3. Llena los datos del receptor
+                                </TextBlock>
+                                <TextBlock Style="{StaticResource TextoNormal}">
+                                    4. Haz clic en "Validar Datos" para verificar
+                                </TextBlock>
+                                <TextBlock Style="{StaticResource TextoNormal}">
+                                    5. Genera la factura y timbrala
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource CajaAdvertencia}" Margin="0,10">
+                            <StackPanel>
+                                <TextBlock FontWeight="Bold" FontSize="14" Foreground="#E65100">
+                                    Paso 6: Pasar a Produccion (cuando todo funcione)
+                                </TextBlock>
+                                <TextBlock Style="{StaticResource TextoNormal}" Margin="0,8,0,0">
+                                    1. Crea tu cuenta de PRODUCCION en el PAC
+                                </TextBlock>
+                                <TextBlock Style="{StaticResource TextoNormal}">
+                                    2. Compra timbres/folios
+                                </TextBlock>
+                                <TextBlock Style="{StaticResource TextoNormal}">
+                                    3. Actualiza las credenciales en la configuracion
+                                </TextBlock>
+                                <TextBlock Style="{StaticResource TextoNormal}">
+                                    4. ACTIVA "Modo Produccion"
+                                </TextBlock>
+                                <TextBlock Style="{StaticResource TextoNormal}">
+                                    5. Listo! Ya puedes emitir facturas reales
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+
+        <!-- Pie -->
+        <Border Grid.Row="2" Background="#FAFAFA" BorderBrush="#E0E0E0" BorderThickness="0,1,0,0" Padding="15">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock VerticalAlignment="Center" Foreground="#757575" FontSize="12">
+                    Si tienes dudas, contacta al soporte de tu PAC o consulta su documentacion.
+                </TextBlock>
+
+                <Button Grid.Column="1" Content="Cerrar" Padding="20,8"
+                        Background="#1976D2" Foreground="White" BorderThickness="0"
+                        Click="btnCerrar_Click"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

@@ -241,6 +241,13 @@ namespace TuTiendita
             }
         }
 
+        private void btnAyudaPAC_Click(object sender, RoutedEventArgs e)
+        {
+            var ventanaAyuda = new VentanaAyudaPAC();
+            ventanaAyuda.Owner = this;
+            ventanaAyuda.ShowDialog();
+        }
+
         private void btnGuardar_Click(object sender, RoutedEventArgs e)
         {
             // Validar campos obligatorios

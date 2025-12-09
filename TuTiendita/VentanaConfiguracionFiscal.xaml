@@ -313,11 +313,18 @@
                         <CheckBox x:Name="chkModoProduccion" Content="Modo Produccion (desmarcar para pruebas)"
                                   FontSize="13" Margin="0,0,0,15"/>
 
-                        <Button x:Name="btnProbarConexionPAC" Content="Probar Conexion con PAC"
-                                Padding="15,10" HorizontalAlignment="Left"
-                                Background="#2196F3" Foreground="White" BorderThickness="0"
-                                Click="btnProbarConexionPAC_Click"
-                                ToolTip="Verifica que las credenciales del PAC sean correctas"/>
+                        <StackPanel Orientation="Horizontal">
+                            <Button x:Name="btnProbarConexionPAC" Content="Probar Conexion con PAC"
+                                    Padding="15,10" HorizontalAlignment="Left"
+                                    Background="#2196F3" Foreground="White" BorderThickness="0"
+                                    Click="btnProbarConexionPAC_Click"
+                                    ToolTip="Verifica que las credenciales del PAC sean correctas"/>
+                            <Button x:Name="btnAyudaPAC" Content="? Ayuda: Como configurar PAC"
+                                    Padding="15,10" Margin="15,0,0,0"
+                                    Background="#FF9800" Foreground="White" BorderThickness="0"
+                                    Click="btnAyudaPAC_Click"
+                                    ToolTip="Guia completa para configurar Finkok o Facturama"/>
+                        </StackPanel>
                     </StackPanel>
                 </Border>
 
