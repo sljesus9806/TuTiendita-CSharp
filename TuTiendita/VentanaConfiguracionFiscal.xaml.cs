@@ -120,9 +120,10 @@ namespace TuTiendita
                 return;
             }
 
-            if (pacSeleccionado != "Finkok")
+            // Verificar que sea un PAC soportado
+            if (pacSeleccionado != "Finkok" && pacSeleccionado != "Facturama")
             {
-                MessageBox.Show($"La prueba de conexion solo esta disponible para Finkok actualmente.\n\n" +
+                MessageBox.Show($"La prueba de conexion solo esta disponible para Finkok y Facturama.\n\n" +
                     $"El PAC seleccionado '{pacSeleccionado}' no tiene implementada esta funcionalidad.",
                     "PAC No Soportado", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
@@ -152,33 +153,49 @@ namespace TuTiendita
             try
             {
                 bool modoProduccion = chkModoProduccion.IsChecked ?? false;
-
-                var finkok = new FinkokService(
-                    txtPACUsuario.Text.Trim(),
-                    txtPACContrasena.Password,
-                    modoProduccion);
-
-                // Intentar obtener timbres disponibles como prueba de conexión
-                int timbres = await finkok.ObtenerTimbresDisponiblesAsync();
-
                 string ambiente = modoProduccion ? "PRODUCCION" : "SANDBOX (Pruebas)";
+                int timbres = -1;
+                bool conexionExitosa = false;
 
-                if (timbres >= 0)
+                if (pacSeleccionado == "Finkok")
+                {
+                    var finkok = new FinkokService(
+                        txtPACUsuario.Text.Trim(),
+                        txtPACContrasena.Password,
+                        modoProduccion);
+
+                    timbres = await finkok.ObtenerTimbresDisponiblesAsync();
+                    conexionExitosa = timbres >= 0;
+                }
+                else if (pacSeleccionado == "Facturama")
+                {
+                    var facturama = new FacturamaService(
+                        txtPACUsuario.Text.Trim(),
+                        txtPACContrasena.Password,
+                        modoProduccion);
+
+                    conexionExitosa = await facturama.VerificarCredencialesAsync();
+                    if (conexionExitosa)
+                    {
+                        timbres = await facturama.ObtenerTimbresDisponiblesAsync();
+                    }
+                }
+
+                if (conexionExitosa && timbres >= 0)
                 {
                     MessageBox.Show(
-                        $"Conexion exitosa con Finkok!\n\n" +
+                        $"Conexion exitosa con {pacSeleccionado}!\n\n" +
                         $"Ambiente: {ambiente}\n" +
-                        $"Timbres disponibles: {timbres}\n\n" +
+                        $"Timbres/Folios disponibles: {timbres}\n\n" +
                         $"Las credenciales son correctas y puede comenzar a timbrar facturas.",
                         "Conexion Exitosa",
                         MessageBoxButton.OK,
                         MessageBoxImage.Information);
                 }
-                else
+                else if (conexionExitosa)
                 {
-                    // La conexión funcionó pero no pudimos obtener timbres
                     MessageBox.Show(
-                        $"Conexion establecida con Finkok.\n\n" +
+                        $"Conexion establecida con {pacSeleccionado}.\n\n" +
                         $"Ambiente: {ambiente}\n\n" +
                         $"Nota: No se pudo obtener el numero de timbres disponibles, " +
                         $"pero las credenciales parecen ser correctas.",
@@ -186,10 +203,19 @@ namespace TuTiendita
                         MessageBoxButton.OK,
                         MessageBoxImage.Information);
                 }
+                else
+                {
+                    MessageBox.Show(
+                        $"No se pudo establecer conexion con {pacSeleccionado}.\n\n" +
+                        $"Verifique que el usuario y contrasena sean correctos.",
+                        "Error de Conexion",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                }
             }
             catch (Exception ex)
             {
-                string mensajeError = $"Error al conectar con Finkok:\n\n{ex.Message}";
+                string mensajeError = $"Error al conectar con {pacSeleccionado}:\n\n{ex.Message}";
 
                 // Proporcionar ayuda adicional según el tipo de error
                 if (ex.Message.Contains("401") || ex.Message.Contains("Unauthorized"))
@@ -202,7 +228,7 @@ namespace TuTiendita
                 {
                     mensajeError += "\n\nPosibles causas:\n" +
                         "- Problema de conexion a internet\n" +
-                        "- El servicio de Finkok no esta disponible temporalmente";
+                        "- El servicio del PAC no esta disponible temporalmente";
                 }
 
                 MessageBox.Show(mensajeError, "Error de Conexion",

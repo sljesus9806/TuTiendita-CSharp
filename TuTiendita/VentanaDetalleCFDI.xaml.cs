@@ -132,7 +132,7 @@ namespace TuTiendita
                     return;
                 }
 
-                // Firmar el XML si tenemos certificados
+                // Firmar el XML si tenemos certificados (requerido para Finkok, opcional para Facturama)
                 if (!string.IsNullOrEmpty(_configuracion.CertificadoCSD) &&
                     !string.IsNullOrEmpty(_configuracion.LlaveCSD) &&
                     File.Exists(_configuracion.CertificadoCSD) &&
@@ -155,14 +155,27 @@ namespace TuTiendita
                     }
                 }
 
-                // Crear servicio Finkok
-                var finkok = new FinkokService(
-                    _configuracion.PACUsuario,
-                    _configuracion.PACContrasena,
-                    _configuracion.PACModoProduccion);
+                TimbradoResult resultado;
 
-                // Timbrar
-                var resultado = await finkok.TimbrarAsync(xmlATimbrar);
+                // Usar el PAC configurado
+                if (_configuracion.PAC == "Facturama")
+                {
+                    var facturama = new FacturamaService(
+                        _configuracion.PACUsuario,
+                        _configuracion.PACContrasena,
+                        _configuracion.PACModoProduccion);
+
+                    resultado = await facturama.TimbrarXMLAsync(xmlATimbrar);
+                }
+                else // Finkok (default)
+                {
+                    var finkok = new FinkokService(
+                        _configuracion.PACUsuario,
+                        _configuracion.PACContrasena,
+                        _configuracion.PACModoProduccion);
+
+                    resultado = await finkok.TimbrarAsync(xmlATimbrar);
+                }
 
                 if (resultado.Success)
                 {
@@ -183,7 +196,7 @@ namespace TuTiendita
                     if (guardado)
                     {
                         MessageBox.Show(
-                            $"¡Factura timbrada exitosamente!\n\n" +
+                            $"¡Factura timbrada exitosamente con {_configuracion.PAC}!\n\n" +
                             $"UUID: {resultado.UUID}\n" +
                             $"Fecha de Timbrado: {resultado.FechaTimbrado}",
                             "Timbrado Exitoso",
@@ -206,15 +219,15 @@ namespace TuTiendita
                 }
                 else
                 {
-                    string errorMsg = $"Error al timbrar:\n\n" +
+                    string errorMsg = $"Error al timbrar con {_configuracion.PAC}:\n\n" +
                         $"Código: {resultado.ErrorCode}\n" +
                         $"Mensaje: {resultado.ErrorMessage}";
 
-                    // Errores comunes de Finkok
+                    // Errores comunes
                     if (resultado.ErrorCode == "301")
                         errorMsg += "\n\nEl XML ya fue timbrado previamente.";
-                    else if (resultado.ErrorCode == "401")
-                        errorMsg += "\n\nCredenciales de Finkok inválidas.";
+                    else if (resultado.ErrorCode == "401" || resultado.ErrorCode == "Unauthorized")
+                        errorMsg += "\n\nCredenciales del PAC inválidas.";
                     else if (resultado.ErrorCode == "CFDI33101")
                         errorMsg += "\n\nEl certificado no corresponde al emisor.";
 
@@ -248,7 +261,7 @@ namespace TuTiendita
             {
                 MessageBox.Show(
                     "No hay un PAC configurado.\n\n" +
-                    "Vaya a Configuración Fiscal y configure un PAC (Finkok recomendado) " +
+                    "Vaya a Configuración Fiscal y configure un PAC (Finkok o Facturama) " +
                     "con sus credenciales para poder timbrar.",
                     "PAC No Configurado",
                     MessageBoxButton.OK,
@@ -256,11 +269,12 @@ namespace TuTiendita
                 return false;
             }
 
-            if (_configuracion.PAC != "Finkok")
+            // Verificar que sea un PAC soportado
+            if (_configuracion.PAC != "Finkok" && _configuracion.PAC != "Facturama")
             {
                 MessageBox.Show(
                     $"El PAC '{_configuracion.PAC}' no está soportado actualmente.\n\n" +
-                    "Por favor configure Finkok como PAC.",
+                    "Por favor configure Finkok o Facturama como PAC.",
                     "PAC No Soportado",
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
@@ -271,8 +285,8 @@ namespace TuTiendita
                 string.IsNullOrEmpty(_configuracion.PACContrasena))
             {
                 MessageBox.Show(
-                    "Faltan las credenciales del PAC (usuario y/o contraseña).\n\n" +
-                    "Configure las credenciales de Finkok en la Configuración Fiscal.",
+                    $"Faltan las credenciales del PAC (usuario y/o contraseña).\n\n" +
+                    $"Configure las credenciales de {_configuracion.PAC} en la Configuración Fiscal.",
                     "Credenciales Requeridas",
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
@@ -304,19 +318,22 @@ namespace TuTiendita
                 return;
             }
 
-            // Validar que tenemos certificados para cancelar
-            if (string.IsNullOrEmpty(_configuracion.CertificadoCSD) ||
-                string.IsNullOrEmpty(_configuracion.LlaveCSD) ||
-                !File.Exists(_configuracion.CertificadoCSD) ||
-                !File.Exists(_configuracion.LlaveCSD))
+            // Validar que tenemos certificados para cancelar (solo requerido para Finkok)
+            if (_configuracion.PAC == "Finkok")
             {
-                MessageBox.Show(
-                    "Se requieren los certificados CSD para cancelar facturas.\n\n" +
-                    "Configure los certificados en la Configuración Fiscal.",
-                    "Certificados Requeridos",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
-                return;
+                if (string.IsNullOrEmpty(_configuracion.CertificadoCSD) ||
+                    string.IsNullOrEmpty(_configuracion.LlaveCSD) ||
+                    !File.Exists(_configuracion.CertificadoCSD) ||
+                    !File.Exists(_configuracion.LlaveCSD))
+                {
+                    MessageBox.Show(
+                        "Se requieren los certificados CSD para cancelar facturas con Finkok.\n\n" +
+                        "Configure los certificados en la Configuración Fiscal.",
+                        "Certificados Requeridos",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    return;
+                }
             }
 
             // Solicitar motivo de cancelación
@@ -346,27 +363,45 @@ namespace TuTiendita
 
             try
             {
-                // Leer certificados
-                byte[] certBytes = File.ReadAllBytes(_configuracion.CertificadoCSD);
-                byte[] keyBytes = File.ReadAllBytes(_configuracion.LlaveCSD);
-                string certBase64 = Convert.ToBase64String(certBytes);
-                string keyBase64 = Convert.ToBase64String(keyBytes);
+                CancelacionResult resultado;
 
-                // Crear servicio Finkok
-                var finkok = new FinkokService(
-                    _configuracion.PACUsuario,
-                    _configuracion.PACContrasena,
-                    _configuracion.PACModoProduccion);
+                if (_configuracion.PAC == "Facturama")
+                {
+                    // Para Facturama necesitamos el ID interno de Facturama
+                    // Si no lo tenemos, intentamos cancelar por UUID
+                    var facturama = new FacturamaService(
+                        _configuracion.PACUsuario,
+                        _configuracion.PACContrasena,
+                        _configuracion.PACModoProduccion);
 
-                // Cancelar
-                var resultado = await finkok.CancelarAsync(
-                    _cfdi.EmisorRFC,
-                    _cfdi.UUID,
-                    certBase64,
-                    keyBase64,
-                    _configuracion.ContrasenaLlaveCSD ?? "",
-                    motivo,
-                    folioSustitucion);
+                    resultado = await facturama.CancelarPorUUIDAsync(
+                        _cfdi.EmisorRFC,
+                        _cfdi.UUID,
+                        motivo,
+                        folioSustitucion);
+                }
+                else // Finkok (default)
+                {
+                    // Leer certificados (requeridos para Finkok)
+                    byte[] certBytes = File.ReadAllBytes(_configuracion.CertificadoCSD);
+                    byte[] keyBytes = File.ReadAllBytes(_configuracion.LlaveCSD);
+                    string certBase64 = Convert.ToBase64String(certBytes);
+                    string keyBase64 = Convert.ToBase64String(keyBytes);
+
+                    var finkok = new FinkokService(
+                        _configuracion.PACUsuario,
+                        _configuracion.PACContrasena,
+                        _configuracion.PACModoProduccion);
+
+                    resultado = await finkok.CancelarAsync(
+                        _cfdi.EmisorRFC,
+                        _cfdi.UUID,
+                        certBase64,
+                        keyBase64,
+                        _configuracion.ContrasenaLlaveCSD ?? "",
+                        motivo,
+                        folioSustitucion);
+                }
 
                 if (resultado.Success)
                 {
@@ -390,7 +425,7 @@ namespace TuTiendita
                 else
                 {
                     MessageBox.Show(
-                        $"Error al cancelar:\n\n" +
+                        $"Error al cancelar con {_configuracion.PAC}:\n\n" +
                         $"Código: {resultado.ErrorCode}\n" +
                         $"Mensaje: {resultado.ErrorMessage}",
                         "Error de Cancelación",

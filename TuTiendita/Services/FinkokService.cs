@@ -714,6 +714,7 @@ namespace TuTiendita.Services
         public string StatusCode { get; set; }
         public string ErrorCode { get; set; }
         public string ErrorMessage { get; set; }
+        public string FacturamaId { get; set; } // ID interno de Facturama
     }
 
     public class CancelacionResult
