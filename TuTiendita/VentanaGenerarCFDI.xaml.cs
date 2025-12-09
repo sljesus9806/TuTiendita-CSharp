@@ -90,10 +90,12 @@ namespace TuTiendita
                 CargarDatosCliente();
                 ActualizarResumen();
                 btnGenerarCFDI.IsEnabled = true;
+                btnValidar.IsEnabled = true;
             }
             else
             {
                 btnGenerarCFDI.IsEnabled = false;
+                btnValidar.IsEnabled = false;
             }
         }
 
@@ -240,6 +242,121 @@ namespace TuTiendita
         {
             DialogResult = false;
             Close();
+        }
+
+        private void btnValidar_Click(object sender, RoutedEventArgs e)
+        {
+            // Construir un CFDI temporal para validar
+            var resultado = new ValidadorCFDI.ResultadoValidacion();
+
+            // Validar configuración fiscal primero
+            var validacionConfig = ValidadorCFDI.ValidarConfiguracionFiscal(_configuracion);
+            foreach (var error in validacionConfig.Errores)
+            {
+                resultado.AgregarError(error.Codigo, $"Configuracion: {error.Mensaje}", error.Campo);
+            }
+            foreach (var adv in validacionConfig.Advertencias)
+            {
+                resultado.AgregarAdvertencia($"Configuracion: {adv}");
+            }
+
+            // Validar RFC del receptor
+            var validacionRFC = ValidadorCFDI.ValidarRFC(txtReceptorRFC.Text?.Trim(), esReceptor: true);
+            foreach (var error in validacionRFC.Errores)
+            {
+                resultado.AgregarError(error.Codigo, $"Receptor: {error.Mensaje}", error.Campo);
+            }
+
+            // Validar CP del receptor
+            var validacionCP = ValidadorCFDI.ValidarCodigoPostal(txtReceptorCP.Text?.Trim());
+            foreach (var error in validacionCP.Errores)
+            {
+                resultado.AgregarError(error.Codigo, $"Receptor: {error.Mensaje}", error.Campo);
+            }
+
+            // Validar régimen fiscal
+            var regimen = cmbReceptorRegimen.SelectedItem as CatalogosSAT.RegimenFiscal;
+            if (regimen != null)
+            {
+                var validacionRegimen = ValidadorCFDI.ValidarRegimenFiscal(regimen.Clave, txtReceptorRFC.Text?.Trim());
+                foreach (var error in validacionRegimen.Errores)
+                {
+                    resultado.AgregarError(error.Codigo, $"Receptor: {error.Mensaje}", error.Campo);
+                }
+            }
+            else
+            {
+                resultado.AgregarError("VAL001", "Debe seleccionar un regimen fiscal", "RegimenFiscal");
+            }
+
+            // Validar uso CFDI
+            var usoCFDI = cmbUsoCFDI.SelectedItem as CatalogosSAT.UsoCFDI;
+            if (usoCFDI != null)
+            {
+                var validacionUso = ValidadorCFDI.ValidarUsoCFDI(usoCFDI.Clave, txtReceptorRFC.Text?.Trim());
+                foreach (var error in validacionUso.Errores)
+                {
+                    resultado.AgregarError(error.Codigo, error.Mensaje, error.Campo);
+                }
+            }
+            else
+            {
+                resultado.AgregarError("VAL002", "Debe seleccionar un uso de CFDI", "UsoCFDI");
+            }
+
+            // Validar forma y método de pago
+            var formaPago = cmbFormaPago.SelectedItem as CatalogosSAT.FormaPago;
+            var metodoPago = cmbMetodoPago.SelectedItem as CatalogosSAT.MetodoPago;
+            if (formaPago != null && metodoPago != null)
+            {
+                var validacionPagos = ValidadorCFDI.ValidarFormaPagoMetodoPago(formaPago.Clave, metodoPago.Clave);
+                foreach (var error in validacionPagos.Errores)
+                {
+                    resultado.AgregarError(error.Codigo, error.Mensaje, error.Campo);
+                }
+                foreach (var adv in validacionPagos.Advertencias)
+                {
+                    resultado.AgregarAdvertencia(adv);
+                }
+            }
+
+            // Validar montos
+            decimal subtotal = _detallesVenta?.Sum(d => (decimal)d.Subtotal) ?? 0;
+            decimal iva = Math.Round(subtotal * 0.16m, 2);
+            decimal total = subtotal + iva;
+            var validacionMontos = ValidadorCFDI.ValidarMontos(subtotal, iva, total);
+            foreach (var error in validacionMontos.Errores)
+            {
+                resultado.AgregarError(error.Codigo, error.Mensaje, error.Campo);
+            }
+            foreach (var adv in validacionMontos.Advertencias)
+            {
+                resultado.AgregarAdvertencia(adv);
+            }
+
+            // Mostrar resultados
+            if (resultado.EsValido)
+            {
+                string mensaje = "La factura cumple con todos los requisitos del SAT.";
+                if (resultado.Advertencias.Count > 0)
+                {
+                    mensaje += "\n\nADVERTENCIAS:\n" + string.Join("\n", resultado.Advertencias.Select(a => $"- {a}"));
+                }
+                MessageBox.Show(mensaje, "Validacion Exitosa",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                txtEstadoGeneracion.Text = "Validacion exitosa - Listo para generar";
+                txtEstadoGeneracion.Foreground = new System.Windows.Media.SolidColorBrush(
+                    System.Windows.Media.Color.FromRgb(76, 175, 80));
+            }
+            else
+            {
+                string mensaje = resultado.ObtenerResumen();
+                MessageBox.Show(mensaje, "Errores de Validacion",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtEstadoGeneracion.Text = $"Validacion fallida - {resultado.Errores.Count} error(es)";
+                txtEstadoGeneracion.Foreground = new System.Windows.Media.SolidColorBrush(
+                    System.Windows.Media.Color.FromRgb(244, 67, 54));
+            }
         }
 
         private void btnGenerarCFDI_Click(object sender, RoutedEventArgs e)

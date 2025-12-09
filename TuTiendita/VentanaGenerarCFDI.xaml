@@ -304,6 +304,12 @@
                     <Button x:Name="btnCancelar" Content="Cancelar"
                             Padding="25,12" FontSize="14"
                             Click="btnCancelar_Click" Margin="0,0,10,0"/>
+                    <Button x:Name="btnValidar" Content="Validar Datos"
+                            Background="#FF9800" Foreground="White"
+                            Padding="25,12" FontSize="14"
+                            BorderThickness="0" Click="btnValidar_Click"
+                            Margin="0,0,10,0" IsEnabled="False"
+                            ToolTip="Valida los datos antes de generar la factura"/>
                     <Button x:Name="btnGenerarCFDI" Content="Generar Factura"
                             Background="#4CAF50" Foreground="White"
                             Padding="25,12" FontSize="14" FontWeight="SemiBold"
