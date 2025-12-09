@@ -1,11 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -17,7 +14,7 @@ namespace TuTiendita.Services
     /// Servicio para integración con Facturama PAC
     /// Documentación: https://apisandbox.facturama.mx/docs
     /// </summary>
-    public class FacturamaService
+    public class FacturamaService : IDisposable
     {
         // URLs de la API REST
         private const string SANDBOX_URL = "https://apisandbox.facturama.mx";
@@ -27,6 +24,7 @@ namespace TuTiendita.Services
         private readonly string _password;
         private readonly bool _isProduction;
         private readonly HttpClient _httpClient;
+        private bool _disposed = false;
 
         public FacturamaService(string username, string password, bool isProduction = false)
         {
@@ -48,6 +46,28 @@ namespace TuTiendita.Services
 
         public string BaseUrl => _isProduction ? PRODUCTION_URL : SANDBOX_URL;
         public bool IsProduction => _isProduction;
+
+        #endregion
+
+        #region IDisposable
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    _httpClient?.Dispose();
+                }
+                _disposed = true;
+            }
+        }
 
         #endregion
 
@@ -171,6 +191,7 @@ namespace TuTiendita.Services
                         result.SelloSAT = cfdiResponse.Complement?.TaxStamp?.SatSign;
                         result.NoCertificadoSAT = cfdiResponse.Complement?.TaxStamp?.SatCertNumber;
                         result.SelloCFDI = cfdiResponse.Complement?.TaxStamp?.CfdiSign;
+                        result.CadenaOriginalTFD = cfdiResponse.Complement?.TaxStamp?.OriginalString;
                         result.FacturamaId = cfdiResponse.Id;
 
                         if (!string.IsNullOrEmpty(cfdiResponse.Id))
@@ -187,7 +208,33 @@ namespace TuTiendita.Services
                     result.Success = false;
                     result.ErrorCode = response.StatusCode.ToString();
                     result.ErrorMessage = errorResponse?.Message ?? responseBody;
+
+                    // Agregar detalles de ModelState si existen
+                    if (errorResponse?.ModelState != null)
+                    {
+                        var errors = new List<string>();
+                        foreach (var state in errorResponse.ModelState)
+                        {
+                            errors.AddRange(state.Value);
+                        }
+                        if (errors.Count > 0)
+                        {
+                            result.ErrorMessage += " - " + string.Join("; ", errors);
+                        }
+                    }
                 }
+            }
+            catch (HttpRequestException ex)
+            {
+                result.Success = false;
+                result.ErrorCode = "HTTP_ERROR";
+                result.ErrorMessage = $"Error de conexión con Facturama: {ex.Message}";
+            }
+            catch (TaskCanceledException)
+            {
+                result.Success = false;
+                result.ErrorCode = "TIMEOUT";
+                result.ErrorMessage = "Tiempo de espera agotado al conectar con Facturama";
             }
             catch (Exception ex)
             {
@@ -445,7 +492,7 @@ namespace TuTiendita.Services
                     FiscalRegime = receptorRegimen,
                     TaxZipCode = receptorCodigoPostal
                 },
-                Items = conceptos.Select(c => new FacturamaItem
+                Items = conceptos?.Select(c => new FacturamaItem
                 {
                     ProductCode = c.ClaveProdServ,
                     IdentificationNumber = c.NoIdentificacion,
@@ -463,8 +510,8 @@ namespace TuTiendita.Services
                         Base = i.Base,
                         Rate = i.TasaOCuota,
                         IsRetention = i.TipoFactor == "Retencion"
-                    }).ToList()
-                }).ToList()
+                    }).ToList() ?? new List<FacturamaTax>()
+                }).ToList() ?? new List<FacturamaItem>()
             };
 
             return request;

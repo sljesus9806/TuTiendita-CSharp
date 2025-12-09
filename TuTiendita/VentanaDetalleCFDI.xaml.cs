@@ -27,13 +27,21 @@ namespace TuTiendita
         private void CargarDatos()
         {
             // Encabezado
-            txtFolio.Text = $"Factura {_cfdi.FolioCompleto}";
-            txtFecha.Text = $"Fecha: {_cfdi.Fecha}";
+            txtFolio.Text = $"Factura {_cfdi?.FolioCompleto ?? "Sin Folio"}";
+            txtFecha.Text = $"Fecha: {_cfdi?.Fecha ?? "N/A"}";
 
             // Estado
-            txtEstado.Text = _cfdi.Estado;
-            brdEstado.Background = new SolidColorBrush(
-                (Color)ColorConverter.ConvertFromString(_cfdi.EstadoColor));
+            txtEstado.Text = _cfdi?.Estado ?? "Desconocido";
+            try
+            {
+                var colorStr = _cfdi?.EstadoColor ?? "#9E9E9E";
+                brdEstado.Background = new SolidColorBrush(
+                    (Color)ColorConverter.ConvertFromString(colorStr));
+            }
+            catch
+            {
+                brdEstado.Background = new SolidColorBrush(Colors.Gray);
+            }
 
             // Datos de timbrado
             if (_cfdi.EstaTimbrado)

@@ -15,7 +15,7 @@ namespace TuTiendita.Services
     /// Servicio para integración con Finkok PAC
     /// Documentación: https://wiki.finkok.com/
     /// </summary>
-    public class FinkokService
+    public class FinkokService : IDisposable
     {
         // URLs de los servicios SOAP
         private const string SANDBOX_STAMP_URL = "https://demo-facturacion.finkok.com/servicios/soap/stamp.wsdl";
@@ -27,6 +27,7 @@ namespace TuTiendita.Services
         private readonly string _password;
         private readonly bool _isProduction;
         private readonly HttpClient _httpClient;
+        private bool _disposed = false;
 
         public FinkokService(string username, string password, bool isProduction = false)
         {
@@ -42,6 +43,28 @@ namespace TuTiendita.Services
         public string StampUrl => _isProduction ? PRODUCTION_STAMP_URL : SANDBOX_STAMP_URL;
         public string CancelUrl => _isProduction ? PRODUCTION_CANCEL_URL : SANDBOX_CANCEL_URL;
         public bool IsProduction => _isProduction;
+
+        #endregion
+
+        #region IDisposable
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    _httpClient?.Dispose();
+                }
+                _disposed = true;
+            }
+        }
 
         #endregion
 
