@@ -156,6 +156,32 @@
                     </StackPanel>
                 </Border>
 
+                <!-- Sección: Lector de Código de Barras -->
+                <Border Background="White" CornerRadius="8" Padding="20" Margin="0,0,0,20">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.1"/>
+                    </Border.Effect>
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                            <TextBlock Text="📷" FontSize="24" Margin="0,0,10,0"/>
+                            <TextBlock Text="Lector de Codigo de Barras" Style="{StaticResource SectionTitle}" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <TextBlock Text="Nota: La mayoria de lectores USB funcionan como teclado y no requieren configuracion de puerto COM. Solo configure el puerto si su lector utiliza conexion serial."
+                                   TextWrapping="Wrap" FontSize="11" Foreground="#666" Margin="0,0,0,15"/>
+
+                        <TextBlock Text="Puerto COM (opcional)" Style="{StaticResource LabelStyle}"/>
+                        <ComboBox x:Name="cmbPuertoLector" Style="{StaticResource ComboStyle}" Width="200" HorizontalAlignment="Left">
+                            <ComboBoxItem Content="(Sin puerto - Modo teclado)"/>
+                        </ComboBox>
+
+                        <Button x:Name="btnProbarLector" Content="Probar Lector"
+                                Background="#9B59B6" Foreground="White" BorderThickness="0"
+                                Padding="15,10" HorizontalAlignment="Left"
+                                Click="btnProbarLector_Click"/>
+                    </StackPanel>
+                </Border>
+
                 <!-- Sección: Estado Actual -->
                 <Border Background="#E3F2FD" CornerRadius="8" Padding="15">
                     <StackPanel>

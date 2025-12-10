@@ -39,13 +39,18 @@ namespace TuTiendita
                 cmbPuertoBascula.Items.Clear();
                 cmbPuertoBascula.Items.Add(new ComboBoxItem { Content = "(Sin bascula)" });
 
+                cmbPuertoLector.Items.Clear();
+                cmbPuertoLector.Items.Add(new ComboBoxItem { Content = "(Sin puerto - Modo teclado)" });
+
                 var puertos = SerialPort.GetPortNames();
                 foreach (var puerto in puertos.OrderBy(p => p))
                 {
                     cmbPuertoBascula.Items.Add(new ComboBoxItem { Content = puerto });
+                    cmbPuertoLector.Items.Add(new ComboBoxItem { Content = puerto });
                 }
 
                 cmbPuertoBascula.SelectedIndex = 0;
+                cmbPuertoLector.SelectedIndex = 0;
             }
             catch (Exception ex)
             {
@@ -157,6 +162,20 @@ namespace TuTiendita
 
                 // Cargar estado del cajón
                 chkCajonConectado.IsChecked = config.CajonConectado;
+
+                // Cargar puerto del lector de código de barras
+                var puertoLector = config.PuertoLectorCodigoBarras ?? "";
+                if (!string.IsNullOrEmpty(puertoLector))
+                {
+                    for (int i = 0; i < cmbPuertoLector.Items.Count; i++)
+                    {
+                        if ((cmbPuertoLector.Items[i] as ComboBoxItem)?.Content?.ToString() == puertoLector)
+                        {
+                            cmbPuertoLector.SelectedIndex = i;
+                            break;
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -201,6 +220,22 @@ namespace TuTiendita
                     var primeraImpresora = estado.Impresoras.FirstOrDefault(i => i.EsDefault) ?? estado.Impresoras[0];
                     sb.AppendLine($"  Nombre: {primeraImpresora.Nombre}");
                     sb.AppendLine($"  Estado: {primeraImpresora.Mensaje}");
+                }
+
+                // Estado del lector de código de barras
+                bool lectorConectado = estado.LectorCodigoBarras?.Estado == EstadoConexion.Conectado;
+                bool lectorConfigurado = estado.LectorCodigoBarras?.Estado != EstadoConexion.NoConfigurado;
+                if (lectorConfigurado)
+                {
+                    sb.AppendLine($"• Lector de barras: {(lectorConectado ? "✓ Conectado" : "✗ No detectado")}");
+                    if (estado.LectorCodigoBarras != null && !string.IsNullOrEmpty(estado.LectorCodigoBarras.Puerto))
+                    {
+                        sb.AppendLine($"  Puerto: {estado.LectorCodigoBarras.Puerto}");
+                    }
+                }
+                else
+                {
+                    sb.AppendLine($"• Lector de barras: Modo teclado (sin puerto COM)");
                 }
 
                 // Estado de internet
@@ -403,6 +438,81 @@ namespace TuTiendita
             }
         }
 
+        private async void btnProbarLector_Click(object sender, RoutedEventArgs e)
+        {
+            var btn = sender as Button;
+            var contenidoOriginal = btn?.Content;
+
+            try
+            {
+                if (btn != null)
+                {
+                    btn.IsEnabled = false;
+                    btn.Content = "Probando...";
+                }
+
+                var puertoSeleccionado = (cmbPuertoLector.SelectedItem as ComboBoxItem)?.Content?.ToString();
+
+                if (string.IsNullOrEmpty(puertoSeleccionado) || puertoSeleccionado == "(Sin puerto - Modo teclado)")
+                {
+                    MessageBox.Show(
+                        "Lector en modo teclado.\n\n" +
+                        "Si su lector funciona como teclado USB (la mayoria de lectores modernos),\n" +
+                        "no necesita configurar un puerto COM.\n\n" +
+                        "Para probar el lector:\n" +
+                        "1. Coloque el cursor en un campo de texto\n" +
+                        "2. Escanee un codigo de barras\n" +
+                        "3. El codigo deberia aparecer como si lo hubiera escrito",
+                        "Lector de Codigo de Barras", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+
+                var resultado = await Task.Run(() =>
+                {
+                    try
+                    {
+                        using (var puerto = new SerialPort(puertoSeleccionado, 9600))
+                        {
+                            puerto.ReadTimeout = 5000;
+                            puerto.WriteTimeout = 3000;
+                            puerto.Open();
+
+                            // Esperar datos del lector
+                            System.Threading.Thread.Sleep(500);
+
+                            if (puerto.BytesToRead > 0)
+                            {
+                                var datos = puerto.ReadExisting();
+                                return $"Conexion exitosa!\n\nDatos recibidos:\n{datos}";
+                            }
+                            else
+                            {
+                                return "Puerto abierto correctamente.\n\n" +
+                                       "No se recibieron datos. Intente escanear un codigo de barras\n" +
+                                       "mientras la prueba esta activa para verificar la conexion.";
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        return $"Error de conexion:\n{ex.Message}";
+                    }
+                });
+
+                MessageBox.Show(resultado, "Prueba de Lector",
+                    MessageBoxButton.OK,
+                    resultado.StartsWith("Error") ? MessageBoxImage.Error : MessageBoxImage.Information);
+            }
+            finally
+            {
+                if (btn != null)
+                {
+                    btn.IsEnabled = true;
+                    btn.Content = contenidoOriginal;
+                }
+            }
+        }
+
         private void btnAbrirCajon_Click(object sender, RoutedEventArgs e)
         {
             var btn = sender as Button;
@@ -496,6 +606,12 @@ namespace TuTiendita
 
                 // Guardar estado del cajón
                 config.CajonConectado = chkCajonConectado.IsChecked == true;
+
+                // Guardar puerto del lector de código de barras
+                var puertoLector = (cmbPuertoLector.SelectedItem as ComboBoxItem)?.Content?.ToString();
+                if (puertoLector == "(Sin puerto - Modo teclado)")
+                    puertoLector = "";
+                config.PuertoLectorCodigoBarras = puertoLector ?? "";
 
                 // Persistir cambios
                 config.Guardar();
