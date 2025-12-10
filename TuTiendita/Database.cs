@@ -219,6 +219,47 @@ namespace TuTiendita
                     }
                     catch { /* Column already exists */ }
 
+                    // Alter Ventas table to add Estado column for cancellation tracking
+                    try
+                    {
+                        string alterVentasEstado = "ALTER TABLE Ventas ADD COLUMN Estado TEXT DEFAULT 'Completada'";
+                        using (var cmd = new SQLiteCommand(alterVentasEstado, connection))
+                        {
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                    catch { /* Column already exists */ }
+
+                    try
+                    {
+                        string alterVentasMotivo = "ALTER TABLE Ventas ADD COLUMN MotivoCancelacion TEXT";
+                        using (var cmd = new SQLiteCommand(alterVentasMotivo, connection))
+                        {
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                    catch { /* Column already exists */ }
+
+                    try
+                    {
+                        string alterVentasCanceladoPor = "ALTER TABLE Ventas ADD COLUMN CanceladoPor TEXT";
+                        using (var cmd = new SQLiteCommand(alterVentasCanceladoPor, connection))
+                        {
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                    catch { /* Column already exists */ }
+
+                    try
+                    {
+                        string alterVentasFechaCancelacion = "ALTER TABLE Ventas ADD COLUMN FechaCancelacion TEXT";
+                        using (var cmd = new SQLiteCommand(alterVentasFechaCancelacion, connection))
+                        {
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                    catch { /* Column already exists */ }
+
                     // Alter Ventas table to add ClienteId column if it doesn't exist
                     try
                     {

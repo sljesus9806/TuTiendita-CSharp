@@ -244,36 +244,15 @@ namespace TuTiendita
             // Solo pedir monto si es efectivo
             if (metodoPago == "Efectivo")
             {
-                var inputDialog = new DialogoEntrada("Ingrese el monto con el que paga el cliente:");
-                if (inputDialog.ShowDialog() == true)
+                var pagoDialog = new DialogoPagoEfectivo(total);
+                if (pagoDialog.ShowDialog() == true)
                 {
-                    if (decimal.TryParse(inputDialog.InputText, out montoPagado))
-                    {
-                        montoPagado = Math.Round(montoPagado, 2);
-                        cambio = Math.Round(montoPagado - total, 2);
-
-                        if (cambio < 0)
-                        {
-                            MessageBox.Show("El monto pagado es insuficiente.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                            return;
-                        }
-
-                        // Validar monto razonable
-                        if (montoPagado > 100000)
-                        {
-                            MessageBox.Show("El monto ingresado parece demasiado alto. Verifique.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                            return;
-                        }
-                    }
-                    else
-                    {
-                        MessageBox.Show("Monto inválido. Ingrese solo números.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                        return;
-                    }
+                    montoPagado = pagoDialog.MontoRecibido;
+                    cambio = pagoDialog.Cambio;
                 }
                 else
                 {
-                    return; // Usuario canceló
+                    return; // Usuario cancelo
                 }
             }
             else
