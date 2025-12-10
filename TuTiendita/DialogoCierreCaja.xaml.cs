@@ -27,49 +27,50 @@ namespace TuTiendita
                 if (total1000 == null || txtTotalGeneral == null)
                     return;
 
-                decimal total = 0;
+                decimal totalBilletes = 0;
+                decimal totalMonedas = 0;
 
                 // Billetes
                 if (int.TryParse(txt1000.Text, out int cant1000))
                 {
                     decimal subtotal = cant1000 * 1000;
                     total1000.Text = subtotal.ToString("C");
-                    total += subtotal;
+                    totalBilletes += subtotal;
                 }
 
                 if (int.TryParse(txt500.Text, out int cant500))
                 {
                     decimal subtotal = cant500 * 500;
                     total500.Text = subtotal.ToString("C");
-                    total += subtotal;
+                    totalBilletes += subtotal;
                 }
 
                 if (int.TryParse(txt200.Text, out int cant200))
                 {
                     decimal subtotal = cant200 * 200;
                     total200.Text = subtotal.ToString("C");
-                    total += subtotal;
+                    totalBilletes += subtotal;
                 }
 
                 if (int.TryParse(txt100.Text, out int cant100))
                 {
                     decimal subtotal = cant100 * 100;
                     total100.Text = subtotal.ToString("C");
-                    total += subtotal;
+                    totalBilletes += subtotal;
                 }
 
                 if (int.TryParse(txt50.Text, out int cant50))
                 {
                     decimal subtotal = cant50 * 50;
                     total50.Text = subtotal.ToString("C");
-                    total += subtotal;
+                    totalBilletes += subtotal;
                 }
 
                 if (int.TryParse(txt20.Text, out int cant20))
                 {
                     decimal subtotal = cant20 * 20;
                     total20.Text = subtotal.ToString("C");
-                    total += subtotal;
+                    totalBilletes += subtotal;
                 }
 
                 // Monedas
@@ -77,36 +78,69 @@ namespace TuTiendita
                 {
                     decimal subtotal = cant10 * 10;
                     total10.Text = subtotal.ToString("C");
-                    total += subtotal;
+                    totalMonedas += subtotal;
                 }
 
                 if (int.TryParse(txt5.Text, out int cant5))
                 {
                     decimal subtotal = cant5 * 5;
                     total5.Text = subtotal.ToString("C");
-                    total += subtotal;
+                    totalMonedas += subtotal;
                 }
 
                 if (int.TryParse(txt2.Text, out int cant2))
                 {
                     decimal subtotal = cant2 * 2;
                     total2.Text = subtotal.ToString("C");
-                    total += subtotal;
+                    totalMonedas += subtotal;
                 }
 
                 if (int.TryParse(txt1.Text, out int cant1))
                 {
                     decimal subtotal = cant1 * 1;
                     total1.Text = subtotal.ToString("C");
-                    total += subtotal;
+                    totalMonedas += subtotal;
                 }
 
-                txtTotalGeneral.Text = total.ToString("C");
+                // Actualizar totales parciales
+                if (txtTotalBilletes != null)
+                    txtTotalBilletes.Text = totalBilletes.ToString("C");
+                if (txtTotalMonedas != null)
+                    txtTotalMonedas.Text = totalMonedas.ToString("C");
+
+                txtTotalGeneral.Text = (totalBilletes + totalMonedas).ToString("C");
             }
             catch
             {
                 // Ignorar errores de conversión
             }
+        }
+
+        private void BtnLimpiar_Click(object sender, RoutedEventArgs e)
+        {
+            // Limpiar todos los campos de billetes
+            txt1000.Text = "0";
+            txt500.Text = "0";
+            txt200.Text = "0";
+            txt100.Text = "0";
+            txt50.Text = "0";
+            txt20.Text = "0";
+
+            // Limpiar todos los campos de monedas
+            txt10.Text = "0";
+            txt5.Text = "0";
+            txt2.Text = "0";
+            txt1.Text = "0";
+
+            // Limpiar notas
+            txtNotas.Text = "";
+
+            // Recalcular totales
+            CalcularTotales();
+
+            // Dar foco al primer campo
+            txt1000.Focus();
+            txt1000.SelectAll();
         }
 
         private void BtnAceptar_Click(object sender, RoutedEventArgs e)
