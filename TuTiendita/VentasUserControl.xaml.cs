@@ -217,13 +217,18 @@ namespace TuTiendita
                 return;
             }
 
-            // Validar stock antes de proceder
-            if (!ValidarStockDisponible())
-            {
-                return;
-            }
+            // Calcular total con redondeo a 2 decimales para evitar errores de centavos
+            decimal total = Math.Round(productosSeleccionados.Sum(p => Math.Round(p.Precio * p.Cantidad, 2)), 2);
 
-            decimal total = productosSeleccionados.Sum(p => p.Precio * p.Cantidad);
+            // Validar que el total sea razonable (prevenir errores de dedo)
+            if (total > 50000)
+            {
+                var confirmar = MessageBox.Show(
+                    $"El total de {total:C} parece muy alto.\n¿Está seguro que es correcto?",
+                    "Confirmar Venta", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (confirmar != MessageBoxResult.Yes)
+                    return;
+            }
 
             // Seleccionar método de pago
             var metodoPagoDialog = new DialogoMetodoPago();
@@ -244,17 +249,25 @@ namespace TuTiendita
                 {
                     if (decimal.TryParse(inputDialog.InputText, out montoPagado))
                     {
-                        cambio = montoPagado - total;
+                        montoPagado = Math.Round(montoPagado, 2);
+                        cambio = Math.Round(montoPagado - total, 2);
 
                         if (cambio < 0)
                         {
                             MessageBox.Show("El monto pagado es insuficiente.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                             return;
                         }
+
+                        // Validar monto razonable
+                        if (montoPagado > 100000)
+                        {
+                            MessageBox.Show("El monto ingresado parece demasiado alto. Verifique.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                            return;
+                        }
                     }
                     else
                     {
-                        MessageBox.Show("Monto inválido.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show("Monto inválido. Ingrese solo números.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         return;
                     }
                 }
@@ -270,19 +283,14 @@ namespace TuTiendita
                 cambio = 0;
             }
 
-            // Guardar la venta en la base de datos
-            long ventaId = GuardarVenta(total, montoPagado, cambio, metodoPago);
+            // IMPORTANTE: Guardar venta Y actualizar stock en UNA SOLA transacción atómica
+            // Esto previene inconsistencias si se va la luz o hay errores
+            var resultado = GuardarVentaConStock(total, montoPagado, cambio, metodoPago);
 
-            if (ventaId > 0)
+            if (resultado.Exito && resultado.VentaId > 0)
             {
-                // Actualizar el stock
-                foreach (var producto in productosSeleccionados)
-                {
-                    Producto.ActualizarStock(producto.Codigo, producto.Cantidad);
-                }
-
-                // Generar ticket en PDF
-                GenerarTicketPDF(ventaId, productosSeleccionados, total, montoPagado, cambio, metodoPago);
+                // Generar ticket en PDF (después de confirmar la transacción)
+                GenerarTicketPDF(resultado.VentaId, productosSeleccionados, total, montoPagado, cambio, metodoPago);
 
                 // Limpiar la venta
                 productosSeleccionados.Clear();
@@ -290,13 +298,168 @@ namespace TuTiendita
                 CalcularTotal();
                 CargarProductos(); // Recargar productos para actualizar stock
 
-                string mensaje = $"Venta #{ventaId} completada.\nMétodo de pago: {metodoPago}";
+                string mensaje = $"Venta #{resultado.VentaId} completada.\nMétodo de pago: {metodoPago}";
                 if (metodoPago == "Efectivo")
                 {
                     mensaje += $"\nCambio: {cambio:C}";
                 }
                 MessageBox.Show(mensaje, "Venta Exitosa", MessageBoxButton.OK, MessageBoxImage.Information);
             }
+            else if (!string.IsNullOrEmpty(resultado.MensajeError))
+            {
+                MessageBox.Show(resultado.MensajeError, "Error en Venta", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        /// <summary>
+        /// Resultado de operación de venta
+        /// </summary>
+        private class ResultadoVenta
+        {
+            public bool Exito { get; set; }
+            public long VentaId { get; set; }
+            public string MensajeError { get; set; }
+        }
+
+        /// <summary>
+        /// Guarda la venta Y actualiza el stock en una SOLA transacción atómica.
+        /// Esto previene inconsistencias si hay cortes de luz o errores.
+        /// </summary>
+        private ResultadoVenta GuardarVentaConStock(decimal total, decimal montoPagado, decimal cambio, string metodoPago)
+        {
+            var resultado = new ResultadoVenta();
+
+            try
+            {
+                using (var connection = Database.GetConnection())
+                {
+                    connection.Open();
+                    using (var transaction = connection.BeginTransaction())
+                    {
+                        try
+                        {
+                            // PASO 1: Verificar stock Y bloquearlo en la misma transacción
+                            foreach (var item in productosSeleccionados)
+                            {
+                                string stockQuery = "SELECT Stock FROM Productos WHERE Codigo = @codigo";
+                                using (var stockCmd = new SQLiteCommand(stockQuery, connection, transaction))
+                                {
+                                    stockCmd.Parameters.AddWithValue("@codigo", item.Codigo);
+                                    var stockActual = stockCmd.ExecuteScalar();
+
+                                    if (stockActual == null || stockActual == DBNull.Value)
+                                    {
+                                        resultado.MensajeError = $"Producto '{item.Nombre}' no encontrado en inventario.";
+                                        transaction.Rollback();
+                                        return resultado;
+                                    }
+
+                                    int stock = Convert.ToInt32(stockActual);
+                                    if (stock < item.Cantidad)
+                                    {
+                                        resultado.MensajeError = $"Stock insuficiente para '{item.Nombre}'.\nDisponible: {stock}, Solicitado: {item.Cantidad}";
+                                        transaction.Rollback();
+                                        return resultado;
+                                    }
+                                }
+                            }
+
+                            // PASO 2: Insertar la venta
+                            string insertVentaQuery = @"INSERT INTO Ventas (TurnoId, UsuarioId, UsuarioNombre, Fecha, Total, MontoPagado, Cambio, MetodoPago)
+                                                       VALUES (@turnoId, @usuarioId, @usuarioNombre, @fecha, @total, @montoPagado, @cambio, @metodoPago);
+                                                       SELECT last_insert_rowid();";
+
+                            long ventaId;
+                            using (var cmd = new SQLiteCommand(insertVentaQuery, connection, transaction))
+                            {
+                                cmd.Parameters.AddWithValue("@turnoId", turnoActualId.HasValue ? (object)turnoActualId.Value : DBNull.Value);
+                                cmd.Parameters.AddWithValue("@usuarioId", usuarioActual.IdUsuario);
+                                cmd.Parameters.AddWithValue("@usuarioNombre", usuarioActual.Nombre);
+                                cmd.Parameters.AddWithValue("@fecha", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                                cmd.Parameters.AddWithValue("@total", total);
+                                cmd.Parameters.AddWithValue("@montoPagado", montoPagado);
+                                cmd.Parameters.AddWithValue("@cambio", cambio);
+                                cmd.Parameters.AddWithValue("@metodoPago", metodoPago);
+
+                                ventaId = Convert.ToInt64(cmd.ExecuteScalar());
+                            }
+
+                            // PASO 3: Insertar detalles de la venta
+                            string insertDetalleQuery = @"INSERT INTO DetalleVentas (VentaId, ProductoCodigo, ProductoNombre, Cantidad, PrecioUnitario, Subtotal)
+                                                         VALUES (@ventaId, @productoCodigo, @productoNombre, @cantidad, @precioUnitario, @subtotal)";
+
+                            foreach (var producto in productosSeleccionados)
+                            {
+                                using (var cmd = new SQLiteCommand(insertDetalleQuery, connection, transaction))
+                                {
+                                    cmd.Parameters.AddWithValue("@ventaId", ventaId);
+                                    cmd.Parameters.AddWithValue("@productoCodigo", producto.Codigo);
+                                    cmd.Parameters.AddWithValue("@productoNombre", producto.Nombre);
+                                    cmd.Parameters.AddWithValue("@cantidad", producto.Cantidad);
+                                    cmd.Parameters.AddWithValue("@precioUnitario", producto.Precio);
+                                    cmd.Parameters.AddWithValue("@subtotal", Math.Round(producto.Precio * producto.Cantidad, 2));
+                                    cmd.ExecuteNonQuery();
+                                }
+                            }
+
+                            // PASO 4: Actualizar stock (DENTRO de la misma transacción)
+                            string updateStockQuery = "UPDATE Productos SET Stock = Stock - @cantidad WHERE Codigo = @codigo AND Stock >= @cantidad";
+                            foreach (var producto in productosSeleccionados)
+                            {
+                                using (var cmd = new SQLiteCommand(updateStockQuery, connection, transaction))
+                                {
+                                    cmd.Parameters.AddWithValue("@cantidad", producto.Cantidad);
+                                    cmd.Parameters.AddWithValue("@codigo", producto.Codigo);
+                                    int filasAfectadas = cmd.ExecuteNonQuery();
+
+                                    // Verificar que se actualizó (protección extra contra race conditions)
+                                    if (filasAfectadas == 0)
+                                    {
+                                        resultado.MensajeError = $"No se pudo actualizar stock de '{producto.Nombre}'. Posible venta simultánea.";
+                                        transaction.Rollback();
+                                        return resultado;
+                                    }
+                                }
+                            }
+
+                            // PASO 5: Actualizar totales del turno
+                            if (turnoActualId.HasValue)
+                            {
+                                string campoMetodo = metodoPago == "Efectivo" ? "TotalEfectivo" :
+                                                   metodoPago == "Tarjeta" ? "TotalTarjeta" : "TotalTransferencia";
+
+                                string updateTurnoQuery = $@"UPDATE Turnos
+                                                           SET TotalVentas = TotalVentas + @total,
+                                                               {campoMetodo} = {campoMetodo} + @total
+                                                           WHERE Id = @turnoId";
+                                using (var cmd = new SQLiteCommand(updateTurnoQuery, connection, transaction))
+                                {
+                                    cmd.Parameters.AddWithValue("@total", total);
+                                    cmd.Parameters.AddWithValue("@turnoId", turnoActualId.Value);
+                                    cmd.ExecuteNonQuery();
+                                }
+                            }
+
+                            // COMMIT: Todo o nada
+                            transaction.Commit();
+
+                            resultado.Exito = true;
+                            resultado.VentaId = ventaId;
+                        }
+                        catch (Exception ex)
+                        {
+                            transaction.Rollback();
+                            resultado.MensajeError = $"Error al procesar venta: {ex.Message}";
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                resultado.MensajeError = $"Error de conexión: {ex.Message}";
+            }
+
+            return resultado;
         }
 
         private void GenerarTicketPDF(long ventaId, List<Producto> productos, decimal total, decimal montoPagado, decimal cambio, string metodoPago)
@@ -386,90 +549,7 @@ namespace TuTiendita
             }
         }
 
-        private long GuardarVenta(decimal total, decimal montoPagado, decimal cambio, string metodoPago)
-        {
-            try
-            {
-                using (var connection = Database.GetConnection())
-                {
-                    connection.Open();
-                    using (var transaction = connection.BeginTransaction())
-                    {
-                        try
-                        {
-                            // Insertar la venta
-                            string insertVentaQuery = @"INSERT INTO Ventas (TurnoId, UsuarioId, UsuarioNombre, Fecha, Total, MontoPagado, Cambio, MetodoPago)
-                                                       VALUES (@turnoId, @usuarioId, @usuarioNombre, @fecha, @total, @montoPagado, @cambio, @metodoPago);
-                                                       SELECT last_insert_rowid();";
-
-                            long ventaId;
-                            using (var cmd = new SQLiteCommand(insertVentaQuery, connection, transaction))
-                            {
-                                cmd.Parameters.AddWithValue("@turnoId", turnoActualId.HasValue ? (object)turnoActualId.Value : DBNull.Value);
-                                cmd.Parameters.AddWithValue("@usuarioId", usuarioActual.IdUsuario);
-                                cmd.Parameters.AddWithValue("@usuarioNombre", usuarioActual.Nombre);
-                                cmd.Parameters.AddWithValue("@fecha", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                                cmd.Parameters.AddWithValue("@total", total);
-                                cmd.Parameters.AddWithValue("@montoPagado", montoPagado);
-                                cmd.Parameters.AddWithValue("@cambio", cambio);
-                                cmd.Parameters.AddWithValue("@metodoPago", metodoPago);
-
-                                ventaId = (long)cmd.ExecuteScalar();
-                            }
-
-                            // Insertar los detalles de la venta
-                            string insertDetalleQuery = @"INSERT INTO DetalleVentas (VentaId, ProductoCodigo, ProductoNombre, Cantidad, PrecioUnitario, Subtotal)
-                                                         VALUES (@ventaId, @productoCodigo, @productoNombre, @cantidad, @precioUnitario, @subtotal)";
-
-                            foreach (var producto in productosSeleccionados)
-                            {
-                                using (var cmd = new SQLiteCommand(insertDetalleQuery, connection, transaction))
-                                {
-                                    cmd.Parameters.AddWithValue("@ventaId", ventaId);
-                                    cmd.Parameters.AddWithValue("@productoCodigo", producto.Codigo);
-                                    cmd.Parameters.AddWithValue("@productoNombre", producto.Nombre);
-                                    cmd.Parameters.AddWithValue("@cantidad", producto.Cantidad);
-                                    cmd.Parameters.AddWithValue("@precioUnitario", producto.Precio);
-                                    cmd.Parameters.AddWithValue("@subtotal", producto.Precio * producto.Cantidad);
-                                    cmd.ExecuteNonQuery();
-                                }
-                            }
-
-                            // Actualizar el total de ventas del turno si existe
-                            if (turnoActualId.HasValue)
-                            {
-                                string campoMetodo = metodoPago == "Efectivo" ? "TotalEfectivo" :
-                                                   metodoPago == "Tarjeta" ? "TotalTarjeta" : "TotalTransferencia";
-
-                                string updateTurnoQuery = $@"UPDATE Turnos
-                                                           SET TotalVentas = TotalVentas + @total,
-                                                               {campoMetodo} = {campoMetodo} + @total
-                                                           WHERE Id = @turnoId";
-                                using (var cmd = new SQLiteCommand(updateTurnoQuery, connection, transaction))
-                                {
-                                    cmd.Parameters.AddWithValue("@total", total);
-                                    cmd.Parameters.AddWithValue("@turnoId", turnoActualId.Value);
-                                    cmd.ExecuteNonQuery();
-                                }
-                            }
-
-                            transaction.Commit();
-                            return ventaId;
-                        }
-                        catch
-                        {
-                            transaction.Rollback();
-                            throw;
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error al guardar la venta: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return -1;
-            }
-        }
-
+        // NOTA: El método GuardarVenta fue reemplazado por GuardarVentaConStock
+        // que es más seguro porque incluye la actualización del stock en la misma transacción
     }
 }

@@ -1,0 +1,55 @@
+<Window x:Class="TuTiendita.VentanaMotivoCancelacion"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Motivo de Cancelacion" Height="300" Width="450"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
+        Background="#F5F5F5">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Seleccione el motivo de cancelacion:"
+                   FontSize="14" FontWeight="SemiBold" Margin="0,0,0,10"/>
+
+        <ComboBox x:Name="cmbMotivo" Grid.Row="1" FontSize="13" Padding="8" Margin="0,0,0,15"
+                  SelectionChanged="cmbMotivo_SelectionChanged">
+            <ComboBoxItem Content="01 - Comprobante emitido con errores con relacion" Tag="01"/>
+            <ComboBoxItem Content="02 - Comprobante emitido con errores sin relacion" Tag="02" IsSelected="True"/>
+            <ComboBoxItem Content="03 - No se llevo a cabo la operacion" Tag="03"/>
+            <ComboBoxItem Content="04 - Operacion nominativa relacionada en factura global" Tag="04"/>
+        </ComboBox>
+
+        <StackPanel x:Name="pnlFolioSustitucion" Grid.Row="2" Visibility="Collapsed" Margin="0,0,0,15">
+            <TextBlock Text="UUID del CFDI que sustituye:" FontSize="13" Margin="0,0,0,5"/>
+            <TextBox x:Name="txtFolioSustitucion" FontSize="13" Padding="8"
+                     ToolTip="Ingrese el UUID del nuevo CFDI que sustituye al cancelado"/>
+            <TextBlock Text="Formato: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+                       FontSize="11" Foreground="Gray" Margin="0,3,0,0"/>
+        </StackPanel>
+
+        <TextBlock Grid.Row="3" TextWrapping="Wrap" FontSize="12" Foreground="#666">
+            <Run FontWeight="SemiBold">Nota:</Run>
+            <LineBreak/>
+            - Motivo 01: Requiere UUID del CFDI de reemplazo
+            <LineBreak/>
+            - Motivo 02: Error sin necesidad de reemplazo
+            <LineBreak/>
+            - Motivo 03: La operacion no se realizo
+            <LineBreak/>
+            - Motivo 04: Incluida en factura global
+        </TextBlock>
+
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
+            <Button x:Name="btnCancelar" Content="Cancelar" Width="100" Height="35"
+                    Margin="0,0,10,0" Click="btnCancelar_Click"/>
+            <Button x:Name="btnAceptar" Content="Aceptar" Width="100" Height="35"
+                    Background="#2196F3" Foreground="White" Click="btnAceptar_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

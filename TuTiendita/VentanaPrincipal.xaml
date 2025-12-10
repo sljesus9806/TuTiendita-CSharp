@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TuTiendita"
+        xmlns:controls="clr-namespace:TuTiendita.Controls"
         mc:Ignorable="d"
         Title="VentanaPrincipal" MinHeight="500" MinWidth="800"
         WindowStartupLocation="CenterScreen">
@@ -23,6 +24,8 @@
             <!-- Ribbon o Barra de Herramientas Superior -->
             <RowDefinition Height="*"/>
             <!-- Contenido Principal -->
+            <RowDefinition Height="Auto"/>
+            <!-- Barra de Estado de Hardware -->
         </Grid.RowDefinitions>
 
         <!-- Barra Superior con Info de Usuario -->
@@ -78,5 +81,8 @@
 
         <!-- Área Principal -->
         <ContentControl x:Name="MainContent" Grid.Row="1" Grid.Column="1" Background="White"/>
+
+        <!-- Panel de Estado de Hardware -->
+        <controls:PanelEstadoHardware x:Name="panelEstadoHardware" Grid.Row="2" Grid.ColumnSpan="2"/>
     </Grid>
 </Window>

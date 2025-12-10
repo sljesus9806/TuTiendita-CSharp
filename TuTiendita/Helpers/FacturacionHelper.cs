@@ -545,6 +545,87 @@ namespace TuTiendita.Helpers
             }
         }
 
+        /// <summary>
+        /// Actualiza un CFDI después de ser timbrado exitosamente
+        /// </summary>
+        public static bool ActualizarCFDITimbrado(CFDI cfdi)
+        {
+            try
+            {
+                using (var conn = Database.GetConnection())
+                {
+                    conn.Open();
+                    string query = @"UPDATE CFDI SET
+                        UUID = @UUID,
+                        FechaTimbrado = @FechaTimbrado,
+                        XMLTimbrado = @XMLTimbrado,
+                        SelloDigitalCFDI = @SelloDigitalCFDI,
+                        SelloSAT = @SelloSAT,
+                        NoCertificadoEmisor = @NoCertificadoEmisor,
+                        NoCertificadoSAT = @NoCertificadoSAT,
+                        CadenaOriginal = @CadenaOriginal,
+                        Estado = @Estado
+                        WHERE Id = @Id";
+
+                    using (var cmd = new SQLiteCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@Id", cfdi.Id);
+                        cmd.Parameters.AddWithValue("@UUID", cfdi.UUID ?? "");
+                        cmd.Parameters.AddWithValue("@FechaTimbrado", cfdi.FechaTimbrado ?? "");
+                        cmd.Parameters.AddWithValue("@XMLTimbrado", cfdi.XMLTimbrado ?? "");
+                        cmd.Parameters.AddWithValue("@SelloDigitalCFDI", cfdi.SelloDigitalCFDI ?? "");
+                        cmd.Parameters.AddWithValue("@SelloSAT", cfdi.SelloSAT ?? "");
+                        cmd.Parameters.AddWithValue("@NoCertificadoEmisor", cfdi.NoCertificadoEmisor ?? "");
+                        cmd.Parameters.AddWithValue("@NoCertificadoSAT", cfdi.NoCertificadoSAT ?? "");
+                        cmd.Parameters.AddWithValue("@CadenaOriginal", cfdi.CadenaOriginal ?? "");
+                        cmd.Parameters.AddWithValue("@Estado", cfdi.Estado ?? "Timbrado");
+
+                        int rows = cmd.ExecuteNonQuery();
+                        return rows > 0;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error al actualizar CFDI timbrado: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Actualiza el estado de un CFDI (para cancelaciones)
+        /// </summary>
+        public static bool ActualizarEstadoCFDI(int cfdiId, string nuevoEstado, string fechaCancelacion = null)
+        {
+            try
+            {
+                using (var conn = Database.GetConnection())
+                {
+                    conn.Open();
+                    string query = @"UPDATE CFDI SET
+                        Estado = @Estado,
+                        FechaCancelacion = @FechaCancelacion
+                        WHERE Id = @Id";
+
+                    using (var cmd = new SQLiteCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@Id", cfdiId);
+                        cmd.Parameters.AddWithValue("@Estado", nuevoEstado);
+                        cmd.Parameters.AddWithValue("@FechaCancelacion",
+                            fechaCancelacion ?? DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss"));
+
+                        int rows = cmd.ExecuteNonQuery();
+                        return rows > 0;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error al actualizar estado CFDI: {ex.Message}");
+                return false;
+            }
+        }
+
         public static CFDI ObtenerCFDIPorId(int id)
         {
             CFDI cfdi = null;

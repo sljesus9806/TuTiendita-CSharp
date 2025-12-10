@@ -22,6 +22,34 @@ namespace TuTiendita
             {
                 connection.Open();
 
+                // =====================================================
+                // CONFIGURACIÓN DE ROBUSTEZ Y RECUPERACIÓN
+                // =====================================================
+
+                // Habilitar WAL mode para mejor rendimiento y recuperación ante fallos
+                // WAL permite recuperar la DB si se va la luz durante una escritura
+                using (var cmd = new SQLiteCommand("PRAGMA journal_mode = WAL;", connection))
+                {
+                    cmd.ExecuteNonQuery();
+                }
+
+                // Sincronizar escrituras para mayor seguridad (FULL es más lento pero más seguro)
+                using (var cmd = new SQLiteCommand("PRAGMA synchronous = NORMAL;", connection))
+                {
+                    cmd.ExecuteNonQuery();
+                }
+
+                // Verificar integridad de la base de datos al iniciar
+                using (var cmd = new SQLiteCommand("PRAGMA integrity_check;", connection))
+                {
+                    var resultado = cmd.ExecuteScalar()?.ToString();
+                    if (resultado != "ok")
+                    {
+                        System.Diagnostics.Debug.WriteLine($"ADVERTENCIA: Posible corrupción en la base de datos: {resultado}");
+                        // En producción, aquí se podría mostrar una alerta al usuario
+                    }
+                }
+
                 // Enable foreign key constraints
                 using (var cmd = new SQLiteCommand("PRAGMA foreign_keys = ON;", connection))
                 {

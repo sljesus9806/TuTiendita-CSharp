@@ -2,6 +2,7 @@ using System;
 using System.Windows;
 using Microsoft.Win32;
 using TuTiendita.Helpers;
+using TuTiendita.Services;
 
 namespace TuTiendita
 {
@@ -105,6 +106,146 @@ namespace TuTiendita
         {
             DialogResult = false;
             Close();
+        }
+
+        private async void btnProbarConexionPAC_Click(object sender, RoutedEventArgs e)
+        {
+            // Validar que se haya seleccionado un PAC
+            var pacSeleccionado = (cmbPAC.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Content?.ToString();
+
+            if (string.IsNullOrEmpty(pacSeleccionado) || pacSeleccionado == "(Sin configurar)")
+            {
+                MessageBox.Show("Debe seleccionar un PAC para probar la conexion.",
+                    "PAC No Seleccionado", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // Verificar que sea un PAC soportado
+            if (pacSeleccionado != "Finkok" && pacSeleccionado != "Facturama")
+            {
+                MessageBox.Show($"La prueba de conexion solo esta disponible para Finkok y Facturama.\n\n" +
+                    $"El PAC seleccionado '{pacSeleccionado}' no tiene implementada esta funcionalidad.",
+                    "PAC No Soportado", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            // Validar credenciales
+            if (string.IsNullOrWhiteSpace(txtPACUsuario.Text))
+            {
+                MessageBox.Show("Ingrese el usuario del PAC.",
+                    "Usuario Requerido", MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtPACUsuario.Focus();
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(txtPACContrasena.Password))
+            {
+                MessageBox.Show("Ingrese la contrasena del PAC.",
+                    "Contrasena Requerida", MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtPACContrasena.Focus();
+                return;
+            }
+
+            // Deshabilitar botón durante la prueba
+            btnProbarConexionPAC.IsEnabled = false;
+            btnProbarConexionPAC.Content = "Probando conexion...";
+
+            try
+            {
+                bool modoProduccion = chkModoProduccion.IsChecked ?? false;
+                string ambiente = modoProduccion ? "PRODUCCION" : "SANDBOX (Pruebas)";
+                int timbres = -1;
+                bool conexionExitosa = false;
+
+                if (pacSeleccionado == "Finkok")
+                {
+                    var finkok = new FinkokService(
+                        txtPACUsuario.Text.Trim(),
+                        txtPACContrasena.Password,
+                        modoProduccion);
+
+                    timbres = await finkok.ObtenerTimbresDisponiblesAsync();
+                    conexionExitosa = timbres >= 0;
+                }
+                else if (pacSeleccionado == "Facturama")
+                {
+                    var facturama = new FacturamaService(
+                        txtPACUsuario.Text.Trim(),
+                        txtPACContrasena.Password,
+                        modoProduccion);
+
+                    conexionExitosa = await facturama.VerificarCredencialesAsync();
+                    if (conexionExitosa)
+                    {
+                        timbres = await facturama.ObtenerTimbresDisponiblesAsync();
+                    }
+                }
+
+                if (conexionExitosa && timbres >= 0)
+                {
+                    MessageBox.Show(
+                        $"Conexion exitosa con {pacSeleccionado}!\n\n" +
+                        $"Ambiente: {ambiente}\n" +
+                        $"Timbres/Folios disponibles: {timbres}\n\n" +
+                        $"Las credenciales son correctas y puede comenzar a timbrar facturas.",
+                        "Conexion Exitosa",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                }
+                else if (conexionExitosa)
+                {
+                    MessageBox.Show(
+                        $"Conexion establecida con {pacSeleccionado}.\n\n" +
+                        $"Ambiente: {ambiente}\n\n" +
+                        $"Nota: No se pudo obtener el numero de timbres disponibles, " +
+                        $"pero las credenciales parecen ser correctas.",
+                        "Conexion Exitosa",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                }
+                else
+                {
+                    MessageBox.Show(
+                        $"No se pudo establecer conexion con {pacSeleccionado}.\n\n" +
+                        $"Verifique que el usuario y contrasena sean correctos.",
+                        "Error de Conexion",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                string mensajeError = $"Error al conectar con {pacSeleccionado}:\n\n{ex.Message}";
+
+                // Proporcionar ayuda adicional según el tipo de error
+                if (ex.Message.Contains("401") || ex.Message.Contains("Unauthorized"))
+                {
+                    mensajeError += "\n\nPosibles causas:\n" +
+                        "- Usuario o contrasena incorrectos\n" +
+                        "- La cuenta no esta activa";
+                }
+                else if (ex.Message.Contains("timeout") || ex.Message.Contains("Timeout"))
+                {
+                    mensajeError += "\n\nPosibles causas:\n" +
+                        "- Problema de conexion a internet\n" +
+                        "- El servicio del PAC no esta disponible temporalmente";
+                }
+
+                MessageBox.Show(mensajeError, "Error de Conexion",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                btnProbarConexionPAC.IsEnabled = true;
+                btnProbarConexionPAC.Content = "Probar Conexion con PAC";
+            }
+        }
+
+        private void btnAyudaPAC_Click(object sender, RoutedEventArgs e)
+        {
+            var ventanaAyuda = new VentanaAyudaPAC();
+            ventanaAyuda.Owner = this;
+            ventanaAyuda.ShowDialog();
         }
 
         private void btnGuardar_Click(object sender, RoutedEventArgs e)

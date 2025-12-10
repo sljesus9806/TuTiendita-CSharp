@@ -327,45 +327,74 @@ namespace TuTiendita
                 return;
             }
 
+            // Validar límite razonable para monto inicial (prevenir errores de dedo)
+            if (montoInicial > 100000)
+            {
+                var confirmar = MessageBox.Show(
+                    $"El monto inicial de {montoInicial:C} parece muy alto.\n¿Está seguro que es correcto?",
+                    "Confirmar Monto", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (confirmar != MessageBoxResult.Yes)
+                    return;
+            }
+
             try
             {
+                int turnoId = 0;
                 using (var connection = Database.GetConnection())
                 {
                     connection.Open();
-                    string insertQuery = @"INSERT INTO Turnos (UsuarioId, UsuarioNombre, FechaApertura, MontoInicial, Estado, TotalVentas)
-                                          VALUES (@usuarioId, @usuarioNombre, @fechaApertura, @montoInicial, @estado, 0)";
-
-                    using (var cmd = new SQLiteCommand(insertQuery, connection))
+                    using (var transaction = connection.BeginTransaction())
                     {
-                        cmd.Parameters.AddWithValue("@usuarioId", usuarioActual.IdUsuario);
-                        cmd.Parameters.AddWithValue("@usuarioNombre", usuarioActual.Nombre);
-                        cmd.Parameters.AddWithValue("@fechaApertura", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                        cmd.Parameters.AddWithValue("@montoInicial", montoInicial);
-                        cmd.Parameters.AddWithValue("@estado", "Abierto");
-                        cmd.ExecuteNonQuery();
+                        try
+                        {
+                            // Verificar que no haya otro turno abierto (doble verificación)
+                            string checkQuery = "SELECT COUNT(*) FROM Turnos WHERE Estado = 'Abierto'";
+                            using (var checkCmd = new SQLiteCommand(checkQuery, connection, transaction))
+                            {
+                                int turnosAbiertos = Convert.ToInt32(checkCmd.ExecuteScalar());
+                                if (turnosAbiertos > 0)
+                                {
+                                    MessageBox.Show("Ya existe un turno abierto. Ciérrelo antes de abrir uno nuevo.",
+                                        "Turno Existente", MessageBoxButton.OK, MessageBoxImage.Warning);
+                                    transaction.Rollback();
+                                    return;
+                                }
+                            }
+
+                            string insertQuery = @"INSERT INTO Turnos (UsuarioId, UsuarioNombre, FechaApertura, MontoInicial, Estado, TotalVentas, TotalEfectivo, TotalTarjeta, TotalTransferencia)
+                                                  VALUES (@usuarioId, @usuarioNombre, @fechaApertura, @montoInicial, @estado, 0, 0, 0, 0);
+                                                  SELECT last_insert_rowid();";
+
+                            using (var cmd = new SQLiteCommand(insertQuery, connection, transaction))
+                            {
+                                cmd.Parameters.AddWithValue("@usuarioId", usuarioActual.IdUsuario);
+                                cmd.Parameters.AddWithValue("@usuarioNombre", usuarioActual.Nombre);
+                                cmd.Parameters.AddWithValue("@fechaApertura", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                                cmd.Parameters.AddWithValue("@montoInicial", Math.Round(montoInicial, 2));
+                                cmd.Parameters.AddWithValue("@estado", "Abierto");
+
+                                // Obtener ID en la MISMA conexión y transacción
+                                turnoId = Convert.ToInt32(cmd.ExecuteScalar());
+                            }
+
+                            transaction.Commit();
+                        }
+                        catch
+                        {
+                            transaction.Rollback();
+                            throw;
+                        }
                     }
                 }
 
-                // Obtener el ID del turno recién creado
-                int turnoId = 0;
-                using (var connection2 = Database.GetConnection())
-                {
-                    connection2.Open();
-                    string queryId = "SELECT last_insert_rowid()";
-                    using (var cmdId = new SQLiteCommand(queryId, connection2))
-                    {
-                        turnoId = Convert.ToInt32(cmdId.ExecuteScalar());
-                    }
-                }
-
-                // Registrar en auditoría
+                // Registrar en auditoría (fuera de la transacción principal)
                 try
                 {
                     Helpers.AuditLogger.RegistrarAperturaTurno(usuarioActual, turnoId, montoInicial);
                 }
-                catch { }
+                catch { /* No fallar si auditoría falla */ }
 
-                MessageBox.Show($"Turno abierto exitosamente con ${montoInicial:F2}", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"Turno #{turnoId} abierto exitosamente con {montoInicial:C}", "Éxito", MessageBoxButton.OK, MessageBoxImage.Information);
                 txtMontoInicial.Clear();
                 CargarEstadoTurno();
                 CargarHistorialTurnos();

@@ -1,7 +1,9 @@
 using System;
+using System.IO;
 using System.Windows;
 using System.Windows.Media;
 using TuTiendita.Helpers;
+using TuTiendita.Services;
 
 namespace TuTiendita
 {
@@ -12,6 +14,7 @@ namespace TuTiendita
     {
         private CFDI _cfdi;
         private ConfiguracionFiscal _configuracion;
+        private bool _isTimbrandoOCancelando = false;
 
         public VentanaDetalleCFDI(CFDI cfdi)
         {
@@ -24,13 +27,21 @@ namespace TuTiendita
         private void CargarDatos()
         {
             // Encabezado
-            txtFolio.Text = $"Factura {_cfdi.FolioCompleto}";
-            txtFecha.Text = $"Fecha: {_cfdi.Fecha}";
+            txtFolio.Text = $"Factura {_cfdi?.FolioCompleto ?? "Sin Folio"}";
+            txtFecha.Text = $"Fecha: {_cfdi?.Fecha ?? "N/A"}";
 
             // Estado
-            txtEstado.Text = _cfdi.Estado;
-            brdEstado.Background = new SolidColorBrush(
-                (Color)ColorConverter.ConvertFromString(_cfdi.EstadoColor));
+            txtEstado.Text = _cfdi?.Estado ?? "Desconocido";
+            try
+            {
+                var colorStr = _cfdi?.EstadoColor ?? "#9E9E9E";
+                brdEstado.Background = new SolidColorBrush(
+                    (Color)ColorConverter.ConvertFromString(colorStr));
+            }
+            catch
+            {
+                brdEstado.Background = new SolidColorBrush(Colors.Gray);
+            }
 
             // Datos de timbrado
             if (_cfdi.EstaTimbrado)
@@ -82,21 +93,218 @@ namespace TuTiendita
             txtTotal.Text = _cfdi.Total.ToString("C");
         }
 
-        private void btnTimbrar_Click(object sender, RoutedEventArgs e)
+        private async void btnTimbrar_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show(
-                "El timbrado de facturas requiere la configuración de un PAC (Proveedor Autorizado de Certificación).\n\n" +
-                "Opciones disponibles:\n" +
-                "1. Configure un PAC en la Configuración Fiscal\n" +
-                "2. Exporte el XML y tímbrelo manualmente en el portal del SAT\n" +
-                "3. Utilice un servicio de timbrado externo\n\n" +
-                "Una vez timbrado, puede importar el XML con el timbre fiscal.",
-                "Timbrado de Factura",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            // Validar que no esté en proceso
+            if (_isTimbrandoOCancelando)
+            {
+                MessageBox.Show("Ya hay una operación en proceso. Por favor espere.",
+                    "Operación en Proceso", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // Validar configuración del PAC
+            if (!ValidarConfiguracionPAC())
+            {
+                return;
+            }
+
+            // Confirmar timbrado
+            var confirmResult = MessageBox.Show(
+                $"¿Desea timbrar la factura {_cfdi.FolioCompleto}?\n\n" +
+                $"Receptor: {_cfdi.ReceptorNombre}\n" +
+                $"RFC: {_cfdi.ReceptorRFC}\n" +
+                $"Total: {_cfdi.Total:C}\n\n" +
+                (_configuracion.PACModoProduccion
+                    ? "⚠️ MODO PRODUCCIÓN - Se consumirá un timbre real"
+                    : "ℹ️ Modo Sandbox - Timbrado de prueba"),
+                "Confirmar Timbrado",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (confirmResult != MessageBoxResult.Yes) return;
+
+            _isTimbrandoOCancelando = true;
+            btnTimbrar.IsEnabled = false;
+            btnTimbrar.Content = "Timbrando...";
+
+            try
+            {
+                // Obtener XML a timbrar
+                string xmlATimbrar = _cfdi.XMLOriginal;
+
+                if (string.IsNullOrEmpty(xmlATimbrar))
+                {
+                    MessageBox.Show("No hay XML generado para esta factura. Por favor regenere la factura.",
+                        "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                // Firmar el XML si tenemos certificados (requerido para Finkok, opcional para Facturama)
+                if (!string.IsNullOrEmpty(_configuracion.CertificadoCSD) &&
+                    !string.IsNullOrEmpty(_configuracion.LlaveCSD) &&
+                    File.Exists(_configuracion.CertificadoCSD) &&
+                    File.Exists(_configuracion.LlaveCSD))
+                {
+                    try
+                    {
+                        xmlATimbrar = FinkokService.FirmarXML(
+                            xmlATimbrar,
+                            _configuracion.CertificadoCSD,
+                            _configuracion.LlaveCSD,
+                            _configuracion.ContrasenaLlaveCSD ?? "");
+                    }
+                    catch (Exception exFirma)
+                    {
+                        MessageBox.Show($"Error al firmar el XML: {exFirma.Message}\n\n" +
+                            "Verifique que los certificados CSD sean válidos y la contraseña sea correcta.",
+                            "Error de Firma", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+                }
+
+                TimbradoResult resultado;
+
+                // Usar el PAC configurado
+                if (_configuracion.PAC == "Facturama")
+                {
+                    var facturama = new FacturamaService(
+                        _configuracion.PACUsuario,
+                        _configuracion.PACContrasena,
+                        _configuracion.PACModoProduccion);
+
+                    resultado = await facturama.TimbrarXMLAsync(xmlATimbrar);
+                }
+                else // Finkok (default)
+                {
+                    var finkok = new FinkokService(
+                        _configuracion.PACUsuario,
+                        _configuracion.PACContrasena,
+                        _configuracion.PACModoProduccion);
+
+                    resultado = await finkok.TimbrarAsync(xmlATimbrar);
+                }
+
+                if (resultado.Success)
+                {
+                    // Actualizar CFDI con datos del timbre
+                    _cfdi.UUID = resultado.UUID;
+                    _cfdi.FechaTimbrado = resultado.FechaTimbrado;
+                    _cfdi.XMLTimbrado = resultado.XMLTimbrado;
+                    _cfdi.SelloDigitalCFDI = resultado.SelloCFDI;
+                    _cfdi.SelloSAT = resultado.SelloSAT;
+                    _cfdi.NoCertificadoEmisor = resultado.NoCertificadoCFDI;
+                    _cfdi.NoCertificadoSAT = resultado.NoCertificadoSAT;
+                    _cfdi.CadenaOriginal = resultado.CadenaOriginalTFD;
+                    _cfdi.Estado = "Timbrado";
+
+                    // Guardar en base de datos
+                    bool guardado = FacturacionHelper.ActualizarCFDITimbrado(_cfdi);
+
+                    if (guardado)
+                    {
+                        MessageBox.Show(
+                            $"¡Factura timbrada exitosamente con {_configuracion.PAC}!\n\n" +
+                            $"UUID: {resultado.UUID}\n" +
+                            $"Fecha de Timbrado: {resultado.FechaTimbrado}",
+                            "Timbrado Exitoso",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Information);
+
+                        // Actualizar UI
+                        CargarDatos();
+                    }
+                    else
+                    {
+                        MessageBox.Show(
+                            "El timbrado fue exitoso pero hubo un error al guardar en la base de datos.\n\n" +
+                            $"UUID: {resultado.UUID}\n\n" +
+                            "Guarde el XML manualmente.",
+                            "Advertencia",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Warning);
+                    }
+                }
+                else
+                {
+                    string errorMsg = $"Error al timbrar con {_configuracion.PAC}:\n\n" +
+                        $"Código: {resultado.ErrorCode}\n" +
+                        $"Mensaje: {resultado.ErrorMessage}";
+
+                    // Errores comunes
+                    if (resultado.ErrorCode == "301")
+                        errorMsg += "\n\nEl XML ya fue timbrado previamente.";
+                    else if (resultado.ErrorCode == "401" || resultado.ErrorCode == "Unauthorized")
+                        errorMsg += "\n\nCredenciales del PAC inválidas.";
+                    else if (resultado.ErrorCode == "CFDI33101")
+                        errorMsg += "\n\nEl certificado no corresponde al emisor.";
+
+                    MessageBox.Show(errorMsg, "Error de Timbrado",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error inesperado al timbrar:\n\n{ex.Message}",
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                _isTimbrandoOCancelando = false;
+                btnTimbrar.IsEnabled = true;
+                btnTimbrar.Content = "Timbrar Factura";
+            }
         }
 
-        private void btnCancelarCFDI_Click(object sender, RoutedEventArgs e)
+        private bool ValidarConfiguracionPAC()
+        {
+            if (_configuracion == null)
+            {
+                MessageBox.Show("No hay configuración fiscal. Configure los datos fiscales primero.",
+                    "Configuración Requerida", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return false;
+            }
+
+            if (string.IsNullOrEmpty(_configuracion.PAC) || _configuracion.PAC == "(Sin configurar)")
+            {
+                MessageBox.Show(
+                    "No hay un PAC configurado.\n\n" +
+                    "Vaya a Configuración Fiscal y configure un PAC (Finkok o Facturama) " +
+                    "con sus credenciales para poder timbrar.",
+                    "PAC No Configurado",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return false;
+            }
+
+            // Verificar que sea un PAC soportado
+            if (_configuracion.PAC != "Finkok" && _configuracion.PAC != "Facturama")
+            {
+                MessageBox.Show(
+                    $"El PAC '{_configuracion.PAC}' no está soportado actualmente.\n\n" +
+                    "Por favor configure Finkok o Facturama como PAC.",
+                    "PAC No Soportado",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return false;
+            }
+
+            if (string.IsNullOrEmpty(_configuracion.PACUsuario) ||
+                string.IsNullOrEmpty(_configuracion.PACContrasena))
+            {
+                MessageBox.Show(
+                    $"Faltan las credenciales del PAC (usuario y/o contraseña).\n\n" +
+                    $"Configure las credenciales de {_configuracion.PAC} en la Configuración Fiscal.",
+                    "Credenciales Requeridas",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                return false;
+            }
+
+            return true;
+        }
+
+        private async void btnCancelarCFDI_Click(object sender, RoutedEventArgs e)
         {
             if (!_cfdi.PuedeCancelarse)
             {
@@ -105,24 +313,156 @@ namespace TuTiendita
                 return;
             }
 
+            if (_isTimbrandoOCancelando)
+            {
+                MessageBox.Show("Ya hay una operación en proceso. Por favor espere.",
+                    "Operación en Proceso", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // Validar configuración del PAC
+            if (!ValidarConfiguracionPAC())
+            {
+                return;
+            }
+
+            // Validar que tenemos certificados para cancelar (solo requerido para Finkok)
+            if (_configuracion.PAC == "Finkok")
+            {
+                if (string.IsNullOrEmpty(_configuracion.CertificadoCSD) ||
+                    string.IsNullOrEmpty(_configuracion.LlaveCSD) ||
+                    !File.Exists(_configuracion.CertificadoCSD) ||
+                    !File.Exists(_configuracion.LlaveCSD))
+                {
+                    MessageBox.Show(
+                        "Se requieren los certificados CSD para cancelar facturas con Finkok.\n\n" +
+                        "Configure los certificados en la Configuración Fiscal.",
+                        "Certificados Requeridos",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    return;
+                }
+            }
+
+            // Solicitar motivo de cancelación
+            var motivoWindow = new VentanaMotivoCancelacion();
+            if (motivoWindow.ShowDialog() != true)
+            {
+                return;
+            }
+
+            string motivo = motivoWindow.MotivoCancelacion;
+            string folioSustitucion = motivoWindow.FolioSustitucion;
+
+            // Confirmar cancelación
             var result = MessageBox.Show(
                 $"¿Está seguro de cancelar la factura {_cfdi.FolioCompleto}?\n\n" +
-                "UUID: {_cfdi.UUID}\n\n" +
-                "Esta acción requerirá autorización del SAT y puede tardar hasta 72 horas.",
+                $"UUID: {_cfdi.UUID}\n" +
+                $"Motivo: {ObtenerDescripcionMotivo(motivo)}\n\n" +
+                "⚠️ Esta acción puede tardar en procesarse y requiere aceptación del receptor.",
                 "Confirmar Cancelación",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Warning);
 
-            if (result == MessageBoxResult.Yes)
+            if (result != MessageBoxResult.Yes) return;
+
+            _isTimbrandoOCancelando = true;
+            btnCancelarCFDI.IsEnabled = false;
+
+            try
             {
-                MessageBox.Show(
-                    "La cancelación de facturas timbradas requiere conexión con el SAT.\n\n" +
-                    "Configure un PAC para realizar cancelaciones automáticas o " +
-                    "cancele manualmente en el portal del SAT.",
-                    "Cancelación",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                CancelacionResult resultado;
+
+                if (_configuracion.PAC == "Facturama")
+                {
+                    // Para Facturama necesitamos el ID interno de Facturama
+                    // Si no lo tenemos, intentamos cancelar por UUID
+                    var facturama = new FacturamaService(
+                        _configuracion.PACUsuario,
+                        _configuracion.PACContrasena,
+                        _configuracion.PACModoProduccion);
+
+                    resultado = await facturama.CancelarPorUUIDAsync(
+                        _cfdi.EmisorRFC,
+                        _cfdi.UUID,
+                        motivo,
+                        folioSustitucion);
+                }
+                else // Finkok (default)
+                {
+                    // Leer certificados (requeridos para Finkok)
+                    byte[] certBytes = File.ReadAllBytes(_configuracion.CertificadoCSD);
+                    byte[] keyBytes = File.ReadAllBytes(_configuracion.LlaveCSD);
+                    string certBase64 = Convert.ToBase64String(certBytes);
+                    string keyBase64 = Convert.ToBase64String(keyBytes);
+
+                    var finkok = new FinkokService(
+                        _configuracion.PACUsuario,
+                        _configuracion.PACContrasena,
+                        _configuracion.PACModoProduccion);
+
+                    resultado = await finkok.CancelarAsync(
+                        _cfdi.EmisorRFC,
+                        _cfdi.UUID,
+                        certBase64,
+                        keyBase64,
+                        _configuracion.ContrasenaLlaveCSD ?? "",
+                        motivo,
+                        folioSustitucion);
+                }
+
+                if (resultado.Success)
+                {
+                    // Actualizar estado
+                    string nuevoEstado = resultado.EstatusUUID == "202" ? "Cancelacion en Proceso" : "Cancelado";
+                    _cfdi.Estado = nuevoEstado;
+                    _cfdi.FechaCancelacion = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
+
+                    FacturacionHelper.ActualizarEstadoCFDI(_cfdi.Id, nuevoEstado, _cfdi.FechaCancelacion);
+
+                    string mensaje = resultado.EstatusUUID == "202"
+                        ? "La solicitud de cancelación ha sido enviada.\n\n" +
+                          "El receptor tiene hasta 72 horas para aceptar o rechazar la cancelación."
+                        : "La factura ha sido cancelada exitosamente.";
+
+                    MessageBox.Show(mensaje, "Cancelación",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
+
+                    CargarDatos();
+                }
+                else
+                {
+                    MessageBox.Show(
+                        $"Error al cancelar con {_configuracion.PAC}:\n\n" +
+                        $"Código: {resultado.ErrorCode}\n" +
+                        $"Mensaje: {resultado.ErrorMessage}",
+                        "Error de Cancelación",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                }
             }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error inesperado al cancelar:\n\n{ex.Message}",
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                _isTimbrandoOCancelando = false;
+                btnCancelarCFDI.IsEnabled = true;
+            }
+        }
+
+        private string ObtenerDescripcionMotivo(string motivo)
+        {
+            return motivo switch
+            {
+                "01" => "01 - Comprobante emitido con errores con relación",
+                "02" => "02 - Comprobante emitido con errores sin relación",
+                "03" => "03 - No se llevó a cabo la operación",
+                "04" => "04 - Operación nominativa relacionada en una factura global",
+                _ => motivo
+            };
         }
 
         private void btnDescargarPDF_Click(object sender, RoutedEventArgs e)
