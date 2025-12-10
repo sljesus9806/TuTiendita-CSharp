@@ -378,14 +378,13 @@ namespace TuTiendita.Helpers
 
                     var datos = new DatosCierreCaja();
 
-                    // Obtener información del turno
-                    string queryTurno = @"SELECT t.FechaApertura, t.FechaCierre, t.MontoInicial,
-                                        t.TotalEfectivo, t.TotalTarjeta, t.TotalTransferencia,
-                                        t.EfectivoEsperado, t.EfectivoContado, t.Diferencia, t.Notas,
-                                        u.Nombre
-                                        FROM Turnos t
-                                        LEFT JOIN Usuarios u ON t.UsuarioId = u.Id
-                                        WHERE t.Id = @TurnoId";
+                    // Obtener información del turno (usando columnas que existen en la tabla)
+                    string queryTurno = @"SELECT FechaApertura, FechaCierre, MontoInicial,
+                                        COALESCE(TotalEfectivo, 0), COALESCE(TotalTarjeta, 0),
+                                        COALESCE(TotalTransferencia, 0), COALESCE(MontoFinal, 0),
+                                        Notas, UsuarioNombre, COALESCE(TotalVentas, 0)
+                                        FROM Turnos
+                                        WHERE Id = @TurnoId";
 
                     using (var cmd = new SQLiteCommand(queryTurno, connection))
                     {
@@ -398,20 +397,27 @@ namespace TuTiendita.Helpers
                             datos.FechaApertura = reader.GetString(0);
                             datos.FechaCierre = reader.IsDBNull(1) ? null : reader.GetString(1);
                             datos.MontoInicial = reader.GetDecimal(2);
-                            datos.TotalEfectivo = !reader.IsDBNull(3) ? reader.GetDecimal(3) : 0;
-                            datos.TotalTarjeta = !reader.IsDBNull(4) ? reader.GetDecimal(4) : 0;
-                            datos.TotalTransferencia = !reader.IsDBNull(5) ? reader.GetDecimal(5) : 0;
-                            datos.EfectivoEsperado = !reader.IsDBNull(6) ? reader.GetDecimal(6) : 0;
-                            datos.EfectivoContado = !reader.IsDBNull(7) ? reader.GetDecimal(7) : 0;
-                            datos.DiferenciaEfectivo = !reader.IsDBNull(8) ? (decimal?)reader.GetDecimal(8) : null;
-                            datos.Notas = reader.IsDBNull(9) ? null : reader.GetString(9);
-                            datos.NombreCajero = reader.IsDBNull(10) ? "Sistema" : reader.GetString(10);
+                            datos.TotalEfectivo = reader.GetDecimal(3);
+                            datos.TotalTarjeta = reader.GetDecimal(4);
+                            datos.TotalTransferencia = reader.GetDecimal(5);
+                            datos.EfectivoContado = reader.GetDecimal(6);
+                            datos.Notas = reader.IsDBNull(7) ? null : reader.GetString(7);
+                            datos.NombreCajero = reader.IsDBNull(8) ? "Sistema" : reader.GetString(8);
+                            datos.TotalVentas = reader.GetDecimal(9);
+
+                            // Calcular efectivo esperado (monto inicial + ventas en efectivo)
+                            datos.EfectivoEsperado = datos.MontoInicial + datos.TotalEfectivo;
+
+                            // Calcular diferencia solo si el turno está cerrado
+                            if (datos.FechaCierre != null && datos.EfectivoContado > 0)
+                            {
+                                datos.DiferenciaEfectivo = datos.EfectivoContado - datos.EfectivoEsperado;
+                            }
                         }
                     }
 
-                    // Calcular totales
+                    // Calcular total general de todos los métodos de pago
                     datos.TotalGeneral = datos.TotalEfectivo + datos.TotalTarjeta + datos.TotalTransferencia;
-                    datos.TotalVentas = datos.TotalGeneral - datos.MontoInicial;
 
                     // Obtener cantidad de ventas
                     string queryVentas = "SELECT COUNT(*) FROM Ventas WHERE TurnoId = @TurnoId";
