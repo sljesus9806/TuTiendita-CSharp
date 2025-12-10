@@ -19,6 +19,8 @@ namespace TuTiendita.Services
         private readonly int _intervaloMs;
         private bool _disposed = false;
         private bool _isMonitoring = false;
+        private bool _isVerifying = false; // Prevenir reentrancia
+        private readonly object _lockObject = new object();
 
         // Estado actual del hardware
         public HardwareStatus EstadoActual { get; private set; }
@@ -49,7 +51,17 @@ namespace TuTiendita.Services
 
             _isMonitoring = true;
             _monitorTimer = new Timer(
-                async _ => await VerificarHardwareAsync(),
+                async _ =>
+                {
+                    try
+                    {
+                        await VerificarHardwareAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Error en monitoreo de hardware: {ex.Message}");
+                    }
+                },
                 null,
                 0, // Ejecutar inmediatamente
                 _intervaloMs);
@@ -71,6 +83,16 @@ namespace TuTiendita.Services
         /// </summary>
         public async Task<HardwareStatus> VerificarHardwareAsync()
         {
+            // Prevenir reentrancia - si ya hay una verificación en curso, retornar estado actual
+            lock (_lockObject)
+            {
+                if (_isVerifying)
+                {
+                    return EstadoActual ?? new HardwareStatus();
+                }
+                _isVerifying = true;
+            }
+
             var nuevoEstado = new HardwareStatus
             {
                 UltimaVerificacion = DateTime.Now
@@ -78,16 +100,38 @@ namespace TuTiendita.Services
 
             try
             {
-                // Verificar en paralelo para mayor velocidad
+                // Crear objetos de resultado separados para evitar race conditions
+                EstadoDispositivo resultadoBascula = null;
+                EstadoDispositivo resultadoRed = null;
+                List<EstadoDispositivo> resultadoImpresoras = null;
+                List<EstadoDispositivo> resultadoPuertos = null;
+                EstadoDispositivo resultadoImpTickets = null;
+                EstadoDispositivo resultadoImpReportes = null;
+
+                // Verificar en paralelo usando resultados separados
                 var tareas = new List<Task>
                 {
-                    Task.Run(() => VerificarBascula(nuevoEstado)),
-                    Task.Run(() => VerificarImpresoras(nuevoEstado)),
-                    Task.Run(() => VerificarPuertosSeriales(nuevoEstado)),
-                    Task.Run(() => VerificarConexionRed(nuevoEstado))
+                    Task.Run(() => { resultadoBascula = VerificarBasculaSeguro(); }),
+                    Task.Run(() =>
+                    {
+                        var resultado = VerificarImpresorasSeguro();
+                        resultadoImpresoras = resultado.Impresoras;
+                        resultadoImpTickets = resultado.ImpresoraTickets;
+                        resultadoImpReportes = resultado.ImpresoraReportes;
+                    }),
+                    Task.Run(() => { resultadoPuertos = VerificarPuertosSeriales(); }),
+                    Task.Run(() => { resultadoRed = VerificarConexionRedSeguro(); })
                 };
 
                 await Task.WhenAll(tareas);
+
+                // Asignar resultados de forma segura
+                nuevoEstado.Bascula = resultadoBascula;
+                nuevoEstado.ConexionRed = resultadoRed;
+                nuevoEstado.Impresoras = resultadoImpresoras ?? new List<EstadoDispositivo>();
+                nuevoEstado.PuertosSeriales = resultadoPuertos ?? new List<EstadoDispositivo>();
+                nuevoEstado.ImpresoraTickets = resultadoImpTickets;
+                nuevoEstado.ImpresoraReportes = resultadoImpReportes;
 
                 // Detectar cambios y notificar
                 DetectarCambios(EstadoActual, nuevoEstado);
@@ -100,6 +144,13 @@ namespace TuTiendita.Services
             {
                 nuevoEstado.ErrorGeneral = ex.Message;
             }
+            finally
+            {
+                lock (_lockObject)
+                {
+                    _isVerifying = false;
+                }
+            }
 
             return nuevoEstado;
         }
@@ -108,19 +159,18 @@ namespace TuTiendita.Services
 
         #region Verificación de Báscula
 
-        private void VerificarBascula(HardwareStatus estado)
+        private EstadoDispositivo VerificarBasculaSeguro()
         {
             try
             {
-                if (string.IsNullOrEmpty(Configuracion.PuertoBascula))
+                if (string.IsNullOrEmpty(Configuracion?.PuertoBascula))
                 {
-                    estado.Bascula = new EstadoDispositivo
+                    return new EstadoDispositivo
                     {
                         Nombre = "Báscula",
                         Estado = EstadoConexion.NoConfigurado,
                         Mensaje = "Puerto no configurado"
                     };
-                    return;
                 }
 
                 // Verificar si el puerto existe
@@ -129,14 +179,13 @@ namespace TuTiendita.Services
 
                 if (!puertoExiste)
                 {
-                    estado.Bascula = new EstadoDispositivo
+                    return new EstadoDispositivo
                     {
                         Nombre = "Báscula",
                         Estado = EstadoConexion.Desconectado,
                         Puerto = Configuracion.PuertoBascula,
                         Mensaje = $"Puerto {Configuracion.PuertoBascula} no disponible"
                     };
-                    return;
                 }
 
                 // Intentar abrir el puerto
@@ -144,7 +193,7 @@ namespace TuTiendita.Services
                     Configuracion.PuertoBascula,
                     Configuracion.BaudRateBascula);
 
-                estado.Bascula = new EstadoDispositivo
+                return new EstadoDispositivo
                 {
                     Nombre = "Báscula",
                     Estado = puertoFuncional ? EstadoConexion.Conectado : EstadoConexion.Error,
@@ -154,7 +203,7 @@ namespace TuTiendita.Services
             }
             catch (Exception ex)
             {
-                estado.Bascula = new EstadoDispositivo
+                return new EstadoDispositivo
                 {
                     Nombre = "Báscula",
                     Estado = EstadoConexion.Error,
@@ -204,59 +253,66 @@ namespace TuTiendita.Services
 
         #region Verificación de Impresoras
 
-        private void VerificarImpresoras(HardwareStatus estado)
+        private (List<EstadoDispositivo> Impresoras, EstadoDispositivo ImpresoraTickets, EstadoDispositivo ImpresoraReportes) VerificarImpresorasSeguro()
         {
+            var impresoras = new List<EstadoDispositivo>();
+            EstadoDispositivo impTickets = null;
+            EstadoDispositivo impReportes = null;
+
             try
             {
-                estado.Impresoras = new List<EstadoDispositivo>();
-
                 // Obtener todas las impresoras instaladas
                 foreach (string printerName in PrinterSettings.InstalledPrinters)
                 {
                     var estadoImpresora = VerificarImpresoraIndividual(printerName);
-                    estado.Impresoras.Add(estadoImpresora);
+                    impresoras.Add(estadoImpresora);
                 }
 
                 // Verificar impresora de tickets específica si está configurada
-                if (!string.IsNullOrEmpty(Configuracion.ImpresoraTickets))
+                if (!string.IsNullOrEmpty(Configuracion?.ImpresoraTickets))
                 {
-                    var impTickets = estado.Impresoras
+                    impTickets = impresoras
                         .FirstOrDefault(i => i.Nombre == Configuracion.ImpresoraTickets);
 
-                    estado.ImpresoraTickets = impTickets ?? new EstadoDispositivo
+                    if (impTickets == null)
                     {
-                        Nombre = Configuracion.ImpresoraTickets,
-                        Estado = EstadoConexion.Desconectado,
-                        Mensaje = "Impresora no encontrada"
-                    };
+                        impTickets = new EstadoDispositivo
+                        {
+                            Nombre = Configuracion.ImpresoraTickets,
+                            Estado = EstadoConexion.Desconectado,
+                            Mensaje = "Impresora no encontrada"
+                        };
+                    }
                 }
 
                 // Verificar impresora de reportes específica si está configurada
-                if (!string.IsNullOrEmpty(Configuracion.ImpresoraReportes))
+                if (!string.IsNullOrEmpty(Configuracion?.ImpresoraReportes))
                 {
-                    var impReportes = estado.Impresoras
+                    impReportes = impresoras
                         .FirstOrDefault(i => i.Nombre == Configuracion.ImpresoraReportes);
 
-                    estado.ImpresoraReportes = impReportes ?? new EstadoDispositivo
+                    if (impReportes == null)
                     {
-                        Nombre = Configuracion.ImpresoraReportes,
-                        Estado = EstadoConexion.Desconectado,
-                        Mensaje = "Impresora no encontrada"
-                    };
+                        impReportes = new EstadoDispositivo
+                        {
+                            Nombre = Configuracion.ImpresoraReportes,
+                            Estado = EstadoConexion.Desconectado,
+                            Mensaje = "Impresora no encontrada"
+                        };
+                    }
                 }
             }
             catch (Exception ex)
             {
-                estado.Impresoras = new List<EstadoDispositivo>
+                impresoras.Add(new EstadoDispositivo
                 {
-                    new EstadoDispositivo
-                    {
-                        Nombre = "Error",
-                        Estado = EstadoConexion.Error,
-                        Mensaje = ex.Message
-                    }
-                };
+                    Nombre = "Error",
+                    Estado = EstadoConexion.Error,
+                    Mensaje = ex.Message
+                });
             }
+
+            return (impresoras, impTickets, impReportes);
         }
 
         private EstadoDispositivo VerificarImpresoraIndividual(string nombreImpresora)
@@ -354,17 +410,18 @@ namespace TuTiendita.Services
 
         #region Verificación de Puertos Seriales
 
-        private void VerificarPuertosSeriales(HardwareStatus estado)
+        private List<EstadoDispositivo> VerificarPuertosSeriales()
         {
+            var resultado = new List<EstadoDispositivo>();
+
             try
             {
-                estado.PuertosSeriales = new List<EstadoDispositivo>();
                 var puertos = SerialPort.GetPortNames();
 
                 foreach (var puerto in puertos)
                 {
                     bool disponible = VerificarPuertoSerial(puerto, 9600);
-                    estado.PuertosSeriales.Add(new EstadoDispositivo
+                    resultado.Add(new EstadoDispositivo
                     {
                         Nombre = puerto,
                         Puerto = puerto,
@@ -375,39 +432,36 @@ namespace TuTiendita.Services
             }
             catch (Exception ex)
             {
-                estado.PuertosSeriales = new List<EstadoDispositivo>
+                resultado.Add(new EstadoDispositivo
                 {
-                    new EstadoDispositivo
-                    {
-                        Nombre = "Error",
-                        Estado = EstadoConexion.Error,
-                        Mensaje = ex.Message
-                    }
-                };
+                    Nombre = "Error",
+                    Estado = EstadoConexion.Error,
+                    Mensaje = ex.Message
+                });
             }
+
+            return resultado;
         }
 
         #endregion
 
         #region Verificación de Red
 
-        private void VerificarConexionRed(HardwareStatus estado)
+        private EstadoDispositivo VerificarConexionRedSeguro()
         {
             try
             {
-                estado.ConexionRed = new EstadoDispositivo
-                {
-                    Nombre = "Conexión a Internet"
-                };
-
                 // Verificar conectividad de red
                 bool hayRed = NetworkInterface.GetIsNetworkAvailable();
 
                 if (!hayRed)
                 {
-                    estado.ConexionRed.Estado = EstadoConexion.Desconectado;
-                    estado.ConexionRed.Mensaje = "Sin conexión de red";
-                    return;
+                    return new EstadoDispositivo
+                    {
+                        Nombre = "Conexión a Internet",
+                        Estado = EstadoConexion.Desconectado,
+                        Mensaje = "Sin conexión de red"
+                    };
                 }
 
                 // Intentar ping a Google DNS para verificar internet
@@ -416,19 +470,27 @@ namespace TuTiendita.Services
                     var reply = ping.Send("8.8.8.8", 3000);
                     if (reply.Status == IPStatus.Success)
                     {
-                        estado.ConexionRed.Estado = EstadoConexion.Conectado;
-                        estado.ConexionRed.Mensaje = $"Conectado ({reply.RoundtripTime}ms)";
+                        return new EstadoDispositivo
+                        {
+                            Nombre = "Conexión a Internet",
+                            Estado = EstadoConexion.Conectado,
+                            Mensaje = $"Conectado ({reply.RoundtripTime}ms)"
+                        };
                     }
                     else
                     {
-                        estado.ConexionRed.Estado = EstadoConexion.Error;
-                        estado.ConexionRed.Mensaje = "Sin acceso a Internet";
+                        return new EstadoDispositivo
+                        {
+                            Nombre = "Conexión a Internet",
+                            Estado = EstadoConexion.Error,
+                            Mensaje = "Sin acceso a Internet"
+                        };
                     }
                 }
             }
             catch (Exception ex)
             {
-                estado.ConexionRed = new EstadoDispositivo
+                return new EstadoDispositivo
                 {
                     Nombre = "Conexión a Internet",
                     Estado = EstadoConexion.Error,

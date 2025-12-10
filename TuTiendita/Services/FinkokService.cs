@@ -151,6 +151,10 @@ namespace TuTiendita.Services
 
         private string BuildStampEnvelope(string xmlBase64)
         {
+            // Escapar caracteres XML especiales para prevenir inyección
+            string safeUsername = EscapeXml(_username);
+            string safePassword = EscapeXml(_password);
+
             return $@"<?xml version=""1.0"" encoding=""UTF-8""?>
 <soapenv:Envelope xmlns:soapenv=""http://schemas.xmlsoap.org/soap/envelope/""
                   xmlns:stamp=""http://facturacion.finkok.com/stamp"">
@@ -158,8 +162,8 @@ namespace TuTiendita.Services
    <soapenv:Body>
       <stamp:stamp>
          <stamp:xml>{xmlBase64}</stamp:xml>
-         <stamp:username>{_username}</stamp:username>
-         <stamp:password>{_password}</stamp:password>
+         <stamp:username>{safeUsername}</stamp:username>
+         <stamp:password>{safePassword}</stamp:password>
       </stamp:stamp>
    </soapenv:Body>
 </soapenv:Envelope>";
@@ -167,6 +171,10 @@ namespace TuTiendita.Services
 
         private string BuildQuickStampEnvelope(string xmlBase64)
         {
+            // Escapar caracteres XML especiales para prevenir inyección
+            string safeUsername = EscapeXml(_username);
+            string safePassword = EscapeXml(_password);
+
             return $@"<?xml version=""1.0"" encoding=""UTF-8""?>
 <soapenv:Envelope xmlns:soapenv=""http://schemas.xmlsoap.org/soap/envelope/""
                   xmlns:stamp=""http://facturacion.finkok.com/stamp"">
@@ -174,11 +182,22 @@ namespace TuTiendita.Services
    <soapenv:Body>
       <stamp:quick_stamp>
          <stamp:xml>{xmlBase64}</stamp:xml>
-         <stamp:username>{_username}</stamp:username>
-         <stamp:password>{_password}</stamp:password>
+         <stamp:username>{safeUsername}</stamp:username>
+         <stamp:password>{safePassword}</stamp:password>
       </stamp:quick_stamp>
    </soapenv:Body>
 </soapenv:Envelope>";
+        }
+
+        private static string EscapeXml(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return value;
+            return value
+                .Replace("&", "&amp;")
+                .Replace("<", "&lt;")
+                .Replace(">", "&gt;")
+                .Replace("\"", "&quot;")
+                .Replace("'", "&apos;");
         }
 
         private TimbradoResult ParseStampResponse(string responseXml)
@@ -358,18 +377,14 @@ namespace TuTiendita.Services
         private string BuildCancelEnvelope(string rfcEmisor, string uuid, string certificadoBase64,
             string llaveBase64, string passwordLlave, string motivo, string folioSustitucion)
         {
-            string uuidsXml = $@"<cancel:UUID>{uuid}</cancel:UUID>";
-
-            if (!string.IsNullOrEmpty(folioSustitucion))
-            {
-                uuidsXml = $@"<cancel:UUIDS>
-                    <cancel:uuids>
-                        <cancel:uuid>{uuid}</cancel:uuid>
-                        <cancel:motivo>{motivo}</cancel:motivo>
-                        <cancel:foliosustitucion>{folioSustitucion}</cancel:foliosustitucion>
-                    </cancel:uuids>
-                </cancel:UUIDS>";
-            }
+            // Escapar caracteres XML especiales
+            string safeUsername = EscapeXml(_username);
+            string safePassword = EscapeXml(_password);
+            string safeRfc = EscapeXml(rfcEmisor);
+            string safeUuid = EscapeXml(uuid);
+            string safeMotivo = EscapeXml(motivo);
+            string safeFolio = EscapeXml(folioSustitucion ?? "");
+            string safePasswordLlave = EscapeXml(passwordLlave);
 
             return $@"<?xml version=""1.0"" encoding=""UTF-8""?>
 <soapenv:Envelope xmlns:soapenv=""http://schemas.xmlsoap.org/soap/envelope/""
@@ -379,17 +394,17 @@ namespace TuTiendita.Services
       <cancel:cancel>
          <cancel:UUIDS>
             <cancel:uuids>
-               <cancel:uuid>{uuid}</cancel:uuid>
-               <cancel:motivo>{motivo}</cancel:motivo>
-               <cancel:foliosustitucion>{folioSustitucion}</cancel:foliosustitucion>
+               <cancel:uuid>{safeUuid}</cancel:uuid>
+               <cancel:motivo>{safeMotivo}</cancel:motivo>
+               <cancel:foliosustitucion>{safeFolio}</cancel:foliosustitucion>
             </cancel:uuids>
          </cancel:UUIDS>
-         <cancel:username>{_username}</cancel:username>
-         <cancel:password>{_password}</cancel:password>
-         <cancel:taxpayer_id>{rfcEmisor}</cancel:taxpayer_id>
+         <cancel:username>{safeUsername}</cancel:username>
+         <cancel:password>{safePassword}</cancel:password>
+         <cancel:taxpayer_id>{safeRfc}</cancel:taxpayer_id>
          <cancel:cer>{certificadoBase64}</cancel:cer>
          <cancel:key>{llaveBase64}</cancel:key>
-         <cancel:passphrase>{passwordLlave}</cancel:passphrase>
+         <cancel:passphrase>{safePasswordLlave}</cancel:passphrase>
       </cancel:cancel>
    </soapenv:Body>
 </soapenv:Envelope>";

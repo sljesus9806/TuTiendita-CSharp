@@ -84,27 +84,47 @@ namespace TuTiendita.Controls
 
         private void Monitor_EstadoCambiado(object sender, HardwareStatus estado)
         {
-            // Ejecutar en el hilo de UI
-            Dispatcher.Invoke(() =>
+            // Ejecutar en el hilo de UI de forma asíncrona para evitar deadlocks
+            if (estado == null) return;
+
+            if (Dispatcher.CheckAccess())
             {
                 ActualizarUI(estado);
-            });
+            }
+            else
+            {
+                Dispatcher.BeginInvoke(new Action(() => ActualizarUI(estado)));
+            }
         }
 
         private void Monitor_DispositivoConectado(object sender, DispositivoEventArgs e)
         {
-            Dispatcher.Invoke(() =>
+            if (e?.Dispositivo == null) return;
+
+            var nombre = e.Dispositivo.Nombre ?? "Dispositivo";
+            if (Dispatcher.CheckAccess())
             {
-                MostrarNotificacion($"{e.Dispositivo.Nombre} conectado", true);
-            });
+                MostrarNotificacion($"{nombre} conectado", true);
+            }
+            else
+            {
+                Dispatcher.BeginInvoke(new Action(() => MostrarNotificacion($"{nombre} conectado", true)));
+            }
         }
 
         private void Monitor_DispositivoDesconectado(object sender, DispositivoEventArgs e)
         {
-            Dispatcher.Invoke(() =>
+            if (e?.Dispositivo == null) return;
+
+            var nombre = e.Dispositivo.Nombre ?? "Dispositivo";
+            if (Dispatcher.CheckAccess())
             {
-                MostrarNotificacion($"{e.Dispositivo.Nombre} desconectado", false);
-            });
+                MostrarNotificacion($"{nombre} desconectado", false);
+            }
+            else
+            {
+                Dispatcher.BeginInvoke(new Action(() => MostrarNotificacion($"{nombre} desconectado", false)));
+            }
         }
 
         #endregion

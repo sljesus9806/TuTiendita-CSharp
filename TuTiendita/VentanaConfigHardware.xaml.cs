@@ -175,25 +175,41 @@ namespace TuTiendita
                 var sb = new StringBuilder();
 
                 // Estado de báscula
-                sb.AppendLine($"• Bascula: {(estado.BasculaConectada ? "✓ Conectada" : "✗ No detectada")}");
-                if (estado.BasculaConectada && !string.IsNullOrEmpty(estado.PuertoBascula))
+                bool basculaConectada = estado.Bascula?.Estado == EstadoConexion.Conectado;
+                sb.AppendLine($"• Bascula: {(basculaConectada ? "✓ Conectada" : "✗ No detectada")}");
+                if (basculaConectada && !string.IsNullOrEmpty(estado.Bascula?.Puerto))
                 {
-                    sb.AppendLine($"  Puerto: {estado.PuertoBascula}");
+                    sb.AppendLine($"  Puerto: {estado.Bascula.Puerto}");
+                }
+                if (estado.Bascula != null && !string.IsNullOrEmpty(estado.Bascula.Mensaje))
+                {
+                    sb.AppendLine($"  Estado: {estado.Bascula.Mensaje}");
                 }
 
                 // Estado de impresora
-                sb.AppendLine($"• Impresora: {(estado.ImpresoraDisponible ? "✓ Lista" : "✗ No disponible")}");
-                if (!string.IsNullOrEmpty(estado.NombreImpresora))
+                bool impresoraDisponible = estado.ImpresoraTickets?.Estado == EstadoConexion.Conectado ||
+                                           estado.Impresoras?.Any(i => i.Estado == EstadoConexion.Conectado) == true;
+                sb.AppendLine($"• Impresora: {(impresoraDisponible ? "✓ Lista" : "✗ No disponible")}");
+
+                if (estado.ImpresoraTickets != null)
                 {
-                    sb.AppendLine($"  Nombre: {estado.NombreImpresora}");
+                    sb.AppendLine($"  Nombre: {estado.ImpresoraTickets.Nombre}");
+                    sb.AppendLine($"  Estado: {estado.ImpresoraTickets.Mensaje}");
                 }
-                if (!string.IsNullOrEmpty(estado.EstadoImpresora))
+                else if (estado.Impresoras?.Count > 0)
                 {
-                    sb.AppendLine($"  Estado: {estado.EstadoImpresora}");
+                    var primeraImpresora = estado.Impresoras.FirstOrDefault(i => i.EsDefault) ?? estado.Impresoras[0];
+                    sb.AppendLine($"  Nombre: {primeraImpresora.Nombre}");
+                    sb.AppendLine($"  Estado: {primeraImpresora.Mensaje}");
                 }
 
                 // Estado de internet
-                sb.AppendLine($"• Internet: {(estado.InternetDisponible ? "✓ Conectado" : "✗ Sin conexion")}");
+                bool internetDisponible = estado.ConexionRed?.Estado == EstadoConexion.Conectado;
+                sb.AppendLine($"• Internet: {(internetDisponible ? "✓ Conectado" : "✗ Sin conexion")}");
+                if (estado.ConexionRed != null && !string.IsNullOrEmpty(estado.ConexionRed.Mensaje))
+                {
+                    sb.AppendLine($"  Detalle: {estado.ConexionRed.Mensaje}");
+                }
 
                 // Última verificación
                 sb.AppendLine();
