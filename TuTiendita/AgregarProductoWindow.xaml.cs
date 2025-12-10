@@ -1,23 +1,10 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using static TuTiendita.ProductosUserControl;
 
 namespace TuTiendita
 {
-    /// <summary>
-    /// Interaction logic for AgregarProductoWindow.xaml
-    /// </summary>
     public partial class AgregarProductoWindow : Window
     {
         public Producto Producto { get; private set; }
@@ -26,6 +13,13 @@ namespace TuTiendita
         {
             InitializeComponent();
             CargarCategorias();
+
+            // Dar foco al campo de codigo para escaneo inmediato
+            Loaded += (s, e) => txtCodigo.Focus();
+
+            // Calcular margen cuando cambian los precios
+            txtPrecio.TextChanged += (s, e) => CalcularMargen();
+            txtCosto.TextChanged += (s, e) => CalcularMargen();
         }
 
         private void CargarCategorias()
@@ -43,6 +37,56 @@ namespace TuTiendita
             {
                 MessageBox.Show($"Error al cargar categorias: {ex.Message}", "Error",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private void TxtCodigo_KeyDown(object sender, KeyEventArgs e)
+        {
+            // Cuando se presiona Enter (tipico de escaner), avanzar al siguiente campo
+            if (e.Key == Key.Enter || e.Key == Key.Return)
+            {
+                e.Handled = true;
+                txtNombre.Focus();
+            }
+        }
+
+        private void BtnGenerarCodigo_Click(object sender, RoutedEventArgs e)
+        {
+            // Generar codigo unico basado en timestamp
+            string codigo = $"P{DateTime.Now:yyyyMMddHHmmss}{new Random().Next(100, 999)}";
+            txtCodigo.Text = codigo;
+            txtNombre.Focus();
+        }
+
+        private void CalcularMargen()
+        {
+            if (decimal.TryParse(txtPrecio.Text, out decimal precio) &&
+                decimal.TryParse(txtCosto.Text, out decimal costo) &&
+                costo > 0)
+            {
+                decimal margen = ((precio - costo) / costo) * 100;
+                if (margen < 0)
+                {
+                    txtMargen.Text = $"{margen:F1}% (Perdida)";
+                    txtMargen.Foreground = System.Windows.Media.Brushes.Red;
+                }
+                else if (margen == 0)
+                {
+                    txtMargen.Text = "0% (Sin ganancia)";
+                    txtMargen.Foreground = System.Windows.Media.Brushes.Orange;
+                }
+                else
+                {
+                    txtMargen.Text = $"{margen:F1}%";
+                    txtMargen.Foreground = new System.Windows.Media.SolidColorBrush(
+                        (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#27AE60"));
+                }
+            }
+            else
+            {
+                txtMargen.Text = "--";
+                txtMargen.Foreground = new System.Windows.Media.SolidColorBrush(
+                    (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#27AE60"));
             }
         }
 
@@ -214,7 +258,7 @@ namespace TuTiendita
                     CategoriaId = cmbCategoria.SelectedValue as int?
                 };
 
-                DialogResult = true; // Cierra el dialogo y retorna el resultado
+                DialogResult = true;
                 Close();
             }
             catch (Exception ex)
@@ -226,7 +270,7 @@ namespace TuTiendita
 
         private void BtnCancelar_Click(object sender, RoutedEventArgs e)
         {
-            DialogResult = false; // Cierra el dialogo sin guardar
+            DialogResult = false;
             Close();
         }
     }
