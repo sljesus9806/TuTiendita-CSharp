@@ -92,11 +92,11 @@ namespace TuTiendita.Helpers
             int? usuarioId,
             string usuarioNombre,
             TipoAccion accion,
-            string tabla = null,
-            string registroId = null,
-            object datosAnteriores = null,
-            object datosNuevos = null,
-            string detalles = null)
+            string? tabla = null,
+            string? registroId = null,
+            object? datosAnteriores = null,
+            object? datosNuevos = null,
+            string? detalles = null)
         {
             try
             {
