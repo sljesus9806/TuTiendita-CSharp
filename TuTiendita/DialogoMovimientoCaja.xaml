@@ -1,63 +1,157 @@
 <Window x:Class="TuTiendita.DialogoMovimientoCaja"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Registrar Movimiento de Caja" Height="350" Width="500"
-        WindowStartupLocation="CenterScreen"
-        ResizeMode="NoResize">
-    <Grid Margin="20">
+        Title="Registrar Movimiento de Caja"
+        MinHeight="420" MinWidth="450"
+        SizeToContent="Height" Width="500"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResizeWithGrip"
+        Background="#F5F5F5">
+
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Tipo de Movimiento -->
-        <TextBlock Grid.Row="0" Text="Tipo de Movimiento" FontSize="14" FontWeight="Bold" Margin="0,0,0,10"/>
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,20">
-            <RadioButton x:Name="rbGasto" Content="Gasto" FontSize="13" Margin="0,0,20,0" IsChecked="True" GroupName="TipoMovimiento"/>
-            <RadioButton x:Name="rbRetiro" Content="Retiro a Caja Fuerte" FontSize="13" Margin="0,0,20,0" GroupName="TipoMovimiento"/>
-            <RadioButton x:Name="rbDeposito" Content="Depósito/Entrada" FontSize="13" GroupName="TipoMovimiento"/>
-        </StackPanel>
-
-        <!-- Monto -->
-        <Grid Grid.Row="2" Margin="0,0,0,15">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="120"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <TextBlock Grid.Column="0" Text="Monto:" VerticalAlignment="Center" FontWeight="SemiBold"/>
-            <TextBox Grid.Column="1" x:Name="txtMonto" Height="30" VerticalContentAlignment="Center" FontSize="14"/>
-        </Grid>
-
-        <!-- Concepto -->
-        <Grid Grid.Row="3" Margin="0,0,0,15">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="120"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <TextBlock Grid.Column="0" Text="Concepto:" VerticalAlignment="Top" FontWeight="SemiBold" Margin="0,5,0,0"/>
-            <TextBox Grid.Column="1" x:Name="txtConcepto" Height="80" TextWrapping="Wrap"
-                     AcceptsReturn="True" VerticalScrollBarVisibility="Auto"/>
-        </Grid>
-
-        <!-- Ayuda -->
-        <Border Grid.Row="4" Background="#ECF0F1" Padding="10" CornerRadius="5" Margin="0,0,0,15">
-            <StackPanel>
-                <TextBlock Text="Ejemplos:" FontWeight="Bold" FontSize="12" Margin="0,0,0,5"/>
-                <TextBlock Text="• Gasto: Compra de suministros, pago a proveedor, servicios" FontSize="11" Margin="0,2"/>
-                <TextBlock Text="• Retiro: Mover efectivo a caja fuerte por seguridad" FontSize="11" Margin="0,2"/>
-                <TextBlock Text="• Depósito: Agregar fondos iniciales, devolución, otros ingresos" FontSize="11" Margin="0,2"/>
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#9B59B6" Padding="20,15">
+            <StackPanel HorizontalAlignment="Center">
+                <TextBlock Text="MOVIMIENTO DE CAJA" FontSize="20" FontWeight="Bold"
+                           Foreground="White" HorizontalAlignment="Center"/>
+                <TextBlock Text="Registre entradas y salidas de efectivo" FontSize="12"
+                           Foreground="#D7BDE2" HorizontalAlignment="Center" Margin="0,3,0,0"/>
             </StackPanel>
         </Border>
 
-        <!-- Botones -->
-        <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Content="Guardar" Width="100" Height="35" Margin="5" Click="BtnGuardar_Click"
-                    Background="#27AE60" Foreground="White" FontWeight="Bold"/>
-            <Button Content="Cancelar" Width="100" Height="35" Margin="5" Click="BtnCancelar_Click"/>
-        </StackPanel>
+        <!-- Content -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Margin="25,20,25,25">
+                <!-- Tipo de Movimiento -->
+                <TextBlock Text="TIPO DE MOVIMIENTO" FontSize="12" FontWeight="Bold"
+                           Foreground="#666" Margin="0,0,0,10"/>
+                <UniformGrid Rows="1" Columns="3" Margin="0,0,0,20">
+                    <Border x:Name="brdGasto" Background="White" CornerRadius="8" Padding="12"
+                            Margin="0,0,5,0" BorderBrush="#E74C3C" BorderThickness="2"
+                            Cursor="Hand" MouseDown="BrdGasto_MouseDown">
+                        <StackPanel HorizontalAlignment="Center">
+                            <TextBlock Text="GASTO" FontSize="11" FontWeight="Bold"
+                                       Foreground="#E74C3C" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Salida" FontSize="10" Foreground="#888"
+                                       HorizontalAlignment="Center"/>
+                            <RadioButton x:Name="rbGasto" IsChecked="True" GroupName="TipoMovimiento"
+                                         HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                        </StackPanel>
+                    </Border>
+                    <Border x:Name="brdRetiro" Background="White" CornerRadius="8" Padding="12"
+                            Margin="5,0,5,0" BorderBrush="#DDD" BorderThickness="1"
+                            Cursor="Hand" MouseDown="BrdRetiro_MouseDown">
+                        <StackPanel HorizontalAlignment="Center">
+                            <TextBlock Text="RETIRO" FontSize="11" FontWeight="Bold"
+                                       Foreground="#F39C12" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Caja Fuerte" FontSize="10" Foreground="#888"
+                                       HorizontalAlignment="Center"/>
+                            <RadioButton x:Name="rbRetiro" GroupName="TipoMovimiento"
+                                         HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                        </StackPanel>
+                    </Border>
+                    <Border x:Name="brdDeposito" Background="White" CornerRadius="8" Padding="12"
+                            Margin="5,0,0,0" BorderBrush="#DDD" BorderThickness="1"
+                            Cursor="Hand" MouseDown="BrdDeposito_MouseDown">
+                        <StackPanel HorizontalAlignment="Center">
+                            <TextBlock Text="DEPOSITO" FontSize="11" FontWeight="Bold"
+                                       Foreground="#27AE60" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Entrada" FontSize="10" Foreground="#888"
+                                       HorizontalAlignment="Center"/>
+                            <RadioButton x:Name="rbDeposito" GroupName="TipoMovimiento"
+                                         HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                        </StackPanel>
+                    </Border>
+                </UniformGrid>
+
+                <!-- Monto -->
+                <TextBlock Text="MONTO" FontSize="12" FontWeight="Bold" Foreground="#666" Margin="0,0,0,8"/>
+                <Border Background="White" CornerRadius="8" BorderBrush="#9B59B6"
+                        BorderThickness="2" Margin="0,0,0,20">
+                    <Grid>
+                        <TextBox x:Name="txtMonto" Height="50" FontSize="22" FontWeight="Bold"
+                                 Padding="45,10,15,10" BorderThickness="0" Background="Transparent"
+                                 VerticalContentAlignment="Center"
+                                 PreviewTextInput="TxtMonto_PreviewTextInput"/>
+                        <TextBlock Text="$" FontSize="22" FontWeight="Bold" Foreground="#9B59B6"
+                                   VerticalAlignment="Center" Margin="15,0,0,0" IsHitTestVisible="False"/>
+                    </Grid>
+                </Border>
+
+                <!-- Concepto -->
+                <TextBlock Text="CONCEPTO / DESCRIPCION" FontSize="12" FontWeight="Bold"
+                           Foreground="#666" Margin="0,0,0,8"/>
+                <Border Background="White" CornerRadius="8" BorderBrush="#DDD"
+                        BorderThickness="1" Margin="0,0,0,15">
+                    <TextBox x:Name="txtConcepto" Height="80" TextWrapping="Wrap"
+                             AcceptsReturn="True" VerticalScrollBarVisibility="Auto"
+                             Padding="12" FontSize="13" BorderThickness="0"/>
+                </Border>
+
+                <!-- Ayuda -->
+                <Border Background="#F4ECF7" CornerRadius="8" Padding="15" Margin="0,0,0,20">
+                    <StackPanel>
+                        <TextBlock Text="Ejemplos de uso:" FontWeight="Bold" FontSize="12"
+                                   Foreground="#8E44AD" Margin="0,0,0,8"/>
+                        <TextBlock Text="Gasto: Compra de suministros, pago a proveedor, servicios"
+                                   FontSize="11" Foreground="#666" Margin="0,2"/>
+                        <TextBlock Text="Retiro: Mover efectivo a caja fuerte por seguridad"
+                                   FontSize="11" Foreground="#666" Margin="0,2"/>
+                        <TextBlock Text="Deposito: Agregar fondos, devoluciones, otros ingresos"
+                                   FontSize="11" Foreground="#666" Margin="0,2"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Botones -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Button Grid.Column="0" Content="Cancelar" Height="48" Margin="0,0,5,0"
+                            Click="BtnCancelar_Click" Background="#E0E0E0" Foreground="#333"
+                            BorderThickness="0" FontSize="15" Cursor="Hand" IsCancel="True">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="{TemplateBinding Background}" CornerRadius="8">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+
+                    <Button Grid.Column="1" Content="Registrar Movimiento" Height="48" Margin="5,0,0,0"
+                            Click="BtnGuardar_Click" Background="#9B59B6" Foreground="White"
+                            FontWeight="Bold" BorderThickness="0" FontSize="15" Cursor="Hand">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="{TemplateBinding Background}" CornerRadius="8">
+                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </Grid>
+            </StackPanel>
+        </ScrollViewer>
     </Grid>
 </Window>

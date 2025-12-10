@@ -1,87 +1,159 @@
 <Window x:Class="TuTiendita.DialogoMetodoPago"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Metodo de Pago" Height="320" Width="400"
-        WindowStartupLocation="CenterScreen"
-        ResizeMode="NoResize"
+        Title="Metodo de Pago"
+        MinHeight="380" MinWidth="400"
+        SizeToContent="Height" Width="420"
+        MaxHeight="600"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResizeWithGrip"
         Background="#F5F5F5">
+
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
         <!-- Header -->
-        <Border Background="#3498DB" Height="60" VerticalAlignment="Top">
-            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                <TextBlock Text="METODO DE PAGO" FontSize="20" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
-                <TextBlock Text="Seleccione como pagara el cliente" FontSize="12" Foreground="#AED6F1" HorizontalAlignment="Center"/>
+        <Border Grid.Row="0" Background="#3498DB" Padding="20,15">
+            <StackPanel HorizontalAlignment="Center">
+                <TextBlock Text="METODO DE PAGO" FontSize="20" FontWeight="Bold"
+                           Foreground="White" HorizontalAlignment="Center"/>
+                <TextBlock Text="Seleccione como pagara el cliente" FontSize="12"
+                           Foreground="#AED6F1" HorizontalAlignment="Center" Margin="0,3,0,0"/>
             </StackPanel>
         </Border>
 
-        <!-- Content -->
-        <StackPanel Margin="25,80,25,25">
-            <!-- Opciones de Pago -->
-            <Border x:Name="brdEfectivo" Background="White" CornerRadius="8" Padding="15" Margin="0,0,0,10"
-                    BorderBrush="#27AE60" BorderThickness="2" Cursor="Hand" MouseDown="BrdEfectivo_MouseDown">
-                <Grid>
+        <!-- Content con ScrollViewer -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled" Padding="0">
+            <StackPanel Margin="20">
+                <!-- Opcion Efectivo -->
+                <Border x:Name="brdEfectivo" Background="White" CornerRadius="8"
+                        Padding="15" Margin="0,0,0,10"
+                        BorderBrush="#27AE60" BorderThickness="2"
+                        Cursor="Hand" MouseDown="BrdEfectivo_MouseDown">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <RadioButton x:Name="rbEfectivo" Grid.Column="0"
+                                     IsChecked="True" GroupName="MetodoPago"
+                                     VerticalAlignment="Center"/>
+                        <StackPanel Grid.Column="1" Margin="10,0,0,0">
+                            <TextBlock Text="Efectivo" FontSize="16"
+                                       FontWeight="SemiBold" Foreground="#333"/>
+                            <TextBlock Text="Pago en efectivo con cambio"
+                                       FontSize="11" Foreground="#888"/>
+                        </StackPanel>
+                        <TextBlock Grid.Column="2" Text="$" FontSize="24"
+                                   Foreground="#27AE60" FontWeight="Bold"
+                                   VerticalAlignment="Center"/>
+                    </Grid>
+                </Border>
+
+                <!-- Opcion Tarjeta -->
+                <Border x:Name="brdTarjeta" Background="White" CornerRadius="8"
+                        Padding="15" Margin="0,0,0,10"
+                        BorderBrush="#DDD" BorderThickness="1"
+                        Cursor="Hand" MouseDown="BrdTarjeta_MouseDown">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <RadioButton x:Name="rbTarjeta" Grid.Column="0"
+                                     GroupName="MetodoPago" VerticalAlignment="Center"/>
+                        <StackPanel Grid.Column="1" Margin="10,0,0,0">
+                            <TextBlock Text="Tarjeta" FontSize="16"
+                                       FontWeight="SemiBold" Foreground="#333"/>
+                            <TextBlock Text="Credito o debito"
+                                       FontSize="11" Foreground="#888"/>
+                        </StackPanel>
+                        <TextBlock Grid.Column="2" Text="&#xE8C7;" FontFamily="Segoe MDL2 Assets"
+                                   FontSize="24" Foreground="#3498DB"
+                                   VerticalAlignment="Center"/>
+                    </Grid>
+                </Border>
+
+                <!-- Opcion Transferencia -->
+                <Border x:Name="brdTransferencia" Background="White" CornerRadius="8"
+                        Padding="15" Margin="0,0,0,10"
+                        BorderBrush="#DDD" BorderThickness="1"
+                        Cursor="Hand" MouseDown="BrdTransferencia_MouseDown">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <RadioButton x:Name="rbTransferencia" Grid.Column="0"
+                                     GroupName="MetodoPago" VerticalAlignment="Center"/>
+                        <StackPanel Grid.Column="1" Margin="10,0,0,0">
+                            <TextBlock Text="Transferencia" FontSize="16"
+                                       FontWeight="SemiBold" Foreground="#333"/>
+                            <TextBlock Text="Transferencia bancaria o SPEI"
+                                       FontSize="11" Foreground="#888"/>
+                        </StackPanel>
+                        <TextBlock Grid.Column="2" Text="&#xE8FB;" FontFamily="Segoe MDL2 Assets"
+                                   FontSize="24" Foreground="#9B59B6"
+                                   VerticalAlignment="Center"/>
+                    </Grid>
+                </Border>
+
+                <!-- Botones -->
+                <Grid Margin="0,15,0,5">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <RadioButton x:Name="rbEfectivo" Grid.Column="0" IsChecked="True" GroupName="MetodoPago" VerticalAlignment="Center"/>
-                    <StackPanel Grid.Column="1" Margin="10,0,0,0">
-                        <TextBlock Text="Efectivo" FontSize="16" FontWeight="SemiBold" Foreground="#333"/>
-                        <TextBlock Text="Pago en efectivo con cambio" FontSize="11" Foreground="#888"/>
-                    </StackPanel>
-                    <TextBlock Grid.Column="2" Text="$" FontSize="24" Foreground="#27AE60" FontWeight="Bold" VerticalAlignment="Center"/>
-                </Grid>
-            </Border>
-
-            <Border x:Name="brdTarjeta" Background="White" CornerRadius="8" Padding="15" Margin="0,0,0,10"
-                    BorderBrush="#DDD" BorderThickness="1" Cursor="Hand" MouseDown="BrdTarjeta_MouseDown">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <RadioButton x:Name="rbTarjeta" Grid.Column="0" GroupName="MetodoPago" VerticalAlignment="Center"/>
-                    <StackPanel Grid.Column="1" Margin="10,0,0,0">
-                        <TextBlock Text="Tarjeta" FontSize="16" FontWeight="SemiBold" Foreground="#333"/>
-                        <TextBlock Text="Credito o debito" FontSize="11" Foreground="#888"/>
-                    </StackPanel>
-                    <TextBlock Grid.Column="2" Text="&#xF09D;" FontFamily="Segoe MDL2 Assets" FontSize="24" Foreground="#3498DB" VerticalAlignment="Center"/>
+
+                    <Button Grid.Column="0" Content="Cancelar" Height="45" Margin="0,0,5,0"
+                            Click="BtnCancelar_Click" Background="#E0E0E0" Foreground="#333"
+                            BorderThickness="0" FontSize="14" Cursor="Hand" IsCancel="True">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="{TemplateBinding Background}"
+                                                    CornerRadius="6" Padding="15,10">
+                                                <ContentPresenter HorizontalAlignment="Center"
+                                                                  VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+
+                    <Button Grid.Column="1" Content="Continuar" Height="45" Margin="5,0,0,0"
+                            Click="BtnAceptar_Click" Background="#3498DB" Foreground="White"
+                            FontWeight="Bold" BorderThickness="0" FontSize="14"
+                            Cursor="Hand" IsDefault="True">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="{TemplateBinding Background}"
+                                                    CornerRadius="6" Padding="15,10">
+                                                <ContentPresenter HorizontalAlignment="Center"
+                                                                  VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                    </Button>
                 </Grid>
-            </Border>
-
-            <Border x:Name="brdTransferencia" Background="White" CornerRadius="8" Padding="15" Margin="0,0,0,10"
-                    BorderBrush="#DDD" BorderThickness="1" Cursor="Hand" MouseDown="BrdTransferencia_MouseDown">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <RadioButton x:Name="rbTransferencia" Grid.Column="0" GroupName="MetodoPago" VerticalAlignment="Center"/>
-                    <StackPanel Grid.Column="1" Margin="10,0,0,0">
-                        <TextBlock Text="Transferencia" FontSize="16" FontWeight="SemiBold" Foreground="#333"/>
-                        <TextBlock Text="Transferencia bancaria o SPEI" FontSize="11" Foreground="#888"/>
-                    </StackPanel>
-                    <TextBlock Grid.Column="2" Text="&#xE8FB;" FontFamily="Segoe MDL2 Assets" FontSize="24" Foreground="#9B59B6" VerticalAlignment="Center"/>
-                </Grid>
-            </Border>
-
-            <!-- Botones -->
-            <Grid Margin="0,15,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-
-                <Button Grid.Column="0" Content="Cancelar" Height="40" Margin="0,0,5,0"
-                        Click="BtnCancelar_Click" Background="#E0E0E0" Foreground="#333"
-                        BorderThickness="0" FontSize="14" Cursor="Hand" IsCancel="True"/>
-                <Button Grid.Column="1" Content="Continuar" Height="40" Margin="5,0,0,0"
-                        Click="BtnAceptar_Click" Background="#3498DB" Foreground="White"
-                        FontWeight="Bold" BorderThickness="0" FontSize="14" Cursor="Hand" IsDefault="True"/>
-            </Grid>
-        </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
     </Grid>
 </Window>

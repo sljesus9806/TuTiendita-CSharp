@@ -57,6 +57,14 @@ namespace TuTiendita
             }
         }
 
+        private void BtnMontoExacto_Click(object sender, RoutedEventArgs e)
+        {
+            // Poner el monto exacto a pagar
+            txtMontoRecibido.Text = TotalAPagar.ToString("0.##");
+            txtMontoRecibido.Focus();
+            txtMontoRecibido.CaretIndex = txtMontoRecibido.Text.Length;
+        }
+
         private void CalcularCambio()
         {
             txtError.Visibility = Visibility.Collapsed;

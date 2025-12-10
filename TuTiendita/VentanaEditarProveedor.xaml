@@ -1,9 +1,14 @@
 <Window x:Class="TuTiendita.VentanaEditarProveedor"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Editar Proveedor" Height="550" Width="600"
-        WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
-    <Grid Margin="20">
+        Title="Editar Proveedor"
+        MinHeight="500" MinWidth="500"
+        Height="580" Width="600"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResizeWithGrip"
+        Background="#F5F5F5">
+
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -11,85 +16,159 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,20">
-            <TextBlock x:Name="txtTitulo" Text="Nuevo Proveedor" FontSize="22" FontWeight="Bold"/>
-            <TextBlock Text="Complete la información del proveedor" FontSize="13" Foreground="#7F8C8D" Margin="0,5,0,0"/>
-        </StackPanel>
+        <Border Grid.Row="0" Background="#8E44AD" Padding="20,15">
+            <StackPanel HorizontalAlignment="Center">
+                <TextBlock x:Name="txtTitulo" Text="NUEVO PROVEEDOR" FontSize="20" FontWeight="Bold"
+                           Foreground="White" HorizontalAlignment="Center"/>
+                <TextBlock Text="Complete la informacion del proveedor" FontSize="12"
+                           Foreground="#D7BDE2" HorizontalAlignment="Center" Margin="0,3,0,0"/>
+            </StackPanel>
+        </Border>
 
         <!-- Form -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="20,15,20,0">
             <StackPanel>
                 <!-- Información Básica -->
-                <TextBlock Text="📋 Información Básica" FontSize="16" FontWeight="Bold" Margin="0,0,0,15"/>
+                <Border Background="White" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+                    <StackPanel>
+                        <TextBlock Text="INFORMACION BASICA" FontSize="14" FontWeight="Bold"
+                                   Foreground="#8E44AD" Margin="0,0,0,15"/>
 
-                <StackPanel Margin="0,0,0,15">
-                    <TextBlock Text="Nombre de la Empresa *" FontWeight="Bold" Margin="0,0,0,5"/>
-                    <TextBox x:Name="txtNombre" Height="35" FontSize="14" Padding="8"/>
-                </StackPanel>
+                        <StackPanel Margin="0,0,0,12">
+                            <TextBlock Text="NOMBRE DE LA EMPRESA *" FontSize="11" FontWeight="Bold" Foreground="#666" Margin="0,0,0,5"/>
+                            <Border Background="#FAFAFA" CornerRadius="6" BorderBrush="#8E44AD" BorderThickness="2">
+                                <TextBox x:Name="txtNombre" Height="42" FontSize="14" Padding="12,0"
+                                         BorderThickness="0" Background="Transparent" VerticalContentAlignment="Center"/>
+                            </Border>
+                        </StackPanel>
 
-                <Grid Margin="0,0,0,15">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="10"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="15"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
 
-                    <StackPanel Grid.Column="0">
-                        <TextBlock Text="RFC" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <TextBox x:Name="txtRUC" Height="35" FontSize="14" Padding="8"/>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="RFC" FontSize="11" FontWeight="Bold" Foreground="#666" Margin="0,0,0,5"/>
+                                <Border Background="#FAFAFA" CornerRadius="6" BorderBrush="#DDD" BorderThickness="1">
+                                    <TextBox x:Name="txtRUC" Height="38" FontSize="14" Padding="10,0"
+                                             BorderThickness="0" Background="Transparent" VerticalContentAlignment="Center"/>
+                                </Border>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="PERSONA DE CONTACTO" FontSize="11" FontWeight="Bold" Foreground="#666" Margin="0,0,0,5"/>
+                                <Border Background="#FAFAFA" CornerRadius="6" BorderBrush="#DDD" BorderThickness="1">
+                                    <TextBox x:Name="txtContacto" Height="38" FontSize="14" Padding="10,0"
+                                             BorderThickness="0" Background="Transparent" VerticalContentAlignment="Center"/>
+                                </Border>
+                            </StackPanel>
+                        </Grid>
                     </StackPanel>
-
-                    <StackPanel Grid.Column="2">
-                        <TextBlock Text="Persona de Contacto" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <TextBox x:Name="txtContacto" Height="35" FontSize="14" Padding="8"/>
-                    </StackPanel>
-                </Grid>
+                </Border>
 
                 <!-- Información de Contacto -->
-                <TextBlock Text="📞 Información de Contacto" FontSize="16" FontWeight="Bold" Margin="0,20,0,15"/>
+                <Border Background="White" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+                    <StackPanel>
+                        <TextBlock Text="INFORMACION DE CONTACTO" FontSize="14" FontWeight="Bold"
+                                   Foreground="#8E44AD" Margin="0,0,0,15"/>
 
-                <Grid Margin="0,0,0,15">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="10"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="15"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
 
-                    <StackPanel Grid.Column="0">
-                        <TextBlock Text="Teléfono" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <TextBox x:Name="txtTelefono" Height="35" FontSize="14" Padding="8"/>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="TELEFONO" FontSize="11" FontWeight="Bold" Foreground="#666" Margin="0,0,0,5"/>
+                                <Border Background="#FAFAFA" CornerRadius="6" BorderBrush="#DDD" BorderThickness="1">
+                                    <TextBox x:Name="txtTelefono" Height="38" FontSize="14" Padding="10,0"
+                                             BorderThickness="0" Background="Transparent" VerticalContentAlignment="Center"/>
+                                </Border>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="EMAIL" FontSize="11" FontWeight="Bold" Foreground="#666" Margin="0,0,0,5"/>
+                                <Border Background="#FAFAFA" CornerRadius="6" BorderBrush="#DDD" BorderThickness="1">
+                                    <TextBox x:Name="txtEmail" Height="38" FontSize="14" Padding="10,0"
+                                             BorderThickness="0" Background="Transparent" VerticalContentAlignment="Center"/>
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+
+                        <StackPanel>
+                            <TextBlock Text="DIRECCION" FontSize="11" FontWeight="Bold" Foreground="#666" Margin="0,0,0,5"/>
+                            <Border Background="#FAFAFA" CornerRadius="6" BorderBrush="#DDD" BorderThickness="1">
+                                <TextBox x:Name="txtDireccion" Height="38" FontSize="14" Padding="10,0"
+                                         BorderThickness="0" Background="Transparent" VerticalContentAlignment="Center"/>
+                            </Border>
+                        </StackPanel>
                     </StackPanel>
-
-                    <StackPanel Grid.Column="2">
-                        <TextBlock Text="Email" FontWeight="Bold" Margin="0,0,0,5"/>
-                        <TextBox x:Name="txtEmail" Height="35" FontSize="14" Padding="8"/>
-                    </StackPanel>
-                </Grid>
-
-                <StackPanel Margin="0,0,0,15">
-                    <TextBlock Text="Dirección" FontWeight="Bold" Margin="0,0,0,5"/>
-                    <TextBox x:Name="txtDireccion" Height="35" FontSize="14" Padding="8"/>
-                </StackPanel>
+                </Border>
 
                 <!-- Notas -->
-                <TextBlock Text="📝 Notas Adicionales" FontSize="16" FontWeight="Bold" Margin="0,20,0,15"/>
+                <Border Background="White" CornerRadius="8" Padding="15" Margin="0,0,0,15">
+                    <StackPanel>
+                        <TextBlock Text="NOTAS ADICIONALES" FontSize="14" FontWeight="Bold"
+                                   Foreground="#8E44AD" Margin="0,0,0,15"/>
 
-                <StackPanel Margin="0,0,0,15">
-                    <TextBlock Text="Notas (términos de pago, condiciones, etc.)" FontWeight="Bold" Margin="0,0,0,5"/>
-                    <TextBox x:Name="txtNotas" Height="80" FontSize="14" Padding="8"
-                             TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"/>
-                </StackPanel>
+                        <StackPanel>
+                            <TextBlock Text="NOTAS (terminos de pago, condiciones, etc.)" FontSize="11" FontWeight="Bold" Foreground="#666" Margin="0,0,0,5"/>
+                            <Border Background="#FAFAFA" CornerRadius="6" BorderBrush="#DDD" BorderThickness="1">
+                                <TextBox x:Name="txtNotas" Height="80" FontSize="13" Padding="10"
+                                         BorderThickness="0" Background="Transparent"
+                                         TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"/>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
             </StackPanel>
         </ScrollViewer>
 
         <!-- Buttons -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
-            <Button x:Name="btnGuardar" Content="💾 Guardar" Width="120" Height="40"
-                    Background="#27AE60" Foreground="White" FontWeight="Bold" BorderThickness="0"
-                    Margin="0,0,10,0" Click="BtnGuardar_Click" Cursor="Hand"/>
-            <Button x:Name="btnCancelar" Content="❌ Cancelar" Width="120" Height="40"
-                    Background="#95A5A6" Foreground="White" FontWeight="Bold" BorderThickness="0"
-                    Click="BtnCancelar_Click" Cursor="Hand"/>
-        </StackPanel>
+        <Grid Grid.Row="2" Margin="20,15,20,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Button x:Name="btnCancelar" Grid.Column="0" Content="Cancelar" Height="48" Margin="0,0,5,0"
+                    Click="BtnCancelar_Click" Background="#E0E0E0" Foreground="#333"
+                    BorderThickness="0" FontSize="15" Cursor="Hand" IsCancel="True">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}" CornerRadius="8">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Button.Style>
+            </Button>
+
+            <Button x:Name="btnGuardar" Grid.Column="1" Content="Guardar Proveedor" Height="48" Margin="5,0,0,0"
+                    Click="BtnGuardar_Click" Background="#8E44AD" Foreground="White"
+                    FontWeight="Bold" BorderThickness="0" FontSize="15" Cursor="Hand">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}" CornerRadius="8">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Button.Style>
+            </Button>
+        </Grid>
     </Grid>
 </Window>
