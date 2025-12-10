@@ -124,5 +124,26 @@ namespace TuTiendita
                 BtnIniciarSesion_Click(this, new RoutedEventArgs());
             }
         }
+
+        // Permitir mover la ventana arrastrando el header
+        private void Header_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Pressed)
+            {
+                DragMove();
+            }
+        }
+
+        // Minimizar la ventana
+        private void BtnMinimize_Click(object sender, RoutedEventArgs e)
+        {
+            WindowState = WindowState.Minimized;
+        }
+
+        // Cerrar la ventana
+        private void BtnClose_Click(object sender, RoutedEventArgs e)
+        {
+            Application.Current.Shutdown();
+        }
     }
 }
