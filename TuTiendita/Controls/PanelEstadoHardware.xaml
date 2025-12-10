@@ -52,6 +52,18 @@
                     </StackPanel>
                 </Border>
 
+                <!-- Indicador de Lector de Código de Barras -->
+                <Border x:Name="brdLector" Style="{StaticResource IndicadorEstado}"
+                        Background="#95A5A6" ToolTip="Lector: No configurado"
+                        MouseLeftButtonUp="Dispositivo_Click" Tag="Lector">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="📷" FontSize="14" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="txtLector" Text="Lector" Style="{StaticResource TextoIndicador}"/>
+                        <TextBlock x:Name="txtLectorEstado" Text="○" Margin="5,0,0,0"
+                                   Style="{StaticResource TextoIndicador}" FontWeight="Bold"/>
+                    </StackPanel>
+                </Border>
+
                 <!-- Indicador de Red/Internet -->
                 <Border x:Name="brdRed" Style="{StaticResource IndicadorEstado}"
                         Background="#95A5A6" ToolTip="Red: Verificando..."

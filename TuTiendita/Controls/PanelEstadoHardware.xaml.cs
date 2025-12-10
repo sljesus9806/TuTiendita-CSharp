@@ -141,6 +141,9 @@ namespace TuTiendita.Controls
                 // Actualizar impresora
                 ActualizarIndicador(brdImpresora, txtImpresoraEstado, estado.ImpresoraTickets, "Impresora");
 
+                // Actualizar lector de código de barras
+                ActualizarIndicador(brdLector, txtLectorEstado, estado.LectorCodigoBarras, "Lector");
+
                 // Actualizar red
                 ActualizarIndicador(brdRed, txtRedEstado, estado.ConexionRed, "Internet");
 
@@ -272,6 +275,21 @@ namespace TuTiendita.Controls
                             {
                                 mensaje = "IMPRESORA\n\nNo hay impresoras disponibles.";
                             }
+                        }
+                        break;
+
+                    case "Lector":
+                        dispositivo = _monitor?.EstadoActual?.LectorCodigoBarras;
+                        if (dispositivo != null)
+                        {
+                            mensaje = $"LECTOR DE CÓDIGO DE BARRAS\n\n" +
+                                     $"Estado: {dispositivo.Estado}\n" +
+                                     $"Puerto: {dispositivo.Puerto ?? "No configurado"}\n" +
+                                     $"Mensaje: {dispositivo.Mensaje}";
+                        }
+                        else
+                        {
+                            mensaje = "LECTOR DE CÓDIGO DE BARRAS\n\nNo configurado.\n\nVaya a Configuración > Hardware para configurar.";
                         }
                         break;
 

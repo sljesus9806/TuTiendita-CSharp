@@ -103,6 +103,7 @@ namespace TuTiendita.Services
                 // Crear objetos de resultado separados para evitar race conditions
                 EstadoDispositivo resultadoBascula = null;
                 EstadoDispositivo resultadoRed = null;
+                EstadoDispositivo resultadoLector = null;
                 List<EstadoDispositivo> resultadoImpresoras = null;
                 List<EstadoDispositivo> resultadoPuertos = null;
                 EstadoDispositivo resultadoImpTickets = null;
@@ -120,7 +121,8 @@ namespace TuTiendita.Services
                         resultadoImpReportes = resultado.ImpresoraReportes;
                     }),
                     Task.Run(() => { resultadoPuertos = VerificarPuertosSeriales(); }),
-                    Task.Run(() => { resultadoRed = VerificarConexionRedSeguro(); })
+                    Task.Run(() => { resultadoRed = VerificarConexionRedSeguro(); }),
+                    Task.Run(() => { resultadoLector = VerificarLectorCodigoBarrasSeguro(); })
                 };
 
                 await Task.WhenAll(tareas);
@@ -128,6 +130,7 @@ namespace TuTiendita.Services
                 // Asignar resultados de forma segura
                 nuevoEstado.Bascula = resultadoBascula;
                 nuevoEstado.ConexionRed = resultadoRed;
+                nuevoEstado.LectorCodigoBarras = resultadoLector;
                 nuevoEstado.Impresoras = resultadoImpresoras ?? new List<EstadoDispositivo>();
                 nuevoEstado.PuertosSeriales = resultadoPuertos ?? new List<EstadoDispositivo>();
                 nuevoEstado.ImpresoraTickets = resultadoImpTickets;
@@ -246,6 +249,63 @@ namespace TuTiendita.Services
                     serialPort?.Dispose();
                 }
                 catch { }
+            }
+        }
+
+        #endregion
+
+        #region Verificación de Lector de Código de Barras
+
+        private EstadoDispositivo VerificarLectorCodigoBarrasSeguro()
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(Configuracion?.PuertoLectorCodigoBarras))
+                {
+                    return new EstadoDispositivo
+                    {
+                        Nombre = "Lector de Código de Barras",
+                        Estado = EstadoConexion.NoConfigurado,
+                        Mensaje = "Puerto no configurado"
+                    };
+                }
+
+                // Verificar si el puerto existe
+                var puertosDisponibles = SerialPort.GetPortNames();
+                bool puertoExiste = puertosDisponibles.Contains(Configuracion.PuertoLectorCodigoBarras);
+
+                if (!puertoExiste)
+                {
+                    return new EstadoDispositivo
+                    {
+                        Nombre = "Lector de Código de Barras",
+                        Estado = EstadoConexion.Desconectado,
+                        Puerto = Configuracion.PuertoLectorCodigoBarras,
+                        Mensaje = $"Puerto {Configuracion.PuertoLectorCodigoBarras} no disponible"
+                    };
+                }
+
+                // Intentar abrir el puerto (la mayoría de lectores USB se conectan como HID o puerto serial)
+                bool puertoFuncional = VerificarPuertoSerial(
+                    Configuracion.PuertoLectorCodigoBarras,
+                    9600); // Baud rate estándar para lectores
+
+                return new EstadoDispositivo
+                {
+                    Nombre = "Lector de Código de Barras",
+                    Estado = puertoFuncional ? EstadoConexion.Conectado : EstadoConexion.Error,
+                    Puerto = Configuracion.PuertoLectorCodigoBarras,
+                    Mensaje = puertoFuncional ? "Conectado y listo" : "Error de comunicación"
+                };
+            }
+            catch (Exception ex)
+            {
+                return new EstadoDispositivo
+                {
+                    Nombre = "Lector de Código de Barras",
+                    Estado = EstadoConexion.Error,
+                    Mensaje = $"Error: {ex.Message}"
+                };
             }
         }
 
@@ -537,6 +597,21 @@ namespace TuTiendita.Services
                     DispositivoDesconectado?.Invoke(this, args);
             }
 
+            // Verificar cambio en lector de código de barras
+            if (anterior.LectorCodigoBarras?.Estado != nuevo.LectorCodigoBarras?.Estado)
+            {
+                var args = new DispositivoEventArgs
+                {
+                    Dispositivo = nuevo.LectorCodigoBarras,
+                    TipoDispositivo = TipoDispositivo.LectorCodigoBarras
+                };
+
+                if (nuevo.LectorCodigoBarras?.Estado == EstadoConexion.Conectado)
+                    DispositivoConectado?.Invoke(this, args);
+                else if (nuevo.LectorCodigoBarras?.Estado == EstadoConexion.Desconectado)
+                    DispositivoDesconectado?.Invoke(this, args);
+            }
+
             // Verificar cambio en conexión de red
             if (anterior.ConexionRed?.Estado != nuevo.ConexionRed?.Estado)
             {
@@ -588,6 +663,7 @@ namespace TuTiendita.Services
         public EstadoDispositivo Bascula { get; set; }
         public EstadoDispositivo ImpresoraTickets { get; set; }
         public EstadoDispositivo ImpresoraReportes { get; set; }
+        public EstadoDispositivo LectorCodigoBarras { get; set; }
         public EstadoDispositivo ConexionRed { get; set; }
 
         public List<EstadoDispositivo> Impresoras { get; set; } = new List<EstadoDispositivo>();
@@ -596,11 +672,13 @@ namespace TuTiendita.Services
         public bool TodoConectado =>
             (Bascula?.Estado == EstadoConexion.Conectado || Bascula?.Estado == EstadoConexion.NoConfigurado) &&
             (ImpresoraTickets?.Estado == EstadoConexion.Conectado || ImpresoraTickets == null) &&
+            (LectorCodigoBarras?.Estado == EstadoConexion.Conectado || LectorCodigoBarras?.Estado == EstadoConexion.NoConfigurado) &&
             (ConexionRed?.Estado == EstadoConexion.Conectado);
 
         public int DispositivosConProblemas =>
             (Bascula?.Estado == EstadoConexion.Desconectado || Bascula?.Estado == EstadoConexion.Error ? 1 : 0) +
             (ImpresoraTickets?.Estado == EstadoConexion.Desconectado || ImpresoraTickets?.Estado == EstadoConexion.Error ? 1 : 0) +
+            (LectorCodigoBarras?.Estado == EstadoConexion.Desconectado || LectorCodigoBarras?.Estado == EstadoConexion.Error ? 1 : 0) +
             (ConexionRed?.Estado == EstadoConexion.Desconectado || ConexionRed?.Estado == EstadoConexion.Error ? 1 : 0);
     }
 
