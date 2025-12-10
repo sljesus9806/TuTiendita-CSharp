@@ -1,45 +1,325 @@
-﻿<Window x:Class="TuTiendita.MainWindow"
+<Window x:Class="TuTiendita.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:TuTiendita"
         mc:Ignorable="d"
-        Title="MainWindow" Height="219" Width="496"
-        WindowStartupLocation="CenterScreen">
+        Title="Tu Tiendita - Iniciar Sesión"
+        Height="550" Width="420"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize">
 
+    <Window.Resources>
+        <!-- Estilo para TextBox -->
+        <Style x:Key="ModernTextBox" TargetType="TextBox">
+            <Setter Property="Background" Value="#F5F7FA"/>
+            <Setter Property="Foreground" Value="#2D3748"/>
+            <Setter Property="BorderBrush" Value="#E2E8F0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="15,12"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="10">
+                            <ScrollViewer x:Name="PART_ContentHost"
+                                          Margin="{TemplateBinding Padding}"
+                                          VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter Property="BorderBrush" Value="#667EEA"/>
+                                <Setter Property="Background" Value="White"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="BorderBrush" Value="#A0AEC0"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
-    <!-- Configuración del Grid para organizar los controles -->
-    <Grid Margin="0,0,0,4">
-        <!-- Definición de Filas -->
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+        <!-- Estilo para PasswordBox -->
+        <Style x:Key="ModernPasswordBox" TargetType="PasswordBox">
+            <Setter Property="Background" Value="#F5F7FA"/>
+            <Setter Property="Foreground" Value="#2D3748"/>
+            <Setter Property="BorderBrush" Value="#E2E8F0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="15,12"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="PasswordBox">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="10">
+                            <ScrollViewer x:Name="PART_ContentHost"
+                                          Margin="{TemplateBinding Padding}"
+                                          VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter Property="BorderBrush" Value="#667EEA"/>
+                                <Setter Property="Background" Value="White"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="BorderBrush" Value="#A0AEC0"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
-        <!-- Definición de Columnas -->
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="29*"/>
-            <ColumnDefinition Width="33*"/>
-        </Grid.ColumnDefinitions>
+        <!-- Estilo para el botón principal -->
+        <Style x:Key="PrimaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#667EEA"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="20,14"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="10"
+                                Padding="{TemplateBinding Padding}">
+                            <Border.Effect>
+                                <DropShadowEffect Color="#667EEA" BlurRadius="15" ShadowDepth="0" Opacity="0.4"/>
+                            </Border.Effect>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#5A67D8"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#4C51BF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
-        <!-- Etiqueta de Usuario -->
-        <Label Content="Usuario:" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="142,0,0,0" Height="26" Width="53"/>
+        <!-- Estilo para botón de cerrar -->
+        <Style x:Key="CloseButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#A0AEC0"/>
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="Width" Value="36"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="18">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#FED7D7"/>
+                                <Setter Property="Foreground" Value="#E53E3E"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
-        <!-- TextBox para Nombre de Usuario -->
-        <TextBox x:Name="txtNombreUsuario" Grid.Row="0" Grid.Column="1" Margin="10,8,31,12" KeyDown="Txt_KeyDown"/>
+        <!-- Estilo para botón minimizar -->
+        <Style x:Key="MinimizeButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#A0AEC0"/>
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="Width" Value="36"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="18">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#E2E8F0"/>
+                                <Setter Property="Foreground" Value="#4A5568"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
 
-        <!-- Etiqueta de Contraseña -->
-        <Label Content="Contraseña:" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="123,0,0,0" Height="26" Width="72"/>
+    <!-- Contenedor principal con sombra -->
+    <Border CornerRadius="20" Background="White" Margin="15">
+        <Border.Effect>
+            <DropShadowEffect Color="#000000" BlurRadius="30" ShadowDepth="0" Opacity="0.15"/>
+        </Border.Effect>
 
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-        <!-- Botón de Iniciar Sesión -->
-        <Button x:Name="BtnIniciarSesion" Content="Iniciar Sesión" Grid.Row="4" Width="150" HorizontalAlignment="Left" Margin="43,51,0,-86" Click="BtnIniciarSesion_Click" Grid.Column="1"/>
+            <!-- Barra superior con gradiente -->
+            <Border Grid.Row="0" CornerRadius="20,20,0,0" MouseLeftButtonDown="Header_MouseLeftButtonDown">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#667EEA" Offset="0"/>
+                        <GradientStop Color="#764BA2" Offset="1"/>
+                    </LinearGradientBrush>
+                </Border.Background>
 
-        <!-- Password box para Contraseña -->
-        <PasswordBox x:Name="txtContrasena" Margin="10,1,31,10" Grid.Row="1" Grid.Column="1"  KeyDown="Txt_KeyDown"  />
-    </Grid>
+                <Grid Height="140">
+                    <!-- Botones de control de ventana -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,10,10,0">
+                        <Button Content="—" Style="{StaticResource MinimizeButton}" Click="BtnMinimize_Click"
+                                Foreground="White" Opacity="0.8"/>
+                        <Button Content="✕" Style="{StaticResource CloseButton}" Click="BtnClose_Click"
+                                Foreground="White" Opacity="0.8"/>
+                    </StackPanel>
+
+                    <!-- Logo y título -->
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <!-- Icono de tienda -->
+                        <Border Width="60" Height="60" CornerRadius="30" Background="White" Margin="0,0,0,10">
+                            <Border.Effect>
+                                <DropShadowEffect Color="#000000" BlurRadius="10" ShadowDepth="0" Opacity="0.1"/>
+                            </Border.Effect>
+                            <Viewbox Width="32" Height="32">
+                                <Canvas Width="24" Height="24">
+                                    <Path Fill="#667EEA" Data="M4 4h16v2H4V4zm16 3H4l1 10h14l1-10zm-8 3a2 2 0 100 4 2 2 0 000-4z"/>
+                                    <Path Fill="#764BA2" Data="M7 18c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                                </Canvas>
+                            </Viewbox>
+                        </Border>
+                        <TextBlock Text="Tu Tiendita"
+                                   FontSize="26"
+                                   FontWeight="Bold"
+                                   Foreground="White"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="Sistema de Gestión"
+                                   FontSize="12"
+                                   Foreground="White"
+                                   Opacity="0.8"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,3,0,0"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Contenido del formulario -->
+            <Grid Grid.Row="1" Margin="35,30,35,35">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Título de bienvenida -->
+                <TextBlock Grid.Row="0"
+                           Text="Bienvenido"
+                           FontSize="22"
+                           FontWeight="SemiBold"
+                           Foreground="#2D3748"
+                           HorizontalAlignment="Center"/>
+                <TextBlock Grid.Row="1"
+                           Text="Ingresa tus credenciales para continuar"
+                           FontSize="13"
+                           Foreground="#718096"
+                           HorizontalAlignment="Center"
+                           Margin="0,5,0,25"/>
+
+                <!-- Campo Usuario -->
+                <Grid Grid.Row="2" Margin="0,0,0,15">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="Usuario"
+                               FontSize="13"
+                               FontWeight="Medium"
+                               Foreground="#4A5568"
+                               Margin="5,0,0,8"/>
+                    <Grid Grid.Row="1">
+                        <TextBox x:Name="txtNombreUsuario"
+                                 Style="{StaticResource ModernTextBox}"
+                                 KeyDown="Txt_KeyDown"/>
+                        <!-- Icono de usuario -->
+                        <TextBlock Text="👤"
+                                   FontSize="16"
+                                   Foreground="#A0AEC0"
+                                   VerticalAlignment="Center"
+                                   HorizontalAlignment="Right"
+                                   Margin="0,0,15,0"
+                                   IsHitTestVisible="False"/>
+                    </Grid>
+                </Grid>
+
+                <!-- Campo Contraseña -->
+                <Grid Grid.Row="3" Margin="0,0,0,25">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="Contraseña"
+                               FontSize="13"
+                               FontWeight="Medium"
+                               Foreground="#4A5568"
+                               Margin="5,0,0,8"/>
+                    <Grid Grid.Row="1">
+                        <PasswordBox x:Name="txtContrasena"
+                                     Style="{StaticResource ModernPasswordBox}"
+                                     KeyDown="Txt_KeyDown"/>
+                        <!-- Icono de candado -->
+                        <TextBlock Text="🔒"
+                                   FontSize="16"
+                                   Foreground="#A0AEC0"
+                                   VerticalAlignment="Center"
+                                   HorizontalAlignment="Right"
+                                   Margin="0,0,15,0"
+                                   IsHitTestVisible="False"/>
+                    </Grid>
+                </Grid>
+
+                <!-- Botón Iniciar Sesión -->
+                <Button x:Name="BtnIniciarSesion"
+                        Grid.Row="4"
+                        Content="Iniciar Sesión"
+                        Style="{StaticResource PrimaryButton}"
+                        Click="BtnIniciarSesion_Click"
+                        HorizontalAlignment="Stretch"/>
+
+                <!-- Pie de página -->
+                <TextBlock Grid.Row="6"
+                           Text="© 2024 Tu Tiendita - Todos los derechos reservados"
+                           FontSize="11"
+                           Foreground="#A0AEC0"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Bottom"/>
+            </Grid>
+        </Grid>
+    </Border>
 </Window>
